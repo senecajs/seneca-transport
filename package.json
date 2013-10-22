@@ -1,0 +1,36 @@
+{
+  "name": "seneca-transport",
+  "version": "0.1.0",
+  "description": "Seneca transport",
+  "main": "transport.js",
+  "scripts": {
+    "test": "node_modules/.bin/mocha test/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/rjrodger/seneca-project.git"
+  },
+  "keywords": [
+    "seneca",
+    "project",
+    "plugin"
+  ],
+  "author": "Richard Rodger (http://richardrodger.com)",
+  "license": "MIT",
+  "dependencies": {
+    "underscore": "~1.5.2",
+    "async": "~0.2.9",
+    "nid": "~0.3.0",
+    "connect": "~2.9.2"
+  },
+  "devDependencies": {
+    "gex": "~0.1.1",
+    "chai": "~1.8.0",
+    "mocha": "~1.13.0"
+  },
+  "files": [
+    "README.md",
+    "LICENSE.txt",
+    "transport.js"
+  ]
+}

@@ -1,2 +1,4 @@
-seneca-transport
-================
+seneca-project
+==============
+
+Project-oriented business logic
