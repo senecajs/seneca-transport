@@ -21,7 +21,8 @@
     "underscore": "~1.5.2",
     "async": "~0.2.9",
     "nid": "~0.3.0",
-    "connect": "~2.9.2"
+    "connect": "~2.9.2",
+    "request": "~2.27.0"
   },
   "devDependencies": {
     "gex": "~0.1.1",
