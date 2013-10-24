@@ -8,6 +8,7 @@ var _       = require('underscore')
 var async   = require('async')
 var connect = require('connect')
 var request = require('request')
+var redis   = require('redis')
 
 var nid = require('nid')
 
@@ -17,26 +18,20 @@ module.exports = function( options ) {
   var plugin = 'transport'
   
 
-  options.listen = parseConfig(options.listen,{
-    type:   'http',
-    host:   'localhost',
-    port:   10101,
-    path:   '/act',
-    limit:  '11mb',
-    timeout: 22222
-  })
-
-  options.client = parseConfig(options.client,{
-    type:   'http',
-    host:   'localhost',
-    port:   10101,
-    path:   '/act',
-    limit:  '11mb',
-    timeout: 22222
-  })
-
-
   options = seneca.util.deepextend({
+    direct: {
+      type:   'direct',
+      host:   'localhost',
+      port:   10101,
+      path:   '/act',
+      limit:  '11mb',
+      timeout: 22222
+    },
+    queue: {
+      type:  'queue',
+      port:  6379,
+      host:  '127.0.0.1'
+    }
   },options)
   
 
@@ -46,54 +41,64 @@ module.exports = function( options ) {
   seneca.add({role:plugin,cmd:'listen'}, cmd_listen)
   seneca.add({role:plugin,cmd:'client'}, cmd_client)
 
-  seneca.add({role:plugin,hook:'listen',type:'http'}, hook_listen_http)
-  seneca.add({role:plugin,hook:'client',type:'http'}, hook_client_http)
+  seneca.add({role:plugin,hook:'listen',type:'direct'}, hook_listen_direct)
+  seneca.add({role:plugin,hook:'client',type:'direct'}, hook_client_direct)
+
+  seneca.add({role:plugin,hook:'listen',type:'queue'}, hook_listen_queue)
+  seneca.add({role:plugin,hook:'client',type:'queue'}, hook_client_queue)
 
 
 
 
-  function parseConfig( inargs, base ) {
-    if( null == inargs ) return base;
-    if( _.isObject(inargs) && !_.isArray(inargs) ) return inargs;
+  function parseConfig( args ) {
+    var out = {}
 
-    var arglen = inargs.length
+    var config = args.config || args
+    //console.dir(config)
 
-    var config = {}
+    var base = options.direct
 
-    // TODO: clean this up!
-    if( 0 === arglen ) {
-      config.port = base.port
-      config.host = base.host
-      config.path = base.path
-    }
-    else if( 1 === arglen ) {
-      if( _.isObject( inargs[0] ) ) {
-        config = inargs[0]
+    if( _.isArray( config ) ) {
+      var arglen = config.length
+
+      if( 0 === arglen ) {
+        out.port = base.port
+        out.host = base.host
+        out.path = base.path
       }
-      else {
-        config.port = parseInt(inargs[0])
-        config.host = base.host
-        config.path = base.path
+      else if( 1 === arglen ) {
+        if( _.isObject( config[0] ) ) {
+          out = config[0]
+        }
+        else {
+          out.port = parseInt(config[0])
+          out.host = base.host
+          out.path = base.path
+        }
       }
+      else if( 2 === arglen ) {
+        out.port = parseInt(config[0])
+        out.host = config[1]
+        out.path = base.path
+      }
+      else if( 3 === arglen ) {
+        out.port = parseInt(config[0])
+        out.host = config[1]
+        out.path = config[2]
+      }
+
     }
-    else if( 2 === arglen ) {
-      config.port = parseInt(inargs[0])
-      config.host = inargs[1]
-      config.path = base.path
-    }
-    else if( 3 === arglen ) {
-      config.port = parseInt(inargs[0])
-      config.host = inargs[1]
-      config.path = inargs[2]
+    else out = config;
+
+    out.type = null == out.type ? base.type : out.type
+
+    if( 'direct' == out.type ) {
+      out.port = null == out.port ? base.port : out.port 
+      out.host = null == out.host ? base.host : out.host
+      out.path = null == out.path ? base.path : out.path
     }
 
-    config.port = null == config.port ? base.port : config.port 
-    config.host = null == config.host ? base.host : config.host
-    config.path = null == config.path ? base.path : config.path
-
-    config.type = null == config.type ? base.type : config.type
-
-    return config
+    return out
   }
 
 
@@ -101,23 +106,28 @@ module.exports = function( options ) {
   function cmd_listen( args, done ) {
     var seneca = this
 
-    var listen_config = parseConfig(args.listen,options.listen)
-    seneca.act( _.extend({role:plugin,hook:'listen'},options.listen,listen_config),done)
+    var listen_config = parseConfig(args)
+    var listen_args = _.omit(_.extend({},options[listen_config.type],args,listen_config,{role:plugin,hook:'listen'}),'cmd') 
+
+    seneca.act( listen_args,done)
   }
 
 
   function cmd_client( args, done ) {
     var seneca = this
 
-    var client_config  = parseConfig(args.client,options.client)
-    var client_args = _.extend({role:plugin,hook:'client'},options.client,client_config)
+    var client_config  = parseConfig(args)
+    //console.dir(client_config)
+
+    var client_args = _.omit(_.extend({},options[client_config.type],args,client_config,{role:plugin,hook:'client'}),'cmd')
+    //console.dir(client_args)
 
     seneca.act( client_args, done )
   }
 
 
 
-  function hook_listen_http( args, done ) {
+  function hook_listen_direct( args, done ) {
     var seneca = this
 
     var app = connect()
@@ -174,7 +184,7 @@ module.exports = function( options ) {
 
 
 
-  function hook_client_http( args, done ) {
+  function hook_client_direct( args, done ) {
     var seneca = this
 
     var fullurl = 'http://'+args.host+':'+args.port+args.path
@@ -189,11 +199,99 @@ module.exports = function( options ) {
       })
     }
 
-    seneca.log.info('client', args.host, args.port, args.path, fullurl)
+
+    if( args.pin ) {
+      var pins = _.isArray(args.pin) ? args.pin : [args.pin]
+      _.each(pins,function(pin){
+        seneca.add(pin,client)
+      })
+    }
+
+    seneca.log.info('client', 'direct', args.host, args.port, args.path, fullurl, seneca.toString())
 
     done(null,client)
   }  
 
+
+  
+
+
+  function hook_listen_queue( args, done ) {
+    var seneca = this
+
+    var redis_in  = redis.createClient(args.port,args.host)
+    var redis_out = redis.createClient(args.port,args.host)
+
+    redis_in.on('message',function(channel,msgstr){
+      var data = JSON.parse(msgstr)
+
+      if( 'act' == data.kind ) {
+        seneca.act(data.act,function(err,res){
+          var outmsg = {
+            kind:'res',
+            id:data.id,
+            err:err?err.message:null,
+            res:res
+          }
+          var outstr = JSON.stringify(outmsg)
+          redis_out.publish(channel,outstr)
+        })
+      }
+    })
+
+    redis_in.subscribe('*')
+
+    seneca.log.info('listen', args.host, args.port, seneca.toString())
+    done()
+  }
+
+
+  function hook_client_queue( args, done ) {
+    var seneca = this
+
+    var redis_in  = redis.createClient(args.port,args.host)
+    var redis_out = redis.createClient(args.port,args.host)
+
+    var callmap = {}
+
+    redis_in.on('message',function(channel,msgstr){
+      var data = JSON.parse(msgstr)
+
+      if( 'res' == data.kind ) {
+        var call = callmap[data.id]
+        if( call ) {
+          delete callmap[data.id]
+
+          call.done( data.err ? new Error(data.err) : null, data.res )
+        }
+      }
+    })
+
+    var client = function( args, done ) {
+      var outmsg = {
+        id:   nid(),
+        kind: 'act',
+        act:  args
+      }
+      var outstr = JSON.stringify(outmsg)
+      callmap[outmsg.id] = {done:done}
+      redis_out.publish('*',outstr)
+    }
+
+
+    if( args.pin ) {
+      var pins = _.isArray(args.pin) ? args.pin : [args.pin]
+      _.each(pins,function(pin){
+        seneca.add(pin,client)
+      })
+    }
+
+    redis_in.subscribe('*')    
+
+    seneca.log.info('client', 'queue', args.host, args.port, seneca.toString())
+
+    done(null,client)
+  }
 
 
   /*
