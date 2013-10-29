@@ -2,7 +2,8 @@
 "use strict";
 
 
-var buffer  = require('buffer')
+var buffer = require('buffer')
+var util   = require('util')
 
 var _       = require('underscore')
 var async   = require('async')
@@ -19,6 +20,7 @@ module.exports = function( options ) {
   
 
   options = seneca.util.deepextend({
+    msgprefix:'seneca-',
     direct: {
       type:   'direct',
       host:   'localhost',
@@ -27,8 +29,8 @@ module.exports = function( options ) {
       limit:  '11mb',
       timeout: 22222
     },
-    queue: {
-      type:  'queue',
+    pubsub: {
+      type:  'pubsub',
       port:  6379,
       host:  '127.0.0.1'
     }
@@ -44,8 +46,8 @@ module.exports = function( options ) {
   seneca.add({role:plugin,hook:'listen',type:'direct'}, hook_listen_direct)
   seneca.add({role:plugin,hook:'client',type:'direct'}, hook_client_direct)
 
-  seneca.add({role:plugin,hook:'listen',type:'queue'}, hook_listen_queue)
-  seneca.add({role:plugin,hook:'client',type:'queue'}, hook_client_queue)
+  seneca.add({role:plugin,hook:'listen',type:'pubsub'}, hook_listen_pubsub)
+  seneca.add({role:plugin,hook:'client',type:'pubsub'}, hook_client_pubsub)
 
 
 
@@ -54,8 +56,6 @@ module.exports = function( options ) {
     var out = {}
 
     var config = args.config || args
-    //console.dir(config)
-
     var base = options.direct
 
     if( _.isArray( config ) ) {
@@ -117,10 +117,7 @@ module.exports = function( options ) {
     var seneca = this
 
     var client_config  = parseConfig(args)
-    //console.dir(client_config)
-
     var client_args = _.omit(_.extend({},options[client_config.type],args,client_config,{role:plugin,hook:'client'}),'cmd')
-    //console.dir(client_args)
 
     seneca.act( client_args, done )
   }
@@ -202,7 +199,7 @@ module.exports = function( options ) {
 
     if( args.pin ) {
       var pins = _.isArray(args.pin) ? args.pin : [args.pin]
-      _.each(pins,function(pin){
+      _.each( seneca.findpins( pins ), function(pin){
         seneca.add(pin,client)
       })
     }
@@ -216,7 +213,7 @@ module.exports = function( options ) {
   
 
 
-  function hook_listen_queue( args, done ) {
+  function hook_listen_pubsub( args, done ) {
     var seneca = this
 
     var redis_in  = redis.createClient(args.port,args.host)
@@ -239,14 +236,23 @@ module.exports = function( options ) {
       }
     })
 
-    redis_in.subscribe('*')
+    if( args.pin ) {
+      var pins = _.isArray(args.pin) ? args.pin : [args.pin]
+      _.each( seneca.findpins( pins ), function(pin){
+        var pinstr = options.msgprefix+util.inspect(pin)
+        redis_in.subscribe(pinstr)
+      })
+    }
 
+    redis_in.subscribe(options.msgprefix+'*')
+    
     seneca.log.info('listen', args.host, args.port, seneca.toString())
     done()
   }
 
 
-  function hook_client_queue( args, done ) {
+
+  function hook_client_pubsub( args, done ) {
     var seneca = this
 
     var redis_in  = redis.createClient(args.port,args.host)
@@ -275,30 +281,35 @@ module.exports = function( options ) {
       }
       var outstr = JSON.stringify(outmsg)
       callmap[outmsg.id] = {done:done}
-      redis_out.publish('*',outstr)
+
+      var actmeta = seneca.findact(args)
+      if( actmeta ) {
+        var actstr = options.msgprefix+util.inspect(actmeta.args)
+        redis_out.publish(actstr,outstr)
+      }
+      else {
+        redis_out.publish(options.msgprefix+'*',outstr)
+      }
     }
 
 
     if( args.pin ) {
       var pins = _.isArray(args.pin) ? args.pin : [args.pin]
-      _.each(pins,function(pin){
+      _.each( seneca.findpins( pins ), function(pin){
+        var pinstr = options.msgprefix+util.inspect(pin)
         seneca.add(pin,client)
+        redis_in.subscribe(pinstr)    
       })
     }
 
-    redis_in.subscribe('*')    
+    redis_in.subscribe(options.msgprefix+'*')    
 
-    seneca.log.info('client', 'queue', args.host, args.port, seneca.toString())
+    seneca.log.info('client', 'pubsub', args.host, args.port, seneca.toString())
 
     done(null,client)
   }
 
 
-  /*
-  seneca.add({init:plugin}, function( args, done ){
-    done()
-  })
-   */
 
   return {
     name: plugin,

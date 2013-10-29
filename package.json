@@ -8,11 +8,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/rjrodger/seneca-service.git"
+    "url": "git://github.com/rjrodger/seneca-transport.git"
   },
   "keywords": [
     "seneca",
-    "project",
+    "transport",
     "plugin"
   ],
   "author": "Richard Rodger (http://richardrodger.com)",
@@ -28,7 +28,8 @@
   "devDependencies": {
     "gex": "~0.1.1",
     "chai": "~1.8.0",
-    "mocha": "~1.13.0"
+    "mocha": "~1.13.0",
+    "seneca": "~0.5.14"
   },
   "files": [
     "README.md",
