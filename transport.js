@@ -5,13 +5,17 @@
 var buffer = require('buffer')
 var util   = require('util')
 
-var _       = require('underscore')
-var async   = require('async')
-var connect = require('connect')
-var request = require('request')
-var redis   = require('redis')
+var _           = require('underscore')
+var async       = require('async')
+var connect     = require('connect')
+var request     = require('request')
+var redis       = require('redis')
+var fivebeans   = require('fivebeans')
+
 
 var nid = require('nid')
+
+
 
 
 module.exports = function( options ) {
@@ -20,7 +24,7 @@ module.exports = function( options ) {
   
 
   options = seneca.util.deepextend({
-    msgprefix:'seneca-',
+    msgprefix:'seneca_',
     direct: {
       type:   'direct',
       host:   'localhost',
@@ -48,6 +52,9 @@ module.exports = function( options ) {
 
   seneca.add({role:plugin,hook:'listen',type:'pubsub'}, hook_listen_pubsub)
   seneca.add({role:plugin,hook:'client',type:'pubsub'}, hook_client_pubsub)
+
+  seneca.add({role:plugin,hook:'listen',type:'queue'}, hook_listen_queue)
+  seneca.add({role:plugin,hook:'client',type:'queue'}, hook_client_queue)
 
 
 
@@ -244,7 +251,7 @@ module.exports = function( options ) {
       })
     }
 
-    redis_in.subscribe(options.msgprefix+'*')
+    redis_in.subscribe(options.msgprefix+'all')
     
     seneca.log.info('listen', args.host, args.port, seneca.toString())
     done()
@@ -288,7 +295,7 @@ module.exports = function( options ) {
         redis_out.publish(actstr,outstr)
       }
       else {
-        redis_out.publish(options.msgprefix+'*',outstr)
+        redis_out.publish(options.msgprefix+'all',outstr)
       }
     }
 
@@ -302,11 +309,209 @@ module.exports = function( options ) {
       })
     }
 
-    redis_in.subscribe(options.msgprefix+'*')    
+    redis_in.subscribe(options.msgprefix+'all')    
 
     seneca.log.info('client', 'pubsub', args.host, args.port, seneca.toString())
 
     done(null,client)
+  }
+
+
+
+
+  function hook_listen_queue( args, done ) {
+    var seneca = this
+
+    var recv = new fivebeans.client();
+    var send   = new fivebeans.client();
+
+    send
+      .on('connect', function() {
+        console.log('LISTEN send connect')
+
+        send.use(options.msgprefix+'out', function(err, numwatched) {
+          if( err ) return console.log('A:'+err);
+          console.log('send use '+numwatched)
+        })
+      })
+      .on('error', function(err) {
+        console.log('LISTEN send error '+err)
+      })
+      .on('close', function() {
+        console.log('LISTEN send close')
+      })
+      .connect()
+
+    recv
+      .on('connect', function() {
+        console.log('LISTEN recv connect')
+
+        recv.watch(options.msgprefix+'in', function(err, numwatched) {
+          if( err ) return console.log('A:'+err);
+
+          console.log('recv watch '+numwatched)
+
+          function do_reserve() {
+            recv.reserve(function(err, jobid, payload) {
+              if( err ) return console.log(err);
+
+              var data = JSON.parse(payload)
+              console.dir(data)
+
+              if( 'act' == data.kind ) {
+                seneca.act(data.act,function(err,res){
+                  var outmsg = {
+                    kind:'res',
+                    id:data.id,
+                    err:err?err.message:null,
+                    res:res
+                  }
+                  var outstr = JSON.stringify(outmsg)
+
+                  send.put(100,0,111,outstr, function(err,outjobid){
+                    if( err ) return console.log(err);
+                    console.log('PUT '+outjobid+' '+outstr)
+
+                    recv.destroy(jobid, function(err) {
+                      if( err ) return console.log(err);
+
+                      console.log('DEL '+jobid)
+                      process.nextTick(do_reserve)
+                    });
+                  })
+                })
+              }
+            })
+          }
+          do_reserve()
+
+
+          /*
+           if( args.pin ) {
+           var pins = _.isArray(args.pin) ? args.pin : [args.pin]
+           _.each( seneca.findpins( pins ), function(pin){
+           var pinstr = options.msgprefix+util.inspect(pin)
+           redis_in.subscribe(pinstr)
+           })
+           }
+
+           redis_in.subscribe(options.msgprefix+'all')
+           */
+
+
+          seneca.log.info('listen', 'queue', args.host, args.port, seneca.toString())
+          done()
+        })
+      })
+      .on('error', function(err) {
+        console.log('LISTEN recv error')
+      })
+      .on('close', function() {
+        console.log('LISTEN recv close')
+      })
+      .connect()
+  }
+
+
+
+  function hook_client_queue( args, done ) {
+    var seneca = this
+
+    var callmap = {}
+
+
+    var recv = new fivebeans.client();
+
+    recv
+      .on('connect', function() {
+        console.log('CLIENT recv connect')
+
+        recv.watch(options.msgprefix+'out', function(err, numwatched) {
+          if( err ) return console.log(err);
+
+          function do_reserve() {
+            recv.reserve(function(err, jobid, payload) {
+              if( err ) return console.log(err);
+
+              var data = JSON.parse(payload)
+
+              if( 'res' == data.kind ) {
+                var call = callmap[data.id]
+                if( call ) {
+                  delete callmap[data.id]
+
+                  recv.destroy(jobid, function(err) {
+                    if( err ) return console.log(err);
+                    console.log('DEL '+jobid)
+                    process.nextTick( do_reserve )
+                  });
+
+                  call.done( data.err ? new Error(data.err) : null, data.res )
+                }
+                else {
+                  recv.release(jobid,100,0,function(err) {
+                    if( err ) return console.log(err);
+                  })
+                }
+              }
+            })
+          }
+          do_reserve()
+
+          do_send()
+        })
+      })
+      .on('error', function(err) {
+        console.log('CLIENT recv error '+err)
+      })
+      .on('close', function() {
+        console.log('CLIENT recv close')
+      })
+      .connect()
+
+
+
+    function do_send() {
+      var send = new fivebeans.client();
+
+      send
+        .on('connect', function() {
+          console.log('CLIENT send connect')
+
+          send.use(options.msgprefix+'in', function(err, numwatched) {
+            if( err ) return console.log(err);
+
+            var outclient = function( args, done ) {
+              var outmsg = {
+                id:   nid(),
+                kind: 'act',
+                act:  args
+              }
+              var outstr = JSON.stringify(outmsg)
+              console.log('SEND:'+outstr)
+            
+              callmap[outmsg.id] = {done:done}
+
+
+              send.put(100,0,111,outstr, function(err,outjobid){
+                if( err ) return console.log(err);
+                console.log( 'PUT '+outjobid+' '+outstr)
+              })
+            }
+
+            seneca.log.info('client', 'queue', args.host, args.port, seneca.toString())
+            done(null,outclient)
+          })
+        })
+        .on('error', function(err) {
+          console.log('CLIENT send error '+err)
+        })
+        .on('close', function() {
+          console.log('CLIENT send close')
+        })
+        .connect()
+    }
+    
   }
 
 
