@@ -136,7 +136,7 @@ module.exports = function( options ) {
     var seneca = this
 
     var listen_config = parseConfig(args)
-    var listen_args = _.omit(_.extend({},options[listen_config.type],args,listen_config,{role:plugin,hook:'listen'}),'cmd') 
+    var listen_args = _.omit(_.extend({},options[listen_config.type],listen_config,{role:plugin,hook:'listen'}),'cmd') 
 
     seneca.act( listen_args,done)
   }
@@ -146,7 +146,7 @@ module.exports = function( options ) {
     var seneca = this
 
     var client_config  = parseConfig(args)
-    var client_args = _.omit(_.extend({},options[client_config.type],args,client_config,{role:plugin,hook:'client'}),'cmd')
+    var client_args = _.omit(_.extend({},options[client_config.type],client_config,{role:plugin,hook:'client'}),'cmd')
 
     seneca.act( client_args, done )
   }
@@ -176,7 +176,8 @@ module.exports = function( options ) {
           req.body = _.extend(0<buf.length?JSON.parse(buf):{},req.query||{})
 
           next();
-        } catch (err){
+        } 
+        catch (err){
           err.body = buf
           err.status = 400
           next(err)
@@ -185,22 +186,44 @@ module.exports = function( options ) {
     })
 
     
-    app.use( function( req, res, next ){
-      if( 0 !== req.url.indexOf(args.path) ) return next();
-
-      var input = handle_entity( req.body )
-      seneca.act( input, function( err, out ){
-        if( err ) return next(err);
-        
-        var outjson = _.isUndefined(out) ? '{}' : JSON.stringify(out)
-
-        res.writeHead(200,{
+    function handle_error(e,res) {
+      if( e.seneca ) {
+        e.seneca.message = e.message
+        var outjson = JSON.stringify(e.seneca)
+        res.writeHead(400,{
           'Content-Type':   'application/json',
           'Cache-Control':  'private, max-age=0, no-cache, no-store',
           'Content-Length': buffer.Buffer.byteLength(outjson) 
         })
         res.end( outjson )
-      })
+      } 
+      else {
+        res.writeHead(500)
+        res.end( e.message )
+      }
+    }
+
+    app.use( function( req, res, next ){
+      if( 0 !== req.url.indexOf(args.path) ) return next();
+
+      try {
+        var input = handle_entity( req.body )
+        seneca.act( input, function( err, out ){
+          if( err ) return handle_error(err,res);
+          
+          var outjson = _.isUndefined(out) ? '{}' : JSON.stringify(out)
+
+          res.writeHead(200,{
+            'Content-Type':   'application/json',
+            'Cache-Control':  'private, max-age=0, no-cache, no-store',
+            'Content-Length': buffer.Buffer.byteLength(outjson) 
+          })
+          res.end( outjson )
+        })
+      }
+      catch(e) {
+        handle_error(err,res);
+      }
     })
 
     seneca.log.info('listen', args.host, args.port, args.path, seneca.toString())
@@ -222,8 +245,18 @@ module.exports = function( options ) {
         json:args
       }
       request.post(reqopts,function(err,response){
-        var out = handle_entity( response&&response.body )
-        done(err, out)
+        if(err) return done(err);
+
+        if( 200 != response.statusCode ) {
+          var errdesc = response.body
+          var localerr = new Error(errdesc.message)
+          localerr.seneca = errdesc
+          done(localerr)
+        }
+        else {
+          var out = handle_entity( response.body )
+          done(null, out)
+        }
       })
     }
 
@@ -231,6 +264,7 @@ module.exports = function( options ) {
     if( args.pin ) {
       var pins = _.isArray(args.pin) ? args.pin : [args.pin]
       _.each( seneca.findpins( pins ), function(pin){
+        seneca.log.debug('client', 'direct', 'pin', pin)
         seneca.add(pin,client)
       })
     }
@@ -348,16 +382,11 @@ module.exports = function( options ) {
 
 
     function do_listen(mark) {
-      console.log('LISTEN MARK '+mark)
-
       var send = new fivebeans.client();
       send
         .on('connect', function() {
-          console.log('LISTEN send connect')
-
           send.use(options.msgprefix+'_'+mark+'_out', function(err, numwatched) {
             if( err ) return seneca.log.error('A:'+err);
-            console.log('send use '+numwatched)
           })
         })
         .on('error', function(err) { seneca.log.error('LISTEN send error '+err) })
@@ -367,12 +396,8 @@ module.exports = function( options ) {
       var recv = new fivebeans.client();
       recv
         .on('connect', function() {
-          console.log('LISTEN recv connect')
-
           recv.watch(options.msgprefix+'_'+mark+'_in', function(err, numwatched) {
             if( err ) return seneca.log.error('A:'+err);
-
-            console.log('recv watch '+numwatched)
 
             function do_reserve() {
               recv.reserve(function(err, jobid, payload) {
@@ -380,10 +405,8 @@ module.exports = function( options ) {
 
                 try {
                   var data = JSON.parse(payload)
-                  console.dir(data)
                 }
                 catch( je ) {
-                  console.log.error(je)
                   return process.nextTick(do_reserve)
                 }
                 
@@ -400,12 +423,9 @@ module.exports = function( options ) {
                     send.put(100,0,args.alivetime,outstr, function(err,outjobid){
                       if( err ) return seneca.log.error(err);
 
-                      console.log('PUT '+outjobid+' '+outstr)
-
                       recv.destroy(jobid, function(err) {
                         if( err ) return seneca.log.error(err);
 
-                        console.log('DEL '+jobid)
                         process.nextTick(do_reserve)
                       });
                     })
@@ -443,23 +463,17 @@ module.exports = function( options ) {
 
 
     function do_client( mark, register ) {
-      console.log('CLIENT MARK '+mark )
-
       var seenmap = {}
       var callmap = {}
       var recv    = new fivebeans.client();
 
       function do_connect() {
-        console.log('CLIENT recv connect '+mark)
-
         recv.watch(options.msgprefix+'_'+mark+'_out', function(err, numwatched) {
           if( err ) return seneca.log.error(err);
 
           function do_reserve() {
             recv.reserve(function(err, jobid, payload) {
               if( err ) return seneca.log.error(err);
-
-              console.log('RES mark='+mark+' payload='+payload)
 
               try {
                 var data = JSON.parse(payload)
@@ -472,16 +486,12 @@ module.exports = function( options ) {
               if( 'res' == data.kind ) {
                 var call = callmap[data.id]
 
-                console.log('call:'+call)
-                console.dir(callmap)
-
                 if( call ) {
                   delete callmap[data.id]
 
                   recv.destroy(jobid, function(err) {
                     if( err ) return seneca.log.error(err);
 
-                    console.log('DEL '+jobid)
                     process.nextTick( do_reserve )
                   })
 
@@ -505,7 +515,6 @@ module.exports = function( options ) {
               }
 
               function do_release(jobid) {
-                console.log('do_release '+jobid)
                 recv.release(jobid,100,0,function(err) {
                   if( err ) return seneca.log.error(err);
                   process.nextTick( do_reserve )
@@ -529,8 +538,6 @@ module.exports = function( options ) {
 
         send
           .on('connect', function() {
-            console.log('CLIENT send connect '+mark)
-
             send.use(options.msgprefix+'_'+mark+'_in', function(err, numwatched) {
               if( err ) return seneca.log.error(err);
 
@@ -541,14 +548,11 @@ module.exports = function( options ) {
                   act:  args
                 }
                 var outstr = JSON.stringify(outmsg)
-                console.log('SEND:'+outstr)
-                
                 callmap[outmsg.id] = {done:done}
 
 
                 send.put(100,0,111,outstr, function(err,outjobid){
                   if( err ) return seneca.log.error(err);
-                  console.log( 'PUT '+outjobid+' '+outstr)
                 })
               }
 
@@ -557,10 +561,8 @@ module.exports = function( options ) {
             })
           })
           .on('error', function(err) {
-            console.log('CLIENT send error '+err)
           })
           .on('close', function() {
-            console.log('CLIENT send close')
           })
           .connect()
       }
@@ -591,21 +593,17 @@ module.exports = function( options ) {
 
     function make_register(pin) {
       return function(err,client_call) {
-        console.log('mk_reg '+util.inspect(pin))
         delete pins_todo[util.inspect(pin)]
 
         if( err ) return seneca.log.error(err);
         clientpatrun.add(pin,client_call)
 
-        console.log(util.inspect(pin)+':'+clientpatrun)
-        
         if( 0 == _.keys(pins_todo).length ) {
           done( null, clientrouter )
         }
       }
     }
 
-    console.log('PIN:'+args.pin)
     if( args.pin ) {
       var pins = _.isArray(args.pin) ? args.pin : [args.pin]
       _.each( seneca.findpins( pins ), function(pin){
