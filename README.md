@@ -16,9 +16,9 @@ You can provide your own transport mechanisms by overriding the transport action
 If you're using this module, feel free to contact me on Twitter if you
 have any questions! :) [@rjrodger](http://twitter.com/rjrodger)
 
-Current Version: 0.1.0
+Current Version: 0.1.1
 
-Tested on: Node 0.10.6, Seneca 0.5.14
+Tested on: Node 0.10.24, Seneca 0.5.15
 
 [![Build Status](https://travis-ci.org/rjrodger/seneca-transport.png?branch=master)](https://travis-ci.org/rjrodger/seneca-transport)
 
@@ -30,8 +30,8 @@ First, define a service (this is just a Seneca plugin):
 
 ```JavaScript
 module.exports = function() {
-  this.add( 'foo:1', function(args,done){done(null,'1-'+args.bar)} )
-  this.add( 'foo:2', function(args,done){done(null,'2-'+args.bar)} )
+  this.add( 'foo:1', function(args,done){done(null,{s:'1-'+args.bar})} )
+  this.add( 'foo:2', function(args,done){done(null,{s:'2-'+args.bar})} )
 }
 ```
 
@@ -47,7 +47,7 @@ And talk to it:
 
 ```JavaScript
 require('seneca')()
-  .proxy()
+  .listen()
   .ready(function(){
     this.act('foo:1,bar:A',function(err,out){console.log(out)})
     this.act('foo:2,bar:B',function(err,out){console.log(out)})
