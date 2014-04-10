@@ -37,10 +37,12 @@ module.exports = function( options ) {
     pubsub: {
       type:  'pubsub',
       port:  6379,
-      host:  '127.0.0.1'
+      host:  'localhost'
     },
     queue: {
-      alivetime: 111
+      alivetime: 111,
+      port:  11300,
+      host:  'localhost'
     }
   },options)
   
@@ -382,7 +384,7 @@ module.exports = function( options ) {
 
 
     function do_listen(mark) {
-      var send = new fivebeans.client();
+      var send = new fivebeans.client(args.host,args.port);
       send
         .on('connect', function() {
           send.use(options.msgprefix+'_'+mark+'_out', function(err, numwatched) {
@@ -393,7 +395,7 @@ module.exports = function( options ) {
         .on('close', function() { seneca.log.info('LISTEN send close') })
         .connect()
 
-      var recv = new fivebeans.client();
+      var recv = new fivebeans.client(args.host,args.port);
       recv
         .on('connect', function() {
           recv.watch(options.msgprefix+'_'+mark+'_in', function(err, numwatched) {
@@ -465,7 +467,7 @@ module.exports = function( options ) {
     function do_client( mark, register ) {
       var seenmap = {}
       var callmap = {}
-      var recv    = new fivebeans.client();
+      var recv    = new fivebeans.client(args.host,args.port);
 
       function do_connect() {
         recv.watch(options.msgprefix+'_'+mark+'_out', function(err, numwatched) {
@@ -534,7 +536,7 @@ module.exports = function( options ) {
 
 
       function do_send() {
-        var send = new fivebeans.client();
+        var send = new fivebeans.client(args.host,args.port);
 
         send
           .on('connect', function() {
@@ -545,7 +547,7 @@ module.exports = function( options ) {
                 var outmsg = {
                   id:   nid(),
                   kind: 'act',
-                  act:  args
+                  act:  seneca.util.clean(args)
                 }
                 var outstr = JSON.stringify(outmsg)
                 callmap[outmsg.id] = {done:done}
@@ -604,6 +606,7 @@ module.exports = function( options ) {
       }
     }
 
+    // TODO: support args.pins
     if( args.pin ) {
       var pins = _.isArray(args.pin) ? args.pin : [args.pin]
       _.each( seneca.findpins( pins ), function(pin){
