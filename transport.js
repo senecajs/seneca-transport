@@ -22,7 +22,7 @@ var nid = require('nid')
 module.exports = function( options ) {
   var seneca = this
   var plugin = 'transport'
-  
+
 
   options = seneca.util.deepextend({
     msgprefix:'seneca_',
@@ -45,7 +45,7 @@ module.exports = function( options ) {
       host:  'localhost'
     }
   },options)
-  
+
 
 
 
@@ -106,7 +106,7 @@ module.exports = function( options ) {
     out.type = null == out.type ? base.type : out.type
 
     if( 'direct' == out.type ) {
-      out.port = null == out.port ? base.port : out.port 
+      out.port = null == out.port ? base.port : out.port
       out.host = null == out.host ? base.host : out.host
       out.path = null == out.path ? base.path : out.path
     }
@@ -118,7 +118,7 @@ module.exports = function( options ) {
   // only support first level
   function handle_entity( raw ) {
     raw = _.isObject( raw ) ? raw : {}
-    
+
     if( raw.entity$ ) {
       return seneca.make$( raw )
     }
@@ -133,12 +133,12 @@ module.exports = function( options ) {
   }
 
 
-  
+
   function cmd_listen( args, done ) {
     var seneca = this
 
     var listen_config = parseConfig(args)
-    var listen_args = _.omit(_.extend({},options[listen_config.type],listen_config,{role:plugin,hook:'listen'}),'cmd') 
+    var listen_args = _.omit(_.extend({},options[listen_config.type],listen_config,{role:plugin,hook:'listen'}),'cmd')
 
     seneca.act( listen_args,done)
   }
@@ -178,7 +178,7 @@ module.exports = function( options ) {
           req.body = _.extend(0<buf.length?JSON.parse(buf):{},req.query||{})
 
           next();
-        } 
+        }
         catch (err){
           err.body = buf
           err.status = 400
@@ -187,7 +187,7 @@ module.exports = function( options ) {
       })
     })
 
-    
+
     function handle_error(e,res) {
       if( e.seneca ) {
         e.seneca.message = e.message
@@ -195,10 +195,10 @@ module.exports = function( options ) {
         res.writeHead(400,{
           'Content-Type':   'application/json',
           'Cache-Control':  'private, max-age=0, no-cache, no-store',
-          'Content-Length': buffer.Buffer.byteLength(outjson) 
+          'Content-Length': buffer.Buffer.byteLength(outjson)
         })
         res.end( outjson )
-      } 
+      }
       else {
         res.writeHead(500)
         res.end( e.message )
@@ -210,15 +210,18 @@ module.exports = function( options ) {
 
       try {
         var input = handle_entity( req.body )
-        seneca.act( input, function( err, out ){
+
+        var s = resumeSenecaContext(seneca, input)
+
+        s.act( input, function( err, out ){
           if( err ) return handle_error(err,res);
-          
+
           var outjson = _.isUndefined(out) ? '{}' : JSON.stringify(out)
 
           res.writeHead(200,{
             'Content-Type':   'application/json',
             'Cache-Control':  'private, max-age=0, no-cache, no-store',
-            'Content-Length': buffer.Buffer.byteLength(outjson) 
+            'Content-Length': buffer.Buffer.byteLength(outjson)
           })
           res.end( outjson )
         })
@@ -274,10 +277,20 @@ module.exports = function( options ) {
     seneca.log.info('client', 'direct', args.host, args.port, args.path, fullurl, seneca.toString())
 
     done(null,client)
-  }  
+  }
+
+  function resumeSenecaContext(globalSeneca, args) {
+    var augmentedParams = {}
+    for(var attr in args) {
+      if(~attr.indexOf('$')) {
+        augmentedParams[attr] = args[attr]
+      }
+    }
+    return globalSeneca.delegate(augmentedParams)
+  }
 
 
-  
+
 
 
   function hook_listen_pubsub( args, done ) {
@@ -290,7 +303,10 @@ module.exports = function( options ) {
       var data = JSON.parse(msgstr)
 
       if( 'act' == data.kind ) {
-        seneca.act(data.act,function(err,res){
+
+        var s = resumeSenecaContext(seneca, data.act)
+
+        s.act(data.act,function(err,res){
           var outmsg = {
             kind:'res',
             id:data.id,
@@ -312,7 +328,7 @@ module.exports = function( options ) {
     }
 
     redis_in.subscribe(options.msgprefix+'all')
-    
+
     seneca.log.info('listen', args.host, args.port, seneca.toString())
     done()
   }
@@ -365,11 +381,11 @@ module.exports = function( options ) {
       _.each( seneca.findpins( pins ), function(pin){
         var pinstr = options.msgprefix+util.inspect(pin)
         seneca.add(pin,client)
-        redis_in.subscribe(pinstr)    
+        redis_in.subscribe(pinstr)
       })
     }
 
-    redis_in.subscribe(options.msgprefix+'all')    
+    redis_in.subscribe(options.msgprefix+'all')
 
     seneca.log.info('client', 'pubsub', args.host, args.port, seneca.toString())
 
@@ -411,9 +427,12 @@ module.exports = function( options ) {
                 catch( je ) {
                   return process.nextTick(do_reserve)
                 }
-                
+
                 if( 'act' == data.kind ) {
-                  seneca.act(data.act,function(err,res){
+
+                  var s = resumeSenecaContext(seneca, data.act)
+
+                  s.act(data.act,function(err,res){
                     var outmsg = {
                       kind:'res',
                       id:data.id,
@@ -446,7 +465,7 @@ module.exports = function( options ) {
         .connect()
     }
 
-    
+
     if( args.pin ) {
       var pins = _.isArray(args.pin) ? args.pin : [args.pin]
       _.each( seneca.findpins( pins ), function(pin){
@@ -579,12 +598,12 @@ module.exports = function( options ) {
     function clientrouter( args, done ) {
       var client_call = clientpatrun.find(args)
       if( client_call ) {
-        client_call( args, done ) 
+        client_call( args, done )
       }
       else {
         client_call = clientpatrun.find({any:true})
         if( client_call ) {
-          client_call( args, done ) 
+          client_call( args, done )
         }
         else {
           seneca.log.error({code:'args-not-found',args:args})
