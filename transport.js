@@ -429,7 +429,10 @@ module.exports = function( options ) {
                 }
 
                 if( 'act' == data.kind ) {
-                  seneca.act(data.act,function(err,res){
+
+                  var s = resumeSenecaContext(seneca, data.act)
+
+                  s.act(data.act,function(err,res){
                     var outmsg = {
                       kind:'res',
                       id:data.id,
