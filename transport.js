@@ -286,7 +286,7 @@ module.exports = function( options ) {
         augmentedParams[attr] = args[attr]
       }
     }
-    var s = globalSeneca.delegate(augmentedParams)
+    return globalSeneca.delegate(augmentedParams)
   }
 
 
