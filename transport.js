@@ -281,9 +281,9 @@ module.exports = function( options ) {
 
   function resumeSenecaContext(globalSeneca, args) {
     var augmentedParams = {}
-    for(var attr in data.act) {
+    for(var attr in args) {
       if(~attr.indexOf('$')) {
-        augmentedParams[attr] = data.act[attr]
+        augmentedParams[attr] = args[attr]
       }
     }
     var s = globalSeneca.delegate(augmentedParams)
