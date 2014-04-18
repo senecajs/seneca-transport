@@ -56,7 +56,7 @@ module.exports = function( options ) {
     },
 
   },options)
-  
+
 
 
   // Pending callbacks for all transports.
@@ -521,6 +521,10 @@ module.exports = function( options ) {
         })
       })
     }
+
+    seneca.log.info('client', 'direct', args.host, args.port, args.path, fullurl, seneca.toString())
+
+    done(null,client)
   }  
 
 
