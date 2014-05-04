@@ -224,7 +224,7 @@ module.exports = function( options ) {
         })
       }
       catch(e) {
-        handle_error(err,res);
+        handle_error(e,res);
       }
     })
 
