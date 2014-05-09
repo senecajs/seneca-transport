@@ -223,7 +223,7 @@ module.exports = function( options ) {
           res.end( outjson )
         })
       }
-      catch(e) {
+      catch(err) {
         handle_error(err,res);
       }
     })
