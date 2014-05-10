@@ -6,7 +6,7 @@ var buffer = require('buffer')
 var util   = require('util')
 
 var _           = require('underscore')
-var async       = require('async')
+//var async       = require('async')
 var patrun      = require('patrun')
 var connect     = require('connect')
 var request     = require('request')
@@ -387,8 +387,10 @@ module.exports = function( options ) {
       var send = new fivebeans.client(args.host,args.port);
       send
         .on('connect', function() {
-          send.use(options.msgprefix+'_'+mark+'_out', function(err, numwatched) {
-            if( err ) return seneca.log.error('A:'+err);
+          var topic_out = options.msgprefix+'_'+mark+'_out'
+          //console.log('topic_out:'+topic_out)
+          send.use(topic_out, function(err, numwatched) {
+            if( err ) return seneca.log.error(err);
           })
         })
         .on('error', function(err) { seneca.log.error('LISTEN send error '+err) })
@@ -398,12 +400,16 @@ module.exports = function( options ) {
       var recv = new fivebeans.client(args.host,args.port);
       recv
         .on('connect', function() {
-          recv.watch(options.msgprefix+'_'+mark+'_in', function(err, numwatched) {
-            if( err ) return seneca.log.error('A:'+err);
+          var topic_in = options.msgprefix+'_'+mark+'_in'
+          //console.log('topic_in:'+topic_in)
+          recv.watch(topic_in, function(err, numwatched) {
+            if( err ) return seneca.log.error(err);
 
             function do_reserve() {
               recv.reserve(function(err, jobid, payload) {
                 if( err ) return console.log(err);
+
+                //console.log('REQ:'+payload)
 
                 try {
                   var data = JSON.parse(payload)
@@ -422,6 +428,7 @@ module.exports = function( options ) {
                     }
                     var outstr = JSON.stringify(outmsg)
 
+                    //console.log('RES:'+outstr)
                     send.put(100,0,args.alivetime,outstr, function(err,outjobid){
                       if( err ) return seneca.log.error(err);
 
@@ -437,8 +444,6 @@ module.exports = function( options ) {
             }
             do_reserve()
 
-            seneca.log.info('listen', 'queue', args.host, args.port, seneca.toString())
-            done()
           })
         })
         .on('error', function(err) { seneca.log.error(err+' LISTEN recv error') })
@@ -454,8 +459,11 @@ module.exports = function( options ) {
         do_listen(pinmark)
       })
     }
+    else do_listen('any')
 
-    do_listen('any')
+
+    seneca.log.info('listen', 'queue', args.host, args.port, seneca.toString())
+    done()
   }
 
 
@@ -470,11 +478,14 @@ module.exports = function( options ) {
       var recv    = new fivebeans.client(args.host,args.port);
 
       function do_connect() {
-        recv.watch(options.msgprefix+'_'+mark+'_out', function(err, numwatched) {
+        var topic_recv = options.msgprefix+'_'+mark+'_out'
+        //console.log('topic_recv:'+topic_recv)
+        recv.watch(topic_recv, function(err, numwatched) {
           if( err ) return seneca.log.error(err);
 
           function do_reserve() {
             recv.reserve(function(err, jobid, payload) {
+              //console.log('RECV: '+payload)
               if( err ) return seneca.log.error(err);
 
               try {
@@ -502,7 +513,7 @@ module.exports = function( options ) {
                 else {
                   // FIX: memleak!
                   if( seenmap[jobid] ) {
-                    setTimeout( function(){do_release(jobid)}, 11 )
+                    setTimeout( function(){do_release(jobid)}, 111 )
                   }
                   else {
                     seenmap[jobid]=new Date().getTime()
@@ -540,7 +551,9 @@ module.exports = function( options ) {
 
         send
           .on('connect', function() {
-            send.use(options.msgprefix+'_'+mark+'_in', function(err, numwatched) {
+            var topic_send = options.msgprefix+'_'+mark+'_in'
+            //console.log('topic_send: '+topic_send)
+            send.use(topic_send, function(err, numwatched) {
               if( err ) return seneca.log.error(err);
 
               var outclient = function( args, done ) {
@@ -552,7 +565,7 @@ module.exports = function( options ) {
                 var outstr = JSON.stringify(outmsg)
                 callmap[outmsg.id] = {done:done}
 
-
+                //console.log('SEND:'+outstr)
                 send.put(100,0,111,outstr, function(err,outjobid){
                   if( err ) return seneca.log.error(err);
                 })
