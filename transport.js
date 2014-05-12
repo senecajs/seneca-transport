@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 Richard Rodger, MIT License */
+/* Copyright (c) 2013-2014 Richard Rodger, MIT License */
 "use strict";
 
 
@@ -6,8 +6,8 @@ var buffer = require('buffer')
 var util   = require('util')
 
 var _           = require('underscore')
-//var async       = require('async')
 var patrun      = require('patrun')
+var gex         = require('gex')
 var connect     = require('connect')
 var request     = require('request')
 var redis       = require('redis')
@@ -65,72 +65,6 @@ module.exports = function( options ) {
 
 
 
-  function parseConfig( args ) {
-    var out = {}
-
-    var config = args.config || args
-    var base = options.direct
-
-    if( _.isArray( config ) ) {
-      var arglen = config.length
-
-      if( 0 === arglen ) {
-        out.port = base.port
-        out.host = base.host
-        out.path = base.path
-      }
-      else if( 1 === arglen ) {
-        if( _.isObject( config[0] ) ) {
-          out = config[0]
-        }
-        else {
-          out.port = parseInt(config[0])
-          out.host = base.host
-          out.path = base.path
-        }
-      }
-      else if( 2 === arglen ) {
-        out.port = parseInt(config[0])
-        out.host = config[1]
-        out.path = base.path
-      }
-      else if( 3 === arglen ) {
-        out.port = parseInt(config[0])
-        out.host = config[1]
-        out.path = config[2]
-      }
-
-    }
-    else out = config;
-
-    out.type = null == out.type ? base.type : out.type
-
-    if( 'direct' == out.type ) {
-      out.port = null == out.port ? base.port : out.port 
-      out.host = null == out.host ? base.host : out.host
-      out.path = null == out.path ? base.path : out.path
-    }
-
-    return out
-  }
-
-
-  // only support first level
-  function handle_entity( raw ) {
-    raw = _.isObject( raw ) ? raw : {}
-    
-    if( raw.entity$ ) {
-      return seneca.make$( raw )
-    }
-    else {
-      _.each( raw, function(v,k){
-        if( _.isObject(v) && v.entity$ ) {
-          raw[k] = seneca.make$( v )
-        }
-      })
-      return raw
-    }
-  }
 
 
   
@@ -236,48 +170,55 @@ module.exports = function( options ) {
 
 
 
-  function hook_client_direct( args, done ) {
+  function hook_client_direct( args, clientdone ) {
     var seneca = this
 
     var fullurl = 'http://'+args.host+':'+args.port+args.path
 
-    var client = function( args, done ) {
-      var reqopts = {
-        url:fullurl,
-        json:args
+    var client = make_anyclient(make_send({},'any'))
+
+    var pins = resolve_pins(args)
+    if( pins ) {
+      var argspatrun = make_argspatrun(pins)
+
+      var sendmap = {}
+      var resolvesend  = make_resolvesend(sendmap,make_send)
+
+      client = make_pinclient( resolvesend, argspatrun )
+    }
+
+    seneca.log.info('client', 'direct', args.host, args.port, args.path, fullurl, pins||'any', seneca.toString())
+    clientdone(null,client)
+
+
+
+    function make_send( spec, topic ) {
+      seneca.log.debug('client', 'direct', 'send', spec, topic, args.host, args.port, args.path, fullurl, seneca.toString())
+      
+      return function( args, done ) {
+        var reqopts = {
+          url:fullurl,
+          json:args
+        }
+        request.post( reqopts, function(err,response) {
+          // TODO: need more info for this err
+          if(err) return done(err);
+
+          if( 200 != response.statusCode ) {
+            var errdesc = response.body
+            var localerr = new Error(errdesc.message)
+            localerr.seneca = errdesc
+            done(localerr)
+          }
+          else {
+            var out = handle_entity( response.body )
+            done(null, out)
+          }
+        })
       }
-      request.post(reqopts,function(err,response){
-        if(err) return done(err);
-
-        if( 200 != response.statusCode ) {
-          var errdesc = response.body
-          var localerr = new Error(errdesc.message)
-          localerr.seneca = errdesc
-          done(localerr)
-        }
-        else {
-          var out = handle_entity( response.body )
-          done(null, out)
-        }
-      })
     }
-
-
-    if( args.pin ) {
-      var pins = _.isArray(args.pin) ? args.pin : [args.pin]
-      _.each( seneca.findpins( pins ), function(pin){
-        seneca.log.debug('client', 'direct', 'pin', pin)
-        seneca.add(pin,client)
-      })
-    }
-
-    seneca.log.info('client', 'direct', args.host, args.port, args.path, fullurl, seneca.toString())
-
-    done(null,client)
   }  
 
-
-  
 
 
   function hook_listen_pubsub( args, done ) {
@@ -388,7 +329,6 @@ module.exports = function( options ) {
       send
         .on('connect', function() {
           var topic_out = options.msgprefix+'_'+mark+'_out'
-          //console.log('topic_out:'+topic_out)
           send.use(topic_out, function(err, numwatched) {
             if( err ) return seneca.log.error(err);
           })
@@ -401,15 +341,12 @@ module.exports = function( options ) {
       recv
         .on('connect', function() {
           var topic_in = options.msgprefix+'_'+mark+'_in'
-          //console.log('topic_in:'+topic_in)
           recv.watch(topic_in, function(err, numwatched) {
             if( err ) return seneca.log.error(err);
 
             function do_reserve() {
               recv.reserve(function(err, jobid, payload) {
                 if( err ) return console.log(err);
-
-                //console.log('REQ:'+payload)
 
                 try {
                   var data = JSON.parse(payload)
@@ -428,7 +365,6 @@ module.exports = function( options ) {
                     }
                     var outstr = JSON.stringify(outmsg)
 
-                    //console.log('RES:'+outstr)
                     send.put(100,0,args.alivetime,outstr, function(err,outjobid){
                       if( err ) return seneca.log.error(err);
 
@@ -479,13 +415,11 @@ module.exports = function( options ) {
 
       function do_connect() {
         var topic_recv = options.msgprefix+'_'+mark+'_out'
-        //console.log('topic_recv:'+topic_recv)
         recv.watch(topic_recv, function(err, numwatched) {
           if( err ) return seneca.log.error(err);
 
           function do_reserve() {
             recv.reserve(function(err, jobid, payload) {
-              //console.log('RECV: '+payload)
               if( err ) return seneca.log.error(err);
 
               try {
@@ -552,7 +486,6 @@ module.exports = function( options ) {
         send
           .on('connect', function() {
             var topic_send = options.msgprefix+'_'+mark+'_in'
-            //console.log('topic_send: '+topic_send)
             send.use(topic_send, function(err, numwatched) {
               if( err ) return seneca.log.error(err);
 
@@ -565,7 +498,6 @@ module.exports = function( options ) {
                 var outstr = JSON.stringify(outmsg)
                 callmap[outmsg.id] = {done:done}
 
-                //console.log('SEND:'+outstr)
                 send.put(100,0,111,outstr, function(err,outjobid){
                   if( err ) return seneca.log.error(err);
                 })
@@ -635,6 +567,181 @@ module.exports = function( options ) {
   }
 
 
+
+
+  function parseConfig( args ) {
+    var out = {}
+
+    var config = args.config || args
+    var base = options.direct
+
+    if( _.isArray( config ) ) {
+      var arglen = config.length
+
+      if( 0 === arglen ) {
+        out.port = base.port
+        out.host = base.host
+        out.path = base.path
+      }
+      else if( 1 === arglen ) {
+        if( _.isObject( config[0] ) ) {
+          out = config[0]
+        }
+        else {
+          out.port = parseInt(config[0])
+          out.host = base.host
+          out.path = base.path
+        }
+      }
+      else if( 2 === arglen ) {
+        out.port = parseInt(config[0])
+        out.host = config[1]
+        out.path = base.path
+      }
+      else if( 3 === arglen ) {
+        out.port = parseInt(config[0])
+        out.host = config[1]
+        out.path = config[2]
+      }
+
+    }
+    else out = config;
+
+    out.type = null == out.type ? base.type : out.type
+
+    if( 'direct' == out.type ) {
+      out.port = null == out.port ? base.port : out.port 
+      out.host = null == out.host ? base.host : out.host
+      out.path = null == out.path ? base.path : out.path
+    }
+
+    return out
+  }
+
+
+  // only support first level
+  // interim measure - deal with this in core seneca act api
+  // allow user to specify operations on result
+  function handle_entity( raw ) {
+    raw = _.isObject( raw ) ? raw : {}
+    
+    if( raw.entity$ ) {
+      return seneca.make$( raw )
+    }
+    else {
+      _.each( raw, function(v,k){
+        if( _.isObject(v) && v.entity$ ) {
+          raw[k] = seneca.make$( v )
+        }
+      })
+      return raw
+    }
+  }
+
+
+
+  function resolve_pins( args ) {
+    var pins = args.pin || args.pins
+    if( pins ) {
+      pins = _.isArray(pins) ? pins : [pins]
+    }
+    return pins
+  }
+
+
+
+  // can handle glob expressions :)
+  function make_argspatrun( pins ) {
+    var argspatrun = patrun(function(pat,data){
+      var gexers = {}
+      _.each(pat, function(v,k){
+        if( _.isString(v) && ~v.indexOf('*') ) {
+          delete pat[k]
+          gexers[k] = gex(v)
+        }
+      })
+
+      // handle previous patterns that match this pattern
+      var prev = this.list(pat)
+      var prevfind = prev[0] && prev[0].find
+      var prevdata = prev[0] && this.findexact(prev[0].match)
+
+      return function(args,data){
+        var out = data
+        _.each(gexers,function(g,k){
+          var v = null==args[k]?'':args[k]
+          if( null == g.on( v ) ) { out = null }
+        })
+
+        if( prevfind && null == out ) {
+          out = prevfind.call(this,args,prevdata)
+        }
+
+        return out
+      }
+    })
+
+    _.each( pins, function( pin ){
+      var spec = { pin:pin }
+      argspatrun.add(pin,spec)
+    })
+
+    return argspatrun
+  }
+
+
+
+  function resolvetopic( spec, args ) {
+    if( !spec.pin ) return function() { return 'any' }
+
+    var topicpin = _.clone(spec.pin)
+
+    var topicargs = {}
+    _.each(topicpin, function(v,k){ topicargs[k]=args[k] })
+
+    return util.inspect(topicargs)
+    //.replace(/=/,'__')
+      .replace(/[^\w\d]/g,'_')
+  }
+
+
+  function make_resolvesend( sendmap, make_send ) {
+    return function( spec, args ) {
+      var topic = resolvetopic(spec,args)
+      var send = sendmap[topic]
+      if( send ) return send;
+
+      return sendmap[topic] = make_send(spec,topic)
+    }
+  }
+
+
+
+  function make_anyclient( send ) {
+    return {
+      match: function( args ) { 
+        return !this.has(args)
+      },
+      send: function( args, done ) {
+        send(args,done)
+      },
+    }
+  }
+
+
+  function make_pinclient( resolvesend, argspatrun ) {  
+    return {
+      match: function( args ) {
+        var match = !!argspatrun.find(args)
+        return match
+      },
+      send: function( args, done ) {
+        var spec = argspatrun.find(args)
+        var send = resolvesend(spec,args)
+        send(args,done)
+      }
+    }
+  }
 
   return {
     name: plugin,
