@@ -4,36 +4,47 @@
 
 var buffer = require('buffer')
 var util   = require('util')
+var net    = require('net')
+var stream = require('stream')
+
 
 var _           = require('underscore')
 var patrun      = require('patrun')
 var gex         = require('gex')
 var connect     = require('connect')
 var request     = require('request')
-var redis       = require('redis')
-var fivebeans   = require('fivebeans')
-
-
-var nid = require('nid')
-
+var nid         = require('nid')
+var es          = require('event-stream')
 
 
 
 module.exports = function( options ) {
   var seneca = this
   var plugin = 'transport'
-  
+
+  var so = seneca.options()
+
 
   options = seneca.util.deepextend({
     msgprefix:'seneca_',
-    direct: {
-      type:   'direct',
-      host:   'localhost',
-      port:   10101,
-      path:   '/act',
-      limit:  '11mb',
-      timeout: 22222
+
+    tcp: {
+      type:     'tcp',
+      host:     'localhost',
+      port:     10101,
+      timeout:  so.timeout ? so.timeout-555 :  22222
     },
+
+    web: {
+      type:     'web',
+      host:     'localhost',
+      port:     10201,
+      path:     '/act',
+      protocol: 'http',
+      timeout:  so.timeout ? so.timeout-555 :  22222
+    },
+
+/*
     pubsub: {
       type:  'pubsub',
       port:  6379,
@@ -44,6 +55,8 @@ module.exports = function( options ) {
       port:  11300,
       host:  'localhost'
     }
+*/
+
   },options)
   
 
@@ -53,16 +66,20 @@ module.exports = function( options ) {
   seneca.add({role:plugin,cmd:'listen'}, cmd_listen)
   seneca.add({role:plugin,cmd:'client'}, cmd_client)
 
-  seneca.add({role:plugin,hook:'listen',type:'direct'}, hook_listen_direct)
-  seneca.add({role:plugin,hook:'client',type:'direct'}, hook_client_direct)
+  seneca.add({role:plugin,hook:'listen',type:'tcp'}, hook_listen_tcp)
+  seneca.add({role:plugin,hook:'client',type:'tcp'}, hook_client_tcp)
 
+  seneca.add({role:plugin,hook:'listen',type:'web'}, hook_listen_web)
+  seneca.add({role:plugin,hook:'client',type:'web'}, hook_client_web)
+
+
+/*
   seneca.add({role:plugin,hook:'listen',type:'pubsub'}, hook_listen_pubsub)
   seneca.add({role:plugin,hook:'client',type:'pubsub'}, hook_client_pubsub)
 
   seneca.add({role:plugin,hook:'listen',type:'queue'}, hook_listen_queue)
   seneca.add({role:plugin,hook:'client',type:'queue'}, hook_client_queue)
-
-
+*/
 
 
 
@@ -74,8 +91,9 @@ module.exports = function( options ) {
     var listen_config = parseConfig(args)
     var listen_args = _.omit(_.extend({},options[listen_config.type],listen_config,{role:plugin,hook:'listen'}),'cmd') 
 
-    seneca.act( listen_args,done)
+    seneca.act( listen_args, done )
   }
+
 
 
   function cmd_client( args, done ) {
@@ -89,7 +107,124 @@ module.exports = function( options ) {
 
 
 
-  function hook_listen_direct( args, done ) {
+  function hook_listen_tcp( args, done ) {
+    var seneca = this
+
+    var msger = new stream.Duplex({objectMode:true})
+    msger._read = function(){}
+    msger._write = function(data,end,done) {
+      var instance = this
+      console.log('LISTEN IN',data)
+
+      if( 'act' == data.kind ) {
+        var input = handle_entity( data.act )
+        seneca.act( input, function( err, out ){
+          var output = {
+            id:data.id,
+            kind:'res',
+            res:out,
+          }
+          if( err ) {
+            output.error = err
+          }
+
+          console.log('LISTEN OUT',output)
+          instance.push(output)        
+        })
+      }
+    }
+
+    var listen = net.createServer(function(connection) {
+      seneca.log.info('listen', args.type, args.host, args.port, args.path, seneca.toString())
+      connection
+        .pipe(es.parse())
+        .pipe(msger)
+        .pipe(es.stringify())
+        .pipe(connection)
+    })
+    listen.listen( args.port, args.host )
+
+    done(null,listen)
+  }
+
+
+
+  function hook_client_tcp( args, clientdone ) {
+    var seneca = this
+
+    var client = make_anyclient(make_send({},'any'))
+
+
+    var pins = resolve_pins(args)
+    if( pins ) {
+      var argspatrun  = make_argspatrun(pins)
+      var resolvesend = make_resolvesend({},make_send)
+
+      client = make_pinclient( resolvesend, argspatrun )
+    }
+
+    seneca.log.info('client', args.type, args.host, args.port, pins||'any', seneca.toString())
+    clientdone(null,client)
+
+
+
+    function make_send( spec, topic ) {
+      var callmap = {}
+
+
+      var msger = new stream.Duplex({objectMode:true})
+      msger._read = function(){}
+      msger._write = function(data,end,done) {
+        console.log('CLIENT RECV',data)
+
+        if( 'res' == data.kind ) {
+          var cb = callmap[data.id]
+          if( cb ) {
+            cb( data.error ? data.error : null, handle_entity(data.res) )
+          }
+        }
+
+        done()
+      }
+
+
+      var client = net.connect({port: args.port, host:args.host})
+
+      client
+        .pipe(es.parse())
+        .pipe( msger )
+        .pipe(es.stringify())
+        .pipe(client)
+
+      client.on('error', function(){
+        console.log(arguments)
+      })
+
+      client.on('connect', function(){
+        seneca.log.debug('client', args.type, 'send', spec, topic, args.host, args.port, seneca.toString())
+      })
+
+      
+      return function( args, done ) {
+        var outmsg = {
+          id:   nid(),
+          kind: 'act',
+          act:  args
+        }
+
+        callmap[outmsg.id] = done
+
+        console.log('CLIENT SEND',outmsg)
+        msger.push( outmsg )
+      }
+
+    }
+  }  
+
+
+
+
+  function hook_listen_web( args, done ) {
     var seneca = this
 
     var app = connect()
@@ -104,17 +239,18 @@ module.exports = function( options ) {
 
 
     app.use( function( req, res, next ){
-      var buf = ''
+      var buf = []
       req.setEncoding('utf8')
-      req.on('data', function(chunk){ buf += chunk })
+      req.on('data', function(chunk){ buf.push(chunk) })
       req.on('end', function(){
         try {
-          req.body = _.extend(0<buf.length?JSON.parse(buf):{},req.query||{})
+          var bufstr = buf.join('')
+          req.body = _.extend(0<bufstr.length?JSON.parse(bufstr):{},req.query||{})
 
           next();
         } 
         catch (err){
-          err.body = buf
+          err.body   = err.message+': '+bufstr
           err.status = 400
           next(err)
         }
@@ -123,21 +259,18 @@ module.exports = function( options ) {
 
     
     function handle_error(e,res) {
+      seneca.log.error('listen',e)
+
       if( e.seneca ) {
         e.seneca.message = e.message
-        var outjson = JSON.stringify(e.seneca)
-        res.writeHead(400,{
-          'Content-Type':   'application/json',
-          'Cache-Control':  'private, max-age=0, no-cache, no-store',
-          'Content-Length': buffer.Buffer.byteLength(outjson) 
-        })
-        res.end( outjson )
+        sendjson( res, e.seneca )
       } 
       else {
         res.writeHead(500)
         res.end( e.message )
       }
     }
+
 
     app.use( function( req, res, next ){
       if( 0 !== req.url.indexOf(args.path) ) return next();
@@ -146,15 +279,7 @@ module.exports = function( options ) {
         var input = handle_entity( req.body )
         seneca.act( input, function( err, out ){
           if( err ) return handle_error(err,res);
-          
-          var outjson = _.isUndefined(out) ? '{}' : JSON.stringify(out)
-
-          res.writeHead(200,{
-            'Content-Type':   'application/json',
-            'Cache-Control':  'private, max-age=0, no-cache, no-store',
-            'Content-Length': buffer.Buffer.byteLength(outjson) 
-          })
-          res.end( outjson )
+          sendjson( res, out )
         })
       }
       catch(e) {
@@ -162,7 +287,7 @@ module.exports = function( options ) {
       }
     })
 
-    seneca.log.info('listen', args.host, args.port, args.path, seneca.toString())
+    seneca.log.info('listen', args.type, args.host, args.port, args.path, seneca.toString())
     var listen = app.listen( args.port, args.host )
 
     done(null,listen)
@@ -170,35 +295,48 @@ module.exports = function( options ) {
 
 
 
-  function hook_client_direct( args, clientdone ) {
+  function sendjson( res, obj ) {
+    var outjson = _.isUndefined(obj) ? '{}' : JSON.stringify(obj)
+
+    res.writeHead(200,{
+      'Content-Type':   'application/json',
+      'Cache-Control':  'private, max-age=0, no-cache, no-store',
+      'Content-Length': buffer.Buffer.byteLength(outjson) 
+    })
+    res.end( outjson )
+  }
+
+
+
+
+  function hook_client_web( args, clientdone ) {
     var seneca = this
 
     var fullurl = 'http://'+args.host+':'+args.port+args.path
 
     var client = make_anyclient(make_send({},'any'))
 
+
     var pins = resolve_pins(args)
     if( pins ) {
-      var argspatrun = make_argspatrun(pins)
-
-      var sendmap = {}
-      var resolvesend  = make_resolvesend(sendmap,make_send)
+      var argspatrun  = make_argspatrun(pins)
+      var resolvesend = make_resolvesend({},make_send)
 
       client = make_pinclient( resolvesend, argspatrun )
     }
 
-    seneca.log.info('client', 'direct', args.host, args.port, args.path, fullurl, pins||'any', seneca.toString())
+    seneca.log.info('client', 'web', args.host, args.port, args.path, fullurl, pins||'any', seneca.toString())
     clientdone(null,client)
 
 
 
     function make_send( spec, topic ) {
-      seneca.log.debug('client', 'direct', 'send', spec, topic, args.host, args.port, args.path, fullurl, seneca.toString())
+      seneca.log.debug('client', 'web', 'send', spec, topic, args.host, args.port, args.path, fullurl, seneca.toString())
       
       return function( args, done ) {
         var reqopts = {
-          url:fullurl,
-          json:args
+          url:  fullurl,
+          json: args
         }
         request.post( reqopts, function(err,response) {
           // TODO: need more info for this err
@@ -220,7 +358,7 @@ module.exports = function( options ) {
   }  
 
 
-
+/*
   function hook_listen_pubsub( args, done ) {
     var seneca = this
 
@@ -565,7 +703,7 @@ module.exports = function( options ) {
       do_client('any',make_register({any:true}))
     }
   }
-
+*/
 
 
 
@@ -573,7 +711,7 @@ module.exports = function( options ) {
     var out = {}
 
     var config = args.config || args
-    var base = options.direct
+    var base = options.web
 
     if( _.isArray( config ) ) {
       var arglen = config.length
@@ -609,7 +747,7 @@ module.exports = function( options ) {
 
     out.type = null == out.type ? base.type : out.type
 
-    if( 'direct' == out.type ) {
+    if( 'web' == out.type ) {
       out.port = null == out.port ? base.port : out.port 
       out.host = null == out.host ? base.host : out.host
       out.path = null == out.path ? base.path : out.path

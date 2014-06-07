@@ -18,18 +18,18 @@
   "author": "Richard Rodger (http://richardrodger.com)",
   "license": "MIT",
   "dependencies": {
-    "nid": "~0.3.2",
-    "underscore": "~1.6.0",
     "async": "~0.7.0",
-    "patrun": "~0.1.5",
-    "redis": "~0.10.1",
-    "request": "~2.34.0",
-    "fivebeans": "~1.1.1",
+    "connect": "~2.14.5",
+    "event-stream": "^3.1.5",
     "gex": "~0.1.3",
-    "chai": "~1.9.1",
+    "nid": "~0.3.2",
+    "patrun": "~0.1.5",
+    "request": "~2.34.0",
+    "underscore": "~1.6.0"
+  },
+  "devDependencies": {
     "mocha": "~1.18.2"
   },
-  "devDependencies": {},
   "files": [
     "README.md",
     "LICENSE.txt",

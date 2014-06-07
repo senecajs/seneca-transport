@@ -1,27 +1,52 @@
-/* Copyright (c) 2013 Richard Rodger */
+/* Copyright (c) 2013-2014 Richard Rodger */
 "use strict";
+
 
 // mocha transport.test.js
 
 
 var seneca  = require('seneca')
 
-var assert  = require('chai').assert
+var assert  = require('assert')
 
 
 
 describe('transport', function() {
   
-  it('direct', function( fin ) {
+  it('tcp', function( fin ) {
 
-    require('seneca')()
+    require('seneca')({xlog:'silent'})
       .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )
-      .listen(20202)
+      .listen({type:'tcp',port:20102})
       .ready( function(err){
         if(err) return fin(err);
 
-        require('seneca')()
-          .client(20202)
+        require('seneca')({xlog:'silent'})
+          .client({type:'tcp',port:20102})
+          .ready(function(err){
+            if(err) return fin(err);
+
+            this.act('c:1,d:A',function(err,out){
+              if(err) return fin(err);
+              
+              assert.equal( '{"s":"1-A"}', JSON.stringify(out) )
+              fin()
+            })
+          })
+      })
+  })
+
+
+  it('web', function( fin ) {
+
+    require('seneca')({log:'silent'})
+      .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )
+      .listen({type:'web',port:20202})
+      .ready( function(err){
+        if(err) return fin(err);
+
+        require('seneca')({log:'silent'})
+          .client({type:'web',port:20202})
           .ready(function(err){
             if(err) return fin(err);
 
