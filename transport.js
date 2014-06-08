@@ -14,7 +14,7 @@ var gex         = require('gex')
 var connect     = require('connect')
 var request     = require('request')
 var nid         = require('nid')
-var es          = require('event-stream')
+
 
 
 
@@ -116,35 +116,68 @@ module.exports = function( options ) {
       var instance = this
       console.log('LISTEN IN',data)
 
-      if( 'act' == data.kind ) {
-        var input = handle_entity( data.act )
-        seneca.act( input, function( err, out ){
-          var output = {
-            id:data.id,
-            kind:'res',
-            res:out,
-          }
-          if( err ) {
-            output.error = err
-          }
-
-          console.log('LISTEN OUT',output)
-          instance.push(output)        
-        })
+      if( null == data.id ) {
+        seneca.log.error('listen', 'invalid-error', args.type, args.host, args.port, seneca.toString(), 'no-message-id')
+        return done();
       }
+
+      if( data.error ) {
+        seneca.log.error('listen', 'in-error', args.type, args.host, args.port, seneca.toString(), data.error, data.error.stack)
+        return done();
+      }
+
+      if( 'act' == data.kind ) {
+        try {
+          var input = handle_entity( data.act )
+          seneca.act( input, function( err, out ){
+            var output = {
+              id:   data.id,
+              kind: 'res',
+              res:  out,
+            }
+            if( err ) {
+              output.error  = err
+              output.indata = data
+            }
+
+            console.log('LISTEN OUT',output)
+            instance.push(output)        
+            return done();
+          })
+        }
+        catch(e) {
+          seneca.log.error('listen', 'act-error', args.type, args.host, args.port, seneca.toString(), e, e.stack)
+          instance.push(output)        
+          return done();
+        }
+      }
+      else done();
     }
 
     var listen = net.createServer(function(connection) {
-      seneca.log.info('listen', args.type, args.host, args.port, args.path, seneca.toString())
+      seneca.log.info('listen', 'connection', args.type, args.host, args.port, seneca.toString(), 'remote', connection.remoteAddress, connection.remotePort)
       connection
-        .pipe(es.parse())
+        .pipe(json_parser_stream)
         .pipe(msger)
-        .pipe(es.stringify())
+        .pipe(json_stringify_stream)
         .pipe(connection)
     })
-    listen.listen( args.port, args.host )
 
-    done(null,listen)
+    listen.on('listening', function() {
+      seneca.log.info('listen', 'open', args.type, args.host, args.port, seneca.toString())
+      done(null,listen)
+    })
+
+    listen.on('error', function(err) {
+      seneca.log.error('listen', 'net-error', args.type, args.host, args.port, seneca.toString(), err, err.stack)
+    })
+
+    listen.on('close', function() {
+      seneca.log.info('listen', 'close', args.type, args.host, args.port, seneca.toString())
+      done(null,listen)
+    })
+
+    listen.listen( args.port, args.host )
   }
 
 
@@ -191,9 +224,9 @@ module.exports = function( options ) {
       var client = net.connect({port: args.port, host:args.host})
 
       client
-        .pipe(es.parse())
+        .pipe(json_parser_stream)
         .pipe( msger )
-        .pipe(es.stringify())
+        .pipe(json_stringify_stream)
         .pipe(client)
 
       client.on('error', function(){
@@ -220,6 +253,47 @@ module.exports = function( options ) {
 
     }
   }  
+
+
+  var json_parser_stream = new stream.Duplex({objectMode:true})
+  json_parser_stream._read = function(){}
+  json_parser_stream._write = function(data,enc,done) {
+    try {
+      var out = JSON.parse(data)
+    }
+    catch(e) {
+      out = {
+        error:  e,
+        data:   data,
+        intime: Date.now()
+      }
+    }
+    
+    this.push(out)        
+  }
+
+
+
+  var json_stringify_stream = new stream.Duplex({objectMode:true})
+  json_stringify_stream._read = function(){}
+  json_stringify_stream._write = function(data,enc,done) {
+    try {
+      var out = JSON.stringify(data)+'\n'
+    }
+    catch(e) {
+      out = {
+        error:  e,
+        data:   data,
+        intime: Date.now()
+      }
+    }
+    
+    this.push(out)        
+  }
+  
+
+
+
 
 
 
@@ -711,7 +785,9 @@ module.exports = function( options ) {
     var out = {}
 
     var config = args.config || args
-    var base = options.web
+
+    // Default transport is tcp
+    var base   = options.tcp
 
     if( _.isArray( config ) ) {
       var arglen = config.length
@@ -747,7 +823,7 @@ module.exports = function( options ) {
 
     out.type = null == out.type ? base.type : out.type
 
-    if( 'web' == out.type ) {
+    if( 'web' == out.type || 'tcp' == out.type ) {
       out.port = null == out.port ? base.port : out.port 
       out.host = null == out.host ? base.host : out.host
       out.path = null == out.path ? base.path : out.path

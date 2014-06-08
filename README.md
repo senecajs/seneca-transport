@@ -16,9 +16,9 @@ You can provide your own transport mechanisms by overriding the transport action
 If you're using this module, feel free to contact me on Twitter if you
 have any questions! :) [@rjrodger](http://twitter.com/rjrodger)
 
-Current Version: 0.1.2
+Current Version: 0.2.0
 
-Tested on: Node 0.10.24, Seneca 0.5.17
+Tested on: Node 0.10.28, 0.11.13, Seneca 0.5.18
 
 [![Build Status](https://travis-ci.org/rjrodger/seneca-transport.png?branch=master)](https://travis-ci.org/rjrodger/seneca-transport)
 
@@ -145,9 +145,14 @@ For more on logging, see the [seneca logging example](http://senecajs.org/loggin
 
 ## Test
 
+This module itself does not contain any direct reference to seneca, as
+it is a seneca dependency. However, seneca is needed to test it, so
+the test script will perform an _npm install seneca_ (if needed). This is not
+saved to _package.json_ however.
+
 ```sh
-cd test
-mocha transport.test.js --seneca.log.all
+npm test
 ```
+
 
 
