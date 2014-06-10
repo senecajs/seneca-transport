@@ -15,13 +15,13 @@ describe('transport', function() {
   
   it('tcp', function( fin ) {
 
-    require('seneca')({xlog:'silent'})
+    require('seneca')({log:'silent'})
       .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )
       .listen({type:'tcp',port:20102})
       .ready( function(err){
         if(err) return fin(err);
 
-        require('seneca')({xlog:'silent'})
+        require('seneca')({log:'silent'})
           .client({type:'tcp',port:20102})
           .ready(function(err){
             if(err) return fin(err);

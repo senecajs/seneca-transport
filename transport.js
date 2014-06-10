@@ -13,7 +13,6 @@ var patrun      = require('patrun')
 var gex         = require('gex')
 var connect     = require('connect')
 var request     = require('request')
-var nid         = require('nid')
 var lrucache    = require('lru-cache')
 
 
@@ -41,27 +40,15 @@ module.exports = function( options ) {
     web: {
       type:     'web',
       port:     10201,
+      host:     'localhost',
       path:     '/act',
       protocol: 'http',
+      timeout:  so.timeout ? so.timeout-555 :  22222,
     },
-
-/*
-    pubsub: {
-      type:  'pubsub',
-      port:  6379,
-      host:  'localhost'
-    },
-    queue: {
-      alivetime: 111,
-      port:  11300,
-      host:  'localhost'
-    }
-*/
 
   },options)
   
 
-  var makemsgid = nid( {length:options.msgidlen} )
   var callmap   = lrucache( options.callmax )
 
 
@@ -74,16 +61,6 @@ module.exports = function( options ) {
 
   seneca.add({role:plugin,hook:'listen',type:'web'}, hook_listen_web)
   seneca.add({role:plugin,hook:'client',type:'web'}, hook_client_web)
-
-
-/*
-  seneca.add({role:plugin,hook:'listen',type:'pubsub'}, hook_listen_pubsub)
-  seneca.add({role:plugin,hook:'client',type:'pubsub'}, hook_client_pubsub)
-
-  seneca.add({role:plugin,hook:'listen',type:'queue'}, hook_listen_queue)
-  seneca.add({role:plugin,hook:'client',type:'queue'}, hook_client_queue)
-*/
-
 
 
 
@@ -117,7 +94,7 @@ module.exports = function( options ) {
     msger._read = function(){}
     msger._write = function(data,end,done) {
       var stream_instance = this
-      console.log('LISTEN IN',data)
+      //console.log('LISTEN IN',data)
 
       if( null == data.id ) {
         seneca.log.error('listen', 'invalid-error', args.type, args.host, args.port, seneca.toString(), 'no-message-id')
@@ -149,7 +126,7 @@ module.exports = function( options ) {
             }
 
             output.time.listen_sent = Date.now()
-            console.log('LISTEN OUT',output)
+            //console.log('LISTEN OUT',output)
             stream_instance.push(output)        
           })
           return done();
@@ -224,7 +201,7 @@ module.exports = function( options ) {
       msger._write = function(data,end,done) {
         data.time = data.time || {}
         data.time.client_recv = Date.now()
-        console.log('CLIENT RECV',data)
+        //console.log('CLIENT RECV',data)
 
         if( null == data.id ) {
           seneca.log.error('client', 'invalid-error', args.type, args.host, args.port, seneca.toString(), 'no-message-id', data)
@@ -275,7 +252,7 @@ module.exports = function( options ) {
       
       return function( args, done ) {
         var outmsg = {
-          id:     makemsgid(),
+          id:     args.actid$,
           kind:   'act',
           origin: seneca.id,
           time:   { client_sent:Date.now() },
@@ -288,7 +265,7 @@ module.exports = function( options ) {
 
         callmap.set(outmsg.id,callmeta) 
 
-        console.log('CLIENT SEND',outmsg)
+        //console.log('CLIENT SEND',outmsg)
         msger.push( outmsg )
       }
 
@@ -342,6 +319,9 @@ module.exports = function( options ) {
   function hook_listen_web( args, done ) {
     var seneca = this
 
+    //console.log('listen',args)
+    
+
     var app = connect()
     //app.use( connect.limit( args.limit ) )
     app.use( connect.timeout( args.timeout ) )
@@ -373,12 +353,12 @@ module.exports = function( options ) {
     })
 
     
-    function handle_error(e,res) {
+    function handle_error(args,e,req,res) {
       seneca.log.error('listen',e)
 
       if( e.seneca ) {
         e.seneca.message = e.message
-        sendjson( res, e.seneca )
+        sendjson( args, req, res, e.seneca )
       } 
       else {
         res.writeHead(500)
@@ -390,17 +370,19 @@ module.exports = function( options ) {
     app.use( function( req, res, next ){
       if( 0 !== req.url.indexOf(args.path) ) return next();
 
+      var recv_time = Date.now()
       try {
         var input = handle_entity( req.body )
         seneca.act( input, function( err, out ){
-          if( err ) return handle_error(err,res);
-          sendjson( res, out )
+          if( err ) return handle_error(input,err,req,res,recv_time);
+          sendjson( input, req, res, out, recv_time )
         })
       }
       catch(e) {
-        handle_error(err,res);
+        handle_error(req.body,err,req,res,recv_time);
       }
     })
+
 
     seneca.log.info('listen', args.type, args.host, args.port, args.path, seneca.toString())
     var listen = app.listen( args.port, args.host )
@@ -410,14 +392,29 @@ module.exports = function( options ) {
 
 
 
-  function sendjson( res, obj ) {
+  function sendjson( args, req, res, obj, recv_time ) {
     var outjson = _.isUndefined(obj) ? '{}' : JSON.stringify(obj)
 
-    res.writeHead(200,{
+    var headers = {
       'Content-Type':   'application/json',
       'Cache-Control':  'private, max-age=0, no-cache, no-store',
-      'Content-Length': buffer.Buffer.byteLength(outjson) 
-    })
+      'Content-Length': buffer.Buffer.byteLength(outjson),
+    }
+
+    if( args ) {
+      headers['Seneca-id']     = args.actid$
+      headers['Seneca-kind']   = 'res'
+      headers['Seneca-origin'] = req.headers['seneca-origin']
+      headers['Seneca-accept'] = seneca.id
+      headers['Seneca-time-client-sent'] = req.headers['seneca-time-client-sent']
+      headers['Seneca-time-listen-recv'] = recv_time
+      headers['Seneca-time-listen-sent'] = Date.now()
+    }
+
+
+    //console.log('listen json',args,headers)
+
+    res.writeHead( 200, headers )
     res.end( outjson )
   }
 
@@ -426,6 +423,8 @@ module.exports = function( options ) {
 
   function hook_client_web( args, clientdone ) {
     var seneca = this
+
+    //console.log('client',args)
 
     var fullurl = 'http://'+args.host+':'+args.port+args.path
 
@@ -449,17 +448,34 @@ module.exports = function( options ) {
       seneca.log.debug('client', 'web', 'send', spec, topic, args.host, args.port, args.path, fullurl, seneca.toString())
       
       return function( args, done ) {
+
+        var headers = {
+          'Seneca-id': args.actid$, 
+          'Seneca-kind': 'req', 
+          'Seneca-origin': seneca.id, 
+          'Seneca-time-client-sent': Date.now()
+        }
+
+        //console.log('client json',args,headers)
+
         var reqopts = {
           url:  fullurl,
-          json: args
+          json: args,
+          headers: headers,
         }
+
         request.post( reqopts, function(err,response) {
           // TODO: need more info for this err
           if(err) return done(err);
 
+          var recv_time = Date.now()
           if( 200 != response.statusCode ) {
             var errdesc = response.body
+
             var localerr = new Error(errdesc.message)
+            localerr.details = response.headers
+            localerr.details['Seneca-client-recv-time'] = recv_time
+
             localerr.seneca = errdesc
             done(localerr)
           }
@@ -473,362 +489,12 @@ module.exports = function( options ) {
   }  
 
 
-/*
-  function hook_listen_pubsub( args, done ) {
-    var seneca = this
-
-    var redis_in  = redis.createClient(args.port,args.host)
-    var redis_out = redis.createClient(args.port,args.host)
-
-    redis_in.on('message',function(channel,msgstr){
-      var data = JSON.parse(msgstr)
-
-      if( 'act' == data.kind ) {
-        seneca.act(data.act,function(err,res){
-          var outmsg = {
-            kind:'res',
-            id:data.id,
-            err:err?err.message:null,
-            res:res
-          }
-          var outstr = JSON.stringify(outmsg)
-          redis_out.publish(channel,outstr)
-        })
-      }
-    })
-
-    if( args.pin ) {
-      var pins = _.isArray(args.pin) ? args.pin : [args.pin]
-      _.each( seneca.findpins( pins ), function(pin){
-        var pinstr = options.msgprefix+util.inspect(pin)
-        redis_in.subscribe(pinstr)
-      })
-    }
-
-    redis_in.subscribe(options.msgprefix+'all')
-    
-    seneca.log.info('listen', args.host, args.port, seneca.toString())
-    done()
-  }
-
-
-
-  function hook_client_pubsub( args, done ) {
-    var seneca = this
-
-    var redis_in  = redis.createClient(args.port,args.host)
-    var redis_out = redis.createClient(args.port,args.host)
-
-    var callmap = {}
-
-    redis_in.on('message',function(channel,msgstr){
-      var data = JSON.parse(msgstr)
-
-      if( 'res' == data.kind ) {
-        var call = callmap[data.id]
-        if( call ) {
-          delete callmap[data.id]
-
-          call.done( data.err ? new Error(data.err) : null, data.res )
-        }
-      }
-    })
-
-    var client = function( args, done ) {
-      var outmsg = {
-        id:   nid(),
-        kind: 'act',
-        act:  args
-      }
-      var outstr = JSON.stringify(outmsg)
-      callmap[outmsg.id] = {done:done}
-
-      var actmeta = seneca.findact(args)
-      if( actmeta ) {
-        var actstr = options.msgprefix+util.inspect(actmeta.args)
-        redis_out.publish(actstr,outstr)
-      }
-      else {
-        redis_out.publish(options.msgprefix+'all',outstr)
-      }
-    }
-
-
-    if( args.pin ) {
-      var pins = _.isArray(args.pin) ? args.pin : [args.pin]
-      _.each( seneca.findpins( pins ), function(pin){
-        var pinstr = options.msgprefix+util.inspect(pin)
-        seneca.add(pin,client)
-        redis_in.subscribe(pinstr)    
-      })
-    }
-
-    redis_in.subscribe(options.msgprefix+'all')    
-
-    seneca.log.info('client', 'pubsub', args.host, args.port, seneca.toString())
-
-    done(null,client)
-  }
-
-
-
-
-  function hook_listen_queue( args, done ) {
-    var seneca = this
-
-
-    function do_listen(mark) {
-      var send = new fivebeans.client(args.host,args.port);
-      send
-        .on('connect', function() {
-          var topic_out = options.msgprefix+'_'+mark+'_out'
-          send.use(topic_out, function(err, numwatched) {
-            if( err ) return seneca.log.error(err);
-          })
-        })
-        .on('error', function(err) { seneca.log.error('LISTEN send error '+err) })
-        .on('close', function() { seneca.log.info('LISTEN send close') })
-        .connect()
-
-      var recv = new fivebeans.client(args.host,args.port);
-      recv
-        .on('connect', function() {
-          var topic_in = options.msgprefix+'_'+mark+'_in'
-          recv.watch(topic_in, function(err, numwatched) {
-            if( err ) return seneca.log.error(err);
-
-            function do_reserve() {
-              recv.reserve(function(err, jobid, payload) {
-                if( err ) return console.log(err);
-
-                try {
-                  var data = JSON.parse(payload)
-                }
-                catch( je ) {
-                  return process.nextTick(do_reserve)
-                }
-                
-                if( 'act' == data.kind ) {
-                  seneca.act(data.act,function(err,res){
-                    var outmsg = {
-                      kind:'res',
-                      id:data.id,
-                      err:err?err.message:null,
-                      res:res
-                    }
-                    var outstr = JSON.stringify(outmsg)
-
-                    send.put(100,0,args.alivetime,outstr, function(err,outjobid){
-                      if( err ) return seneca.log.error(err);
-
-                      recv.destroy(jobid, function(err) {
-                        if( err ) return seneca.log.error(err);
-
-                        process.nextTick(do_reserve)
-                      });
-                    })
-                  })
-                }
-              })
-            }
-            do_reserve()
-
-          })
-        })
-        .on('error', function(err) { seneca.log.error(err+' LISTEN recv error') })
-        .on('close', function() { seneca.log.info('LISTEN recv close') })
-        .connect()
-    }
-
-    
-    if( args.pin ) {
-      var pins = _.isArray(args.pin) ? args.pin : [args.pin]
-      _.each( seneca.findpins( pins ), function(pin){
-        var pinmark = util.inspect(pin).replace(/=/,'__').replace(/[^\w\d]/g,'_')
-        do_listen(pinmark)
-      })
-    }
-    else do_listen('any')
-
-
-    seneca.log.info('listen', 'queue', args.host, args.port, seneca.toString())
-    done()
-  }
-
-
-
-  function hook_client_queue( args, done ) {
-    var seneca  = this
-
-
-    function do_client( mark, register ) {
-      var seenmap = {}
-      var callmap = {}
-      var recv    = new fivebeans.client(args.host,args.port);
-
-      function do_connect() {
-        var topic_recv = options.msgprefix+'_'+mark+'_out'
-        recv.watch(topic_recv, function(err, numwatched) {
-          if( err ) return seneca.log.error(err);
-
-          function do_reserve() {
-            recv.reserve(function(err, jobid, payload) {
-              if( err ) return seneca.log.error(err);
-
-              try {
-                var data = JSON.parse(payload)
-              }
-              catch( je ) {
-                seneca.log.error(je)
-                return process.nextTick( do_reserve )
-              }
-
-              if( 'res' == data.kind ) {
-                var call = callmap[data.id]
-
-                if( call ) {
-                  delete callmap[data.id]
-
-                  recv.destroy(jobid, function(err) {
-                    if( err ) return seneca.log.error(err);
-
-                    process.nextTick( do_reserve )
-                  })
-
-                  call.done( data.err ? new Error(data.err) : null, data.res )
-                }
-                else {
-                  // FIX: memleak!
-                  if( seenmap[jobid] ) {
-                    setTimeout( function(){do_release(jobid)}, 111 )
-                  }
-                  else {
-                    seenmap[jobid]=new Date().getTime()
-                    do_release(jobid)
-                  }
-                }
-              }
-              else {
-                recv.release(jobid,100,0,function(err) {
-                  if( err ) return seneca.log.error(err);
-                })
-              }
-
-              function do_release(jobid) {
-                recv.release(jobid,100,0,function(err) {
-                  if( err ) return seneca.log.error(err);
-                  process.nextTick( do_reserve )
-                })
-              }
-            })
-          }
-          do_reserve()
-        })
-      }
-
-      recv
-        .on('connect', do_connect)
-        .on('error', function(err) { seneca.log.error('CLIENT recv error '+err) })
-        .on('close', function() { seneca.log.info('CLIENT recv close') })
-        .connect()
-
-
-      function do_send() {
-        var send = new fivebeans.client(args.host,args.port);
-
-        send
-          .on('connect', function() {
-            var topic_send = options.msgprefix+'_'+mark+'_in'
-            send.use(topic_send, function(err, numwatched) {
-              if( err ) return seneca.log.error(err);
-
-              var outclient = function( args, done ) {
-                var outmsg = {
-                  id:   nid(),
-                  kind: 'act',
-                  act:  seneca.util.clean(args)
-                }
-                var outstr = JSON.stringify(outmsg)
-                callmap[outmsg.id] = {done:done}
-
-                send.put(100,0,111,outstr, function(err,outjobid){
-                  if( err ) return seneca.log.error(err);
-                })
-              }
-
-              seneca.log.info('client', 'queue', args.host, args.port, seneca.toString())
-              register(null,outclient)
-            })
-          })
-          .on('error', function(err) {
-          })
-          .on('close', function() {
-          })
-          .connect()
-      }
-      do_send()
-
-    }
-
-
-    var pins_todo = {}
-
-    var clientpatrun = patrun()
-    function clientrouter( args, done ) {
-      var client_call = clientpatrun.find(args)
-      if( client_call ) {
-        client_call( args, done ) 
-      }
-      else {
-        client_call = clientpatrun.find({any:true})
-        if( client_call ) {
-          client_call( args, done ) 
-        }
-        else {
-          seneca.log.error({code:'args-not-found',args:args})
-        }
-      }
-    }
-
-
-    function make_register(pin) {
-      return function(err,client_call) {
-        delete pins_todo[util.inspect(pin)]
-
-        if( err ) return seneca.log.error(err);
-        clientpatrun.add(pin,client_call)
-
-        if( 0 == _.keys(pins_todo).length ) {
-          done( null, clientrouter )
-        }
-      }
-    }
-
-    // TODO: support args.pins
-    if( args.pin ) {
-      var pins = _.isArray(args.pin) ? args.pin : [args.pin]
-      _.each( seneca.findpins( pins ), function(pin){
-        var pinmark = util.inspect(pin).replace(/=/,'__').replace(/[^\w\d]/g,'_')
-        pins_todo[util.inspect(pin)]=true
-        do_client(pinmark,make_register(pin))
-        seneca.add(pin,clientrouter)
-      })
-    }
-    else {
-      do_client('any',make_register({any:true}))
-    }
-  }
-*/
-
-
 
   function parseConfig( args ) {
+    //console.log('pc',args)
     var out = {}
 
     var config = args.config || args
-
-    // Default transport is tcp
-    var base   = options.tcp
 
     if( _.isArray( config ) ) {
       var arglen = config.length
@@ -862,7 +528,20 @@ module.exports = function( options ) {
     }
     else out = config;
 
-    out.type = null == out.type ? base.type : out.type
+    // Default transport is tcp
+    out.type = out.type || 'tcp'
+
+    //out.type = null == out.type ? base.type : out.type
+
+    if( 'direct' == out.type ) {
+      out.type = 'tcp'
+    }
+
+
+    var base = options[out.type] || {}
+    //console.log('base',base)
+
+    out = _.extend({},base,out)
 
     if( 'web' == out.type || 'tcp' == out.type ) {
       out.port = null == out.port ? base.port : out.port 
