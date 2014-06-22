@@ -30,7 +30,13 @@ describe('transport', function() {
               if(err) return fin(err);
               
               assert.equal( '{"s":"1-A"}', JSON.stringify(out) )
-              fin()
+
+              this.act('c:1,d:AA',function(err,out){
+                if(err) return fin(err);
+              
+                assert.equal( '{"s":"1-AA"}', JSON.stringify(out) )
+                fin()
+              })
             })
           })
       })
@@ -54,7 +60,13 @@ describe('transport', function() {
               if(err) return fin(err);
               
               assert.equal( '{"s":"1-A"}', JSON.stringify(out) )
-              fin()
+
+              this.act('c:1,d:AA',function(err,out){
+                if(err) return fin(err);
+              
+                assert.equal( '{"s":"1-AA"}', JSON.stringify(out) )
+                fin()
+              })
             })
           })
       })
