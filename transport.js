@@ -734,12 +734,12 @@ module.exports = function( options ) {
 
 
   function listen_topics( seneca, args, listen_options, do_topic ) {
-    var msgprefix = listen_options.msgprefix
+    var msgprefix = options.msgprefix
     var pins      = resolve_pins( args )
 
     if( pins ) {
       _.each( seneca.findpins( pins ), function(pin) {
-        var topic = options.msgprefix + util.inspect(pin).replace(/[^\w\d]/g,'_')
+        var topic = msgprefix + util.inspect(pin).replace(/[^\w\d]/g,'_')
         do_topic( topic )
       })
     }
@@ -783,12 +783,18 @@ module.exports = function( options ) {
     catch_act_error:  catch_act_error,
     listen_topics:    listen_topics,
     handle_response:  handle_response,
-    prepare_request:  prepare_request
+    prepare_request:  prepare_request,
+    make_anyclient:   make_anyclient,
+    resolve_pins:     resolve_pins,
+    make_argspatrun:  make_argspatrun,
+    make_resolvesend: make_resolvesend,
+    make_pinclient:   make_pinclient,
   }
 
 
   return {
     name: plugin,
-    exportmap: { utils: transutils }
+    exportmap: { utils: transutils },
+    options: options
   }
 }
