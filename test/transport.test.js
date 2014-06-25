@@ -48,13 +48,11 @@ describe('transport', function() {
     require('seneca')({log:'silent'})
       .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )
       .listen({type:'web',port:20202})
-      .ready( function(err){
-        if(err) return fin(err);
+      .ready( function() {
 
         require('seneca')({log:'silent'})
           .client({type:'web',port:20202})
-          .ready(function(err){
-            if(err) return fin(err);
+          .ready(function() {
 
             this.act('c:1,d:A',function(err,out){
               if(err) return fin(err);
