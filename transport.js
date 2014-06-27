@@ -14,10 +14,8 @@ var gex         = require('gex')
 var connect     = require('connect')
 var request     = require('request')
 var lrucache    = require('lru-cache')
+var reconnect   = require('reconnect-net')
 
-
-// VERY IMPORTANT
-// TODO: listen should use inbound id for actid$
 
 
 module.exports = function( options ) {
@@ -86,8 +84,10 @@ module.exports = function( options ) {
     var seneca = this
 
     var listen_config = parseConfig(args)
-    var listen_args   = _.omit(_.extend({},listen_config,
-                                        {role:plugin,hook:'listen'}),'cmd') 
+    var listen_args  = 
+          seneca.util.clean(
+            _.omit(
+              _.extend({},listen_config,{role:plugin,hook:'listen'}),'cmd'))
 
     seneca.act( listen_args, done )
   }
@@ -98,8 +98,10 @@ module.exports = function( options ) {
     var seneca = this
 
     var client_config = parseConfig(args)
-    var client_args   = _.omit(_.extend({},client_config,
-                                        {role:plugin,hook:'client'}),'cmd')
+    var client_args   = 
+          seneca.util.clean(
+            _.omit(
+              _.extend({},client_config,{role:plugin,hook:'client'}),'cmd'))
 
     seneca.act( client_args, done )
   }
@@ -108,27 +110,34 @@ module.exports = function( options ) {
   function hook_listen_tcp( args, done ) {
     var seneca         = this
     var type           = args.type
-    var listen_options = _.extend({},options[type],args)
+    var listen_options = seneca.util.clean(_.extend({},options[type],args))
     
-    var msger = new stream.Duplex({objectMode:true})
-    msger._read = function() {}
-    msger._write = function( data, enc , done ) {
-      var stream_instance = this
+    function make_msger() {
+      var msger = new stream.Duplex({objectMode:true})
+      msger._read = function() {}
+      msger._write = function( data, enc , done ) {
+        var stream_instance = this
 
-      handle_request( seneca, data, listen_options, function(out) {
-        stream_instance.push(out)
-        return done();
-      })
+        handle_request( seneca, data, listen_options, function(out) {
+          stream_instance.push(out)
+          return done();
+        })
+      }
+      return msger
     }
 
     var listen = net.createServer(function(connection) {
       seneca.log.info('listen', 'connection', listen_options, seneca, 
                       'remote', connection.remoteAddress, connection.remotePort)
       connection
-        .pipe(json_parser_stream)
-        .pipe(msger)
-        .pipe(json_stringify_stream)
+        .pipe(json_parser_stream())
+        .pipe(make_msger())
+        .pipe(json_stringify_stream())
         .pipe(connection)
+
+      connection.on('error',function(err){
+        console.log(err)
+      })
     })
 
     listen.on('listening', function() {
@@ -152,7 +161,7 @@ module.exports = function( options ) {
   function hook_client_tcp( args, clientdone ) {
     var seneca         = this
     var type           = args.type
-    var client_options = _.extend({},options[type],args)
+    var client_options = seneca.util.clean(_.extend({},options[type],args))
 
     make_client( make_send, client_options, clientdone )
 
@@ -161,34 +170,55 @@ module.exports = function( options ) {
       seneca.log.debug('client', type, 'send-init', 
                        spec, topic, client_options, seneca)
 
-      var msger = new stream.Duplex({objectMode:true})
-      msger._read = function() {}
-      msger._write = function( data, enc, done ) {
-        handle_response( seneca, data, client_options )
-        return done();
+      function make_msger() {
+        var msger = new stream.Duplex({objectMode:true})
+        msger._read = function() {}
+        msger._write = function( data, enc, done ) {
+          handle_response( seneca, data, client_options )
+          return done();
+        }
+        return msger;
       }
 
-      var client = net.connect({
+      var msger = make_msger()
+
+      reconnect( function(client) {
+        client
+          .pipe( json_parser_stream() )
+          .pipe( msger )
+          .pipe( json_stringify_stream() )
+          .pipe( client )
+
+        /*
+        client.on('error', function(err) {
+          seneca.log.error('client', type, 'send-error', 
+                           spec, topic, client_options, seneca, err.stack||err)
+        })
+
+        client.on('connect', function() {
+          seneca.log.debug('client', type, 'send-connect', 
+                           spec, topic, client_options, seneca)
+        })
+         */
+
+      }).on('connect', function() {
+          seneca.log.debug('client', type, 'connect', 
+                           spec, topic, client_options, seneca)
+
+      }).on('reconnect', function() {
+          seneca.log.debug('client', type, 'reconnect', 
+                           spec, topic, client_options, seneca)
+
+      }).on('disconnect', function(err) {
+          seneca.log.debug('client', type, 'disconnect', 
+                           spec, topic, client_options, seneca, 
+                           (err&&err.stack)||err)
+
+      }).connect({
         port: client_options.port, 
         host: client_options.host
       })
 
-      client
-        .pipe( json_parser_stream )
-        .pipe( msger )
-        .pipe( json_stringify_stream )
-        .pipe( client )
-
-      client.on('error', function(err) {
-        seneca.log.error('client', type, 'send-error', 
-                         spec, topic, client_options, seneca, err.stack||err)
-      })
-
-      client.on('connect', function() {
-        seneca.log.debug('client', type, 'send-connect', 
-                         spec, topic, client_options, seneca)
-      })
-      
       return function( args, done ) {
         var outmsg = prepare_request( seneca, args, done )
         msger.push( outmsg )
@@ -197,56 +227,65 @@ module.exports = function( options ) {
   }
 
 
-  var json_parser_stream = new stream.Duplex({objectMode:true})
-  json_parser_stream.linebuf = []
-  json_parser_stream._read   = function() {}
-  json_parser_stream._write  = function(data,enc,done) {
-    var str     = ''+data
-    var endline = -1
-    var remain  = 0
+  function json_parser_stream() {
+    var json_parser = new stream.Duplex({objectMode:true})
+    json_parser.linebuf = []
+    json_parser._read   = function() {}
+    json_parser._write  = function(data,enc,done) {
+      var str     = ''+data
+      var endline = -1
+      var remain  = 0
 
-    while( -1 != (endline = str.indexOf('\n',remain)) ) {
-      this.linebuf.push( str.substring(remain,endline) )
-      var jsonstr = this.linebuf.join('')
+      while( -1 != (endline = str.indexOf('\n',remain)) ) {
+        this.linebuf.push( str.substring(remain,endline) )
+        var jsonstr = this.linebuf.join('')
 
-      this.linebuf.length = 0
-      remain = endline+1
+        this.linebuf.length = 0
+        remain = endline+1
 
-      if( '' == jsonstr ) {
-        return done();
+        if( '' == jsonstr ) {
+          return done();
+        }
+
+        var data = parseJSON( seneca, 'stream', jsonstr )
+
+        if( data ) {
+          this.push(data)        
+        }
       }
 
-      var data = parseJSON( seneca, 'stream', jsonstr )
-
-      if( data ) {
-        this.push(data)        
+      if( -1 == endline ) {
+        this.linebuf.push(str.substring(remain))
       }
+
+      return done();
     }
 
-    if( -1 == endline ) {
-      this.linebuf.push(str.substring(remain))
-    }
-
-    return done();
+    return json_parser;
   }
 
-  var json_stringify_stream = new stream.Duplex({objectMode:true})
-  json_stringify_stream._read = function() {}
-  json_stringify_stream._write = function( data, enc, done ) {
-    var out = stringifyJSON( seneca, 'stream', data )
+
+  function json_stringify_stream() {
+    var json_stringify = new stream.Duplex({objectMode:true})
+    json_stringify._read = function() {}
+    json_stringify._write = function( data, enc, done ) {
+      var out = stringifyJSON( seneca, 'stream', data )
     
-    if( out ) {
-      this.push(out+'\n')        
+      if( out ) {
+        this.push(out+'\n')        
+      }
+
+      done()
     }
 
-    done()
+    return json_stringify;
   }
   
 
   function hook_listen_web( args, done ) {
     var seneca         = this
     var type           = args.type
-    var listen_options = _.extend({},options[type],args)
+    var listen_options = seneca.util.clean(_.extend({},options[type],args))
 
     var app = connect()
     app.use( connect.timeout( listen_options.timeout ) )
@@ -325,7 +364,7 @@ module.exports = function( options ) {
   function hook_client_web( args, clientdone ) {
     var seneca         = this
     var type           = args.type
-    var client_options = _.extend({},options[type],args)
+    var client_options = seneca.util.clean(_.extend({},options[type],args))
 
     make_client( make_send, client_options, clientdone )
 
@@ -356,17 +395,20 @@ module.exports = function( options ) {
         request.post( reqopts, function(err,response,body) {
 
           var data = {
-            id:     response.headers['seneca-id'],
-            kind:   'res',
-            origin: response.headers['seneca-origin'],
-            accept: response.headers['seneca-accept'],
-            time: {
+            kind:  'res',
+            res:   body,
+            error: err
+          }
+
+          if( response ) {
+            data.id     = response.headers['seneca-id'],
+            data.origin = response.headers['seneca-origin'],
+            data.accept = response.headers['seneca-accept'],
+            data.time = {
               client_sent: response.headers['seneca-time-client-sent'],
               listen_recv: response.headers['seneca-time-listen-recv'],
               listen_sent: response.headers['seneca-time-listen-sent'],
-            },
-            res:   body,
-            error: err
+            }
           }
 
           handle_response( seneca, data, client_options )

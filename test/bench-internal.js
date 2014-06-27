@@ -67,7 +67,7 @@ typemap.tcp = function() {
           function call() {
             ctxt.seneca.act('a:1')
             ctxt.total++
-            setImmediate(call)
+            0 == ctxt.total % 100 ? setImmediate(call) : call()
           }
 
           call()
