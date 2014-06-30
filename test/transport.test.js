@@ -43,7 +43,7 @@ describe('transport', function() {
         var count = 0
         function check() {
           count++
-          if( 2 == count ) fin()
+          if( 3 == count ) fin()
         }
 
         run_client( 'tcp', 20102, check )
@@ -63,7 +63,7 @@ describe('transport', function() {
         var count = 0
         function check() {
           count++
-          if( 2 == count ) fin()
+          if( 3 == count ) fin()
         }
 
         run_client( 'web', 20202, check )
