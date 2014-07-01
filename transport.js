@@ -15,6 +15,7 @@ var connect     = require('connect')
 var request     = require('request')
 var lrucache    = require('lru-cache')
 var reconnect   = require('reconnect-net')
+var nid         = require('nid')
 
 
 
@@ -456,7 +457,6 @@ module.exports = function( options ) {
 
 
   function parseConfig( args ) {
-    //console.log('pc',args)
     var out = {}
 
     var config = args.config || args
@@ -503,7 +503,6 @@ module.exports = function( options ) {
     }
 
     var base = options[out.type] || {}
-    //console.log('base',base)
 
     out = _.extend({},base,out)
 
@@ -587,7 +586,7 @@ module.exports = function( options ) {
 
 
   function resolvetopic( opts, spec, args ) {
-    var msgprefix = opts.msgprefix
+    var msgprefix = (null == options.msgprefix ? '' : options.msgprefix) 
     if( !spec.pin ) return function() { return msgprefix+'any' }
 
     var topicpin = _.clone(spec.pin)
@@ -615,11 +614,13 @@ module.exports = function( options ) {
 
 
   function make_anyclient( opts, make_send, done ) {
-    make_send( {}, opts.msgprefix+'any', function( err, send ) {
+    var msgprefix = (null == options.msgprefix ? '' : options.msgprefix) 
+    make_send( {}, msgprefix+'any', function( err, send ) {
       if( err ) return done(err);
       if( !_.isFunction(send) ) return done(seneca.fail('null-client',{opts:opts}));
 
       done( null, {
+        id: nid(),
         match: function( args ) { 
           return !this.has(args)
         },
@@ -633,6 +634,7 @@ module.exports = function( options ) {
 
   function make_pinclient( resolvesend, argspatrun, done ) {  
     done(null, {
+      id: nid(),
       match: function( args ) {
         var match = !!argspatrun.find(args)
         return match
@@ -682,7 +684,7 @@ module.exports = function( options ) {
 
 
   function listen_topics( seneca, args, listen_options, do_topic ) {
-    var msgprefix = listen_options.msgprefix
+    var msgprefix = (null == options.msgprefix ? '' : options.msgprefix) 
     var pins      = resolve_pins( args )
 
     if( pins ) {
