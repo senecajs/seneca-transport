@@ -29,7 +29,8 @@
     "underscore": "~1.6.0"
   },
   "devDependencies": {
-    "mocha": "~1.18.2"
+    "mocha": "~1.18.2",
+    "seneca-transport-test": "^0.1.0"
   },
   "files": [
     "README.md",

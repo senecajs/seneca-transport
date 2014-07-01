@@ -149,6 +149,8 @@ module.exports = function( options ) {
       return msger
     }
 
+    var connections = []
+
     var listen = net.createServer(function(connection) {
       seneca.log.info('listen', 'connection', listen_options, seneca, 
                       'remote', connection.remoteAddress, connection.remotePort)
@@ -161,6 +163,8 @@ module.exports = function( options ) {
       connection.on('error',function(err){
         console.log(err)
       })
+
+      connections.push(connection)
     })
 
     listen.on('listening', function() {
@@ -178,6 +182,18 @@ module.exports = function( options ) {
     })
 
     listen.listen( listen_options.port, listen_options.host )
+
+
+    seneca.add('role:seneca,cmd:close',function( close_args, done ) {
+      var closer = this
+
+      listen.close()
+      connections.forEach(function(con){
+        try { con.destroy() } catch(e) { seneca.log.error(e) }
+      })
+
+      closer.prior(close_args,done)
+    })
   }
 
 
@@ -370,6 +386,13 @@ module.exports = function( options ) {
 
     seneca.log.info('listen', listen_options, seneca)
     var listen = app.listen( listen_options.port, listen_options.host )
+
+    seneca.add('role:seneca,cmd:close',function( close_args, done ) {
+      var closer = this
+
+      listen.close()
+      closer.prior(close_args,done)
+    })
 
     done(null,listen)
   }
