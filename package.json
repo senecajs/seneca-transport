@@ -1,6 +1,6 @@
 {
   "name": "seneca-transport",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Seneca transport",
   "main": "transport.js",
   "scripts": {
@@ -18,18 +18,20 @@
   "author": "Richard Rodger (http://richardrodger.com)",
   "license": "MIT",
   "dependencies": {
-    "async": "~0.7.0",
-    "connect": "~2.14.5",
-    "gex": "~0.1.3",
+    "async": "~0.9.0",
+    "connect": "~3.0.1",
+    "connect-query": "^0.1.0",
+    "connect-timeout": "^1.1.1",
+    "gex": "~0.1.4",
     "lru-cache": "~2.5.0",
-    "nid": "^0.3.2",
-    "patrun": "~0.1.5",
+    "nid": "~0.3.2",
+    "patrun": "~0.2.0",
     "reconnect-net": "0.0.0",
-    "request": "~2.34.0",
+    "request": "~2.36.0",
     "underscore": "~1.6.0"
   },
   "devDependencies": {
-    "mocha": "~1.18.2",
+    "mocha": "~1.20.1",
     "seneca-transport-test": "^0.1.0"
   },
   "files": [

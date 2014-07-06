@@ -16,7 +16,8 @@ var request     = require('request')
 var lrucache    = require('lru-cache')
 var reconnect   = require('reconnect-net')
 var nid         = require('nid')
-
+var timeout     = require('connect-timeout');
+var query       = require('connect-query');
 
 
 module.exports = function( options ) {
@@ -179,7 +180,6 @@ module.exports = function( options ) {
 
     listen.on('close', function() {
       seneca.log.info('listen', 'close', listen_options, seneca)
-      done(null,listen)
     })
 
     listen.listen( listen_options.port, listen_options.host )
@@ -316,13 +316,12 @@ module.exports = function( options ) {
     var listen_options = seneca.util.clean(_.extend({},options[type],args))
 
     var app = connect()
-    app.use( connect.timeout( listen_options.timeout ) )
-    app.use( connect.responseTime() )
+    app.use( timeout( listen_options.timeout ) )
 
     // query params get injected into args
     // let's you use a GET for debug
     // GETs can have side-effects, this is not a web server, or a REST API
-    app.use( connect.query() )
+    app.use( query() )
 
     app.use( function( req, res, next ) {
       var buf = []
@@ -362,7 +361,7 @@ module.exports = function( options ) {
 
       handle_request( seneca, data, listen_options, function(out) {
         var outjson = "{}"
-        if( null != out ) {
+        if( null != out && out.res ) {
           outjson = stringifyJSON(seneca,'listen-web',out.res)
         }
 
@@ -464,25 +463,28 @@ module.exports = function( options ) {
     if( _.isArray( config ) ) {
       var arglen = config.length
 
+      /*
       if( 0 === arglen ) {
         out.port = base.port
         out.host = base.host
         out.path = base.path
       }
-      else if( 1 === arglen ) {
+      else 
+       */
+      if( 1 === arglen ) {
         if( _.isObject( config[0] ) ) {
           out = config[0]
         }
         else {
           out.port = parseInt(config[0])
-          out.host = base.host
-          out.path = base.path
+          //out.host = base.host
+          //out.path = base.path
         }
       }
       else if( 2 === arglen ) {
         out.port = parseInt(config[0])
         out.host = config[1]
-        out.path = base.path
+        //out.path = base.path
       }
       else if( 3 === arglen ) {
         out.port = parseInt(config[0])

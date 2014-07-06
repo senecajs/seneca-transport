@@ -9,6 +9,9 @@ var seneca  = require('seneca')
 
 var assert  = require('assert')
 
+var test = require('seneca-transport-test')
+
+
 
 function run_client( type, port, done ) {
   require('seneca')({log:'silent'})
@@ -32,6 +35,15 @@ function run_client( type, port, done ) {
 
 
 describe('transport', function() {
+
+  it('happy-tcp', function( fin ) {
+    test.foo_test( require, fin, 'tcp' )
+  })
+
+  it('happy-web', function( fin ) {
+    test.foo_test( require, fin, 'web' )
+  })
+
   
   it('tcp', function( fin ) {
 

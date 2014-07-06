@@ -18,7 +18,7 @@ have any questions! :) [@rjrodger](http://twitter.com/rjrodger)
 
 Current Version: 0.2.0
 
-Tested on: Node 0.10.28, 0.11.13, Seneca 0.5.18
+Tested on: Node 0.10.29, Seneca 0.5.18
 
 [![Build Status](https://travis-ci.org/rjrodger/seneca-transport.png?branch=master)](https://travis-ci.org/rjrodger/seneca-transport)
 
