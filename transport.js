@@ -221,8 +221,11 @@ module.exports = function( options ) {
       }
 
       var msger = make_msger()
+      var connections = []
 
-      reconnect( function(client) {
+      var clientconnect = reconnect( function(client) {
+        connections.push(client)
+
         client
           .pipe( json_parser_stream() )
           .pipe( msger )
@@ -250,6 +253,17 @@ module.exports = function( options ) {
       send_done( null, function( args, done ) {
         var outmsg = prepare_request( seneca, args, done )
         msger.push( outmsg )
+      })
+
+      seneca.add('role:seneca,cmd:close',function( close_args, done ) {
+        var closer = this
+
+        clientconnect.disconnect()
+        connections.forEach(function(con){
+          try { con.destroy() } catch(e) { seneca.log.error(e) }
+        })
+
+        closer.prior(close_args,done)
       })
     }
   }
