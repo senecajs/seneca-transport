@@ -16,7 +16,7 @@ You can provide your own transport mechanisms by overriding the transport action
 If you're using this module, feel free to contact me on Twitter if you
 have any questions! :) [@rjrodger](http://twitter.com/rjrodger)
 
-Current Version: 0.2.0
+Current Version: 0.2.1
 
 Tested on: Node 0.10.29, Seneca 0.5.18
 
@@ -104,19 +104,17 @@ Create a Seneca instance that sends actions to a remote service.  The
 
 ## Hook Patterns
 
-These patterns are called by the primary action patterns. Add your own for additional transport mechanisms.
+These patterns are called by the primary action patterns. Add your own for additional transport mechanisms. For example, [seneca-redis-transport](http://github.com/rjrodger/seneca-redis-transport) defines:
 
-   * role:transport, hook:listen, type:direct
-   * role:transport, hook:client, type:pubsub
-   * role:transport, hook:listen, type:direct
-   * role:transport, hook:client, type:pubsub
+   * role:transport, hook:listen, type:redis
+   * role:transport, hook:client, type:redis
 
 These all take additional configuration arguments, which are passed through from the primary actions:
 
    * host
    * port
-   * path (not used by pubsub)
-
+   * path
+   * any other configuration you need
 
 
 ## Pattern Selection
