@@ -81,6 +81,7 @@ module.exports = function( options ) {
     done( null, inflight )
   }
 
+
   
   function cmd_listen( args, done ) {
     var seneca = this
@@ -114,6 +115,7 @@ module.exports = function( options ) {
   }
 
 
+
   function handle_legacy_types(type,done) {
     var ok = false
 
@@ -129,6 +131,7 @@ module.exports = function( options ) {
 
     return ok;
   }
+
 
 
   function hook_listen_tcp( args, done ) {
@@ -163,7 +166,7 @@ module.exports = function( options ) {
         .pipe(connection)
 
       connection.on('error',function(err){
-        console.log(err)
+        seneca.log.error('listen', 'pipe-error', listen_options, seneca, err.stack||err)
       })
 
       connections.push(connection)
@@ -196,6 +199,7 @@ module.exports = function( options ) {
       closer.prior(close_args,done)
     })
   }
+
 
 
   function hook_client_tcp( args, clientdone ) {
@@ -251,7 +255,7 @@ module.exports = function( options ) {
       })
 
       send_done( null, function( args, done ) {
-        var outmsg = prepare_request( seneca, args, done )
+        var outmsg = prepare_request( this, args, done )
         msger.push( outmsg )
       })
 
@@ -267,6 +271,7 @@ module.exports = function( options ) {
       })
     }
   }
+
 
 
   function json_parser_stream() {
@@ -307,6 +312,7 @@ module.exports = function( options ) {
   }
 
 
+
   function json_stringify_stream() {
     var json_stringify = new stream.Duplex({objectMode:true})
     json_stringify._read = function() {}
@@ -323,6 +329,7 @@ module.exports = function( options ) {
     return json_stringify;
   }
   
+
 
   function hook_listen_web( args, done ) {
     var seneca         = this
@@ -412,6 +419,7 @@ module.exports = function( options ) {
   }
 
 
+
   function hook_client_web( args, clientdone ) {
     var seneca         = this
     var type           = args.type
@@ -467,6 +475,7 @@ module.exports = function( options ) {
       })
     }
   }  
+
 
 
   function parseConfig( args ) {
@@ -532,6 +541,7 @@ module.exports = function( options ) {
   }
 
 
+
   // only support first level
   // interim measure - deal with this in core seneca act api
   // allow user to specify operations on result
@@ -552,6 +562,7 @@ module.exports = function( options ) {
   }
 
 
+
   function resolve_pins( opts ) {
     var pins = opts.pin || opts.pins
     if( pins ) {
@@ -559,6 +570,7 @@ module.exports = function( options ) {
     }
     return pins
   }
+
 
 
   // can handle glob expressions :)
@@ -597,8 +609,11 @@ module.exports = function( options ) {
       argspatrun.add(pin,spec)
     })
 
+    argspatrun.mark = util.inspect(pins).replace(/\s+/g, '').replace(/\n/g, '')
+
     return argspatrun
   }
+
 
 
   function resolvetopic( opts, spec, args ) {
@@ -612,6 +627,7 @@ module.exports = function( options ) {
 
     return msgprefix+(util.inspect(topicargs).replace(/[^\w\d]/g,'_'))
   }
+
 
 
   function make_resolvesend( opts, sendmap, make_send ) {
@@ -629,6 +645,7 @@ module.exports = function( options ) {
   }
 
 
+
   function make_anyclient( opts, make_send, done ) {
     var msgprefix = (null == options.msgprefix ? '' : options.msgprefix) 
     make_send( {}, msgprefix+'any', function( err, send ) {
@@ -637,6 +654,7 @@ module.exports = function( options ) {
 
       done( null, {
         id: nid(),
+        toString: function(){ return 'any-'+this.id },
         match: function( args ) { 
           return !this.has(args)
         },
@@ -648,22 +666,27 @@ module.exports = function( options ) {
   }
 
 
+
   function make_pinclient( resolvesend, argspatrun, done ) {  
     done(null, {
       id: nid(),
+      //toString: function(){ return 'pin-<<'+argspatrun.toString(function(o){return 'X'})+'>>-'+this.id },
+      toString: function(){ return 'pin-'+argspatrun.mark+'-'+this.id },
       match: function( args ) {
         var match = !!argspatrun.find(args)
         return match
       },
       send: function( args, done ) {
+        var seneca = this
         var spec = argspatrun.find(args)
         resolvesend(spec,args,function(err, send){
           if( err ) return done(err);
-          send.call(this,args,done)
+          send.call(seneca,args,done)
         })
       }
     })
   }
+
 
 
   function prepare_response( seneca, input ) {
@@ -680,6 +703,7 @@ module.exports = function( options ) {
   }
 
 
+
   function update_output( output, err, out ) {
     output.res = out
 
@@ -692,11 +716,13 @@ module.exports = function( options ) {
   }
 
 
+
   function catch_act_error( seneca, e, listen_options, input, output ) {
     seneca.log.error('listen', 'act-error', listen_options, e.stack || e )
     output.error = e
     output.input = input
   }
+
 
 
   function listen_topics( seneca, args, listen_options, do_topic ) {
@@ -713,6 +739,7 @@ module.exports = function( options ) {
       do_topic( msgprefix+'any' )
     }
   }
+
 
 
   function handle_response( seneca, data, client_options ) {
@@ -761,6 +788,7 @@ module.exports = function( options ) {
   }
 
 
+
   function prepare_request( seneca, args, done ) {
     var callmeta = {
       args: args,
@@ -774,11 +802,12 @@ module.exports = function( options ) {
       kind:   'act',
       origin: seneca.id,
       time:   { client_sent:Date.now() },
-      act:    args,
+      act:    seneca.util.clean(args),
     }
 
     return output;
   }
+
 
 
   function handle_request( seneca, data, listen_options, respond ) {
@@ -819,6 +848,7 @@ module.exports = function( options ) {
   }
 
 
+
   function make_client( make_send, client_options, clientdone ) {
     var pins = resolve_pins( client_options )
     seneca.log.info( 'client', client_options, pins||'any', seneca )
@@ -841,16 +871,18 @@ module.exports = function( options ) {
   }
 
 
+
   function parseJSON( seneca, note, str ) {
     if( str ) {
       try {
         return JSON.parse( str )
       }
       catch( e ) {
-        seneca.log.error( 'json-parse', note, str )
+        seneca.log.error( 'json-parse', note, str, e.stack||e.message )
       }
     }
   }
+
 
 
   function stringifyJSON( seneca, note, obj ) {
@@ -859,10 +891,11 @@ module.exports = function( options ) {
         return JSON.stringify( obj )
       }
       catch( e ) {
-        seneca.log.error( 'json-stringify', note, obj )
+        seneca.log.error( 'json-stringify', note, obj, e.stack||e.message )
       }
     }
   }
+
 
 
   var transutils = {
