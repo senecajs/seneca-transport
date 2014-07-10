@@ -37,15 +37,23 @@ function run_client( type, port, done ) {
 describe('transport', function() {
 
   it('happy-tcp', function( fin ) {
-    test.foo_test( require, fin, 'tcp' )
+    test.foo_test( 'transport', require, fin, 'tcp' )
+  })
+
+  it('happy-pin-tcp', function( fin ) {
+    test.foo_pintest( 'transport', require, fin, 'tcp' )
   })
 
   it('happy-web', function( fin ) {
-    test.foo_test( require, fin, 'web' )
+    test.foo_test( 'transport', require, fin, 'web' )
+  })
+
+  it('happy-pin-web', function( fin ) {
+    test.foo_pintest( 'transport', require, fin, 'web' )
   })
 
   
-  it('tcp', function( fin ) {
+  it('tcp-basic', function( fin ) {
 
     require('seneca')({log:'silent'})
       .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )
@@ -65,7 +73,7 @@ describe('transport', function() {
   })
 
 
-  it('web', function( fin ) {
+  it('web-basic', function( fin ) {
 
     require('seneca')({log:'silent'})
       .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )

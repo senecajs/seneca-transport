@@ -625,7 +625,15 @@ module.exports = function( options ) {
     var topicargs = {}
     _.each(topicpin, function(v,k) { topicargs[k]=args[k] })
 
-    return msgprefix+(util.inspect(topicargs).replace(/[^\w\d]/g,'_'))
+    var sb = []
+    _.each( _.keys(topicargs).sort(), function(k){
+      sb.push(k)
+      sb.push('=')
+      sb.push(topicargs[k])
+      sb.push(',')
+    })
+
+    return msgprefix+(sb.join('')).replace(/[^\w\d]+/g,'_')
   }
 
 
@@ -731,7 +739,18 @@ module.exports = function( options ) {
 
     if( pins ) {
       _.each( seneca.findpins( pins ), function(pin) {
-        var topic = msgprefix + util.inspect(pin).replace(/[^\w\d]/g,'_')
+
+        var sb = []
+        _.each( _.keys(pin).sort(), function(k){
+          sb.push(k)
+          sb.push('=')
+          sb.push(pin[k])
+          sb.push(',')
+        })
+
+        var topic = msgprefix+(sb.join('')).replace(/[^\w\d]+/g,'_')
+
+        //var topic = msgprefix + util.inspect(pin).replace(/[^\w\d]/g,'_')
         do_topic( topic )
       })
     }

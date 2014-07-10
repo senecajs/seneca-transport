@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "mocha": "~1.20.1",
-    "seneca-transport-test": "^0.1.0"
+    "seneca-transport-test": "~0.1.2"
   },
   "files": [
     "README.md",
