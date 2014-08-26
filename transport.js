@@ -29,23 +29,23 @@ module.exports = function( options ) {
 
   options = seneca.util.deepextend({
     msgprefix: 'seneca_',
-    callmax:   1111,
+    callmax:   111111,
     msgidlen:  12,
+
+    web: {
+      type:     'web',
+      port:     10101,
+      host:     'localhost',
+      path:     '/act',
+      protocol: 'http',
+      timeout:  Math.max( so.timeout ? so.timeout-555 : 5555, 555 )
+    },
 
     tcp: {
       type:     'tcp',
       host:     'localhost',
-      port:     10101,
-      timeout:  so.timeout ? so.timeout-555 :  22222,
-    },
-
-    web: {
-      type:     'web',
       port:     10201,
-      host:     'localhost',
-      path:     '/act',
-      protocol: 'http',
-      timeout:  so.timeout ? so.timeout-555 :  22222,
+      timeout:  Math.max( so.timeout ? so.timeout-555 : 5555, 555 )
     },
 
   },options)
@@ -61,13 +61,18 @@ module.exports = function( options ) {
   seneca.add({role:plugin,cmd:'listen'}, cmd_listen)
   seneca.add({role:plugin,cmd:'client'}, cmd_client)
 
+
   seneca.add({role:plugin,hook:'listen',type:'tcp'}, hook_listen_tcp)
   seneca.add({role:plugin,hook:'client',type:'tcp'}, hook_client_tcp)
 
   seneca.add({role:plugin,hook:'listen',type:'web'}, hook_listen_web)
   seneca.add({role:plugin,hook:'client',type:'web'}, hook_client_web)
 
-  // Legacy api.
+  // Aliases.
+  seneca.add({role:plugin,hook:'listen',type:'http'}, hook_listen_web)
+  seneca.add({role:plugin,hook:'client',type:'http'}, hook_client_web)
+
+  // Legacy API.
   seneca.add({role:plugin,hook:'listen',type:'direct'}, hook_listen_web)
   seneca.add({role:plugin,hook:'client',type:'direct'}, hook_client_web)
 
@@ -118,8 +123,6 @@ module.exports = function( options ) {
 
   function handle_legacy_types(type,done) {
     var ok = false
-
-    // TODO: this type of code should have an easier idiom
 
     if( 'pubsub' == type ) {
       done(seneca.fail('plugin-needed',{name:'seneca-redis-transport'}))
@@ -370,14 +373,32 @@ module.exports = function( options ) {
     app.use( function( req, res, next ) {
       if( 0 !== req.url.indexOf(listen_options.path) ) return next();
 
-      var data = {
-        id:     req.headers['seneca-id'],
-        kind:   'act',
-        origin: req.headers['seneca-origin'],
-        time: {
-          client_sent: req.headers['seneca-time-client-sent'],
-        },
-        act:   req.body,
+      var data
+      var standard = !!req.headers['seneca-id']
+
+      if( standard ) {
+        data = {
+          id:     req.headers['seneca-id'],
+          kind:   'act',
+          origin: req.headers['seneca-origin'],
+          time: {
+            client_sent: req.headers['seneca-time-client-sent'],
+          },
+          act:    req.body,
+        }
+      }
+
+      // convenience for non-seneca clients
+      else {
+        data = {
+          id:     seneca.idgen(),
+          kind:   'act',
+          origin: req.headers['user-agent'] || 'UNKNOWN',
+          time: {
+            client_sent: Date.now()
+          },
+          act:    req.body,
+        }
       }
 
       handle_request( seneca, data, listen_options, function(out) {
@@ -392,13 +413,13 @@ module.exports = function( options ) {
           'Content-Length': buffer.Buffer.byteLength(outjson),
         }
         
-        headers['seneca-id']     = out.id
+        headers['seneca-id']     = out ? out.id : seneca.if
         headers['seneca-kind']   = 'res'
-        headers['seneca-origin'] = out.origin
+        headers['seneca-origin'] = out ? out.origin : 'UNKNOWN'
         headers['seneca-accept'] = seneca.id
-        headers['seneca-time-client-sent'] = out.time.client_sent
-        headers['seneca-time-listen-recv'] = out.time.listen_recv
-        headers['seneca-time-listen-sent'] = out.time.listen_sent
+        headers['seneca-time-client-sent'] = out ? out.time.client_sent : '0'
+        headers['seneca-time-listen-recv'] = out ? out.time.listen_recv : '0'
+        headers['seneca-time-listen-sent'] = out ? out.time.listen_sent : '0'
         
         res.writeHead( 200, headers )
         res.end( outjson )
@@ -486,28 +507,17 @@ module.exports = function( options ) {
     if( _.isArray( config ) ) {
       var arglen = config.length
 
-      /*
-      if( 0 === arglen ) {
-        out.port = base.port
-        out.host = base.host
-        out.path = base.path
-      }
-      else 
-       */
       if( 1 === arglen ) {
         if( _.isObject( config[0] ) ) {
           out = config[0]
         }
         else {
           out.port = parseInt(config[0])
-          //out.host = base.host
-          //out.path = base.path
         }
       }
       else if( 2 === arglen ) {
         out.port = parseInt(config[0])
         out.host = config[1]
-        //out.path = base.path
       }
       else if( 3 === arglen ) {
         out.port = parseInt(config[0])
@@ -518,13 +528,13 @@ module.exports = function( options ) {
     }
     else out = config;
 
-    // Default transport is tcp
-    out.type = out.type || 'tcp'
 
-    //out.type = null == out.type ? base.type : out.type
+    // Default transport is web
+    out.type = out.type || 'web'
 
-    if( 'direct' == out.type ) {
-      out.type = 'tcp'
+    // Aliases.
+    if( 'direct' == out.type || 'http' == out.type ) {
+      out.type = 'web'
     }
 
     var base = options[out.type] || {}

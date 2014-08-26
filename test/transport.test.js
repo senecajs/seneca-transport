@@ -8,6 +8,7 @@
 var seneca  = require('seneca')
 
 var assert  = require('assert')
+var request = require('request')
 
 var test = require('seneca-transport-test')
 
@@ -76,6 +77,7 @@ describe('transport', function() {
   it('web-basic', function( fin ) {
 
     require('seneca')({log:'silent'})
+      .use('../transport.js')
       .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )
       .listen({type:'web',port:20202})
       .ready( function() {
@@ -83,12 +85,23 @@ describe('transport', function() {
         var count = 0
         function check() {
           count++
-          if( 3 == count ) fin()
+          if( 4 == count ) fin()
         }
 
         run_client( 'web', 20202, check )
         run_client( 'web', 20202, check )
         run_client( 'web', 20202, check )
+
+        // special case for non-seneca clients
+        request.post({
+          url:  'http://localhost:20202/act',
+          json: {c:1,d:'A'}
+
+        },function(err,res,body){
+          if( err ) return fin(err)
+          assert.equal( '{"s":"1-A"}', JSON.stringify(body) )
+          check()
+        })
       })
   })
 })
