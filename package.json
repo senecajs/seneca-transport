@@ -19,15 +19,15 @@
   "license": "MIT",
   "dependencies": {
     "async": "~0.9.0",
-    "connect": "~3.0.1",
-    "connect-query": "^0.1.0",
+    "connect": "~3.0.2",
+    "connect-query": "^0.2.0",
     "connect-timeout": "^1.1.1",
     "gex": "~0.1.4",
     "lru-cache": "~2.5.0",
     "nid": "~0.3.2",
     "patrun": "~0.2.0",
     "reconnect-net": "0.0.0",
-    "request": "~2.36.0",
+    "request": "~2.40.0",
     "underscore": "~1.6.0"
   },
   "devDependencies": {

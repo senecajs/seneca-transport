@@ -177,7 +177,8 @@ module.exports = function( options ) {
 
     listen.on('listening', function() {
       seneca.log.info('listen', 'open', listen_options, seneca)
-      done(null,listen)
+      //done(null,listen)
+      done()
     })
 
     listen.on('error', function(err) {
@@ -369,7 +370,6 @@ module.exports = function( options ) {
       })
     })
 
-    
     app.use( function( req, res, next ) {
       if( 0 !== req.url.indexOf(listen_options.path) ) return next();
 
@@ -425,7 +425,7 @@ module.exports = function( options ) {
         res.end( outjson )
       })
     })
-
+    
     seneca.log.info('listen', listen_options, seneca)
     var listen = app.listen( listen_options.port, listen_options.host )
 
@@ -436,7 +436,8 @@ module.exports = function( options ) {
       closer.prior(close_args,done)
     })
 
-    done(null,listen)
+    //done(null,listen)
+    done()
   }
 
 

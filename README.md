@@ -1,27 +1,24 @@
-# seneca-transport
+seneca-transport - a [Seneca](http://senecajs.org) plugin
+======================================================
 
-## An action transport plugin for the [Seneca](http://senecajs.org) framework
+## Seneca Transport Plugin
 
-This plugin allows you to execute Seneca actions in separate Seneca processes. The default transport
-mechanism is HTTP. Redis publish-subscribe is also built-in.
+This plugin provides the HTTP and TCP transport channels for micro-service messages. It's a built-in dependency of the Seneca module, so you don't need to include it manually. You use this plugin to wire up your micro-services so that they can talk to each other.
 
-This plugin provides the implementation for the <i>listen</i>, <i>client</i>, and <i>proxy</i> convenience methods on the
-Seneca object. It is included as a dependent module of the Seneca module.
+[![Build Status](https://travis-ci.org/rjrodger/seneca-transport.png?branch=master)](https://travis-ci.org/rjrodger/seneca-transport)
 
-You can provide your own transport mechanisms by overriding the transport action patterns (see below).
+[![NPM](https://nodei.co/npm/seneca-transport.png)](https://nodei.co/npm/seneca-transport/)
+[![NPM](https://nodei.co/npm-dl/seneca-transport.png)](https://nodei.co/npm-dl/seneca-transport/)
 
+For a gentle introduction to Seneca itself, see the
+[senecajs.org](http://senecajs.org) site.
 
-## Support
-
-If you're using this module, feel free to contact me on Twitter if you
+If you're using this plugin module, feel free to contact me on twitter if you
 have any questions! :) [@rjrodger](http://twitter.com/rjrodger)
 
 Current Version: 0.2.3
 
-Tested on: Node 0.10.29, Seneca 0.5.18
-
-[![Build Status](https://travis-ci.org/rjrodger/seneca-transport.png?branch=master)](https://travis-ci.org/rjrodger/seneca-transport)
-
+Tested on: Seneca 0.5.19, Node 0.10.29
 
 
 ## Quick example
@@ -30,8 +27,13 @@ First, define a service (this is just a Seneca plugin):
 
 ```JavaScript
 module.exports = function() {
-  this.add( 'foo:1', function(args,done){done(null,{s:'1-'+args.bar})} )
-  this.add( 'foo:2', function(args,done){done(null,{s:'2-'+args.bar})} )
+  this.add( 'foo:1', function(args,done){
+    done(null,{:'1-'+args.bar})
+  })
+
+  this.add( 'foo:2', function(args,done){
+    done(null,{s:'2-'+args.bar})
+  })
 }
 ```
 
