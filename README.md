@@ -78,12 +78,12 @@ seneca()
 
 You can create multiple instances of Seneca inside the same Node.js
 process. They won't interfere with each other, but they will share
-external options from configurations files or the command line.
+external options from configuration files or the command line.
 
-If you run the full script (Full source is in
+If you run the full script (full source is in
 [readme-color.js](https://github.com/rjrodger/seneca-transport/blob/master/test/readme-color.js)),
 you'll see the standard Seneca startup log messages, but you won't see
-anything that tells you what the _color_ plugin is doing, since this
+anything that tells you what the _color_ plugin is doing since this
 code doesn't bother printing the result of the action. Let's use a
 filtered log to output the inbound and outbound action messages from
 each Seneca instance so we can see what's going on. Run the script with:
@@ -94,7 +94,7 @@ node readme-color.js --seneca.log=type:act,regex:color:red
 
 This log filter restricts printed log entries to those that report
 inbound and outbound actions, and further, to those log lines that
-match the regular expression <code>/color=red/<code>. Here's what you'll see:
+match the regular expression <code>/color=red/</code>. Here's what you'll see:
 
 ```sh
 [TIME] vy../..15/- DEBUG act -     - IN  485n.. color:red {color=red}   CLIENT 
@@ -104,17 +104,18 @@ match the regular expression <code>/color=red/<code>. Here's what you'll see:
 ```
 
 The second field is the identifier of the Seneca instance. You can see
-that first the client _vy../..15/-_ sends the message
-<code>{color=red}</code>. The message is sent over HTTP to the server
-_ly../..80/-_. The server performs the action, generating the result
-<code>{hex=#FF0000}</code>, and sending it back.
+that first the client (with an identifier of _vy../..15/-_) sends the
+message <code>{color=red}</code>. The message is sent over HTTP to the
+server ( with an identifier of _ly../..80/-_). The server performs the
+action, generating the result <code>{hex=#FF0000}</code>, and sending
+it back.
 
 The third field, <code>DEBUG</code>, indicates the log level. The next
-fields, <code>act</code> indicates the type of the log entry. Since
+field, <code>act</code> indicates the type of the log entry. Since
 you specified <code>type:act</code> in the log filter, you've got a
 match!
 
-The next two fields indicate the plugin name and tag <code>color
+The next two fields indicate the plugin name and tag, in this case <code>color
 -</code>. The plugin is only known on the server side, so the client
 just indicates a blank entry with <code>-</code>. For more details on
 plugin names and tags, see [How to write a Seneca
@@ -137,7 +138,7 @@ message (when inbound), or the response message (when outbound).
 The last field <code>f2rv..</code> is the internal identifier of the
 action function that acts on the message. On the client side, there is
 no action function, and this is indicated by the <code>CLIENT</code>
-marker. If you'd like to match up action function identifier to
+marker. If you'd like to match up the action function identifier to
 message executions, add a log filter to see them:
 
 ```sh
@@ -151,8 +152,9 @@ node readme-color.js --seneca.log=type:act,regex:color:red \
 ```
 
 The filter <code>plugin:color,case:ADD</code> picks out log entries of
-type _plugin_, where the _case_ is ADD. These entries indicate the
-action patterns that a plugin has registered.
+type _plugin_, where the plugin has the name _color_, and where the
+_case_ is ADD. These entries indicate the action patterns that a
+plugin has registered. In this case, there's only one _color:red_.
 
 You've run this example in a single Node.js process up to now. Of
 course, the whole point is to run it a separate processes! Let's do that. First, here's the server:

@@ -13,5 +13,5 @@ seneca()
   .listen()
 
 
-// node readme-color.js --seneca.log=type:act,regex:color:red
+// node readme-color-service.js --seneca.log=type:act,regex:color:red
 

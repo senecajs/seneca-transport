@@ -5,5 +5,5 @@ seneca()
   .client()
   .act('color:red')
 
-// node readme-color.js --seneca.log=type:act,regex:color:red
+// node readme-color-client.js --seneca.log=type:act,regex:color:red
 
