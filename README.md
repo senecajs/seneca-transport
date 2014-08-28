@@ -89,7 +89,7 @@ filtered log to output the inbound and outbound action messages from
 each Seneca instance so we can see what's going on. Run the script with:
 
 ```sh
-node readme-color.js --seneca.log=type:act,regex:color=red
+node readme-color.js --seneca.log=type:act,regex:color:red
 ```
 
 This log filter restricts printed log entries to those that report
@@ -120,21 +120,96 @@ just indicates a blank entry with <code>-</code>. For more details on
 plugin names and tags, see [How to write a Seneca
 plugin](http://senecajs.org).
 
-The next field is either <code>IN</code> or <code>OUT</code>, and
-indicates the direction of the message. If you follow the flow, you
-can see that the message is first inbound to the client, and then
-inbound to the server (the client sends it onwards). The response is
-outbound from the server, and then outbound from the client (back to
-your own code). The field after that, <code>485n..</code>, is the
-message identifier. You can see that it remains the same over multiple
-Seneca instances. This helps you to debug message flow.
+The next field (also known as the _case_) is either <code>IN</code> or
+<code>OUT</code>, and indicates the direction of the message. If you
+follow the flow, you can see that the message is first inbound to the
+client, and then inbound to the server (the client sends it
+onwards). The response is outbound from the server, and then outbound
+from the client (back to your own code). The field after that,
+<code>485n..</code>, is the message identifier. You can see that it
+remains the same over multiple Seneca instances. This helps you to
+debug message flow.
 
 The next two fields show the action pattern of the message
 <code>color:red</code>, followed by the actual data of the request
 message (when inbound), or the response message (when outbound).
 
+The last field <code>f2rv..</code> is the internal identifier of the
+action function that acts on the message. On the client side, there is
+no action function, and this is indicated by the <code>CLIENT</code>
+marker. If you'd like to match up action function identifier to
+message executions, add a log filter to see them:
+
+```sh
+node readme-color.js --seneca.log=type:act,regex:color:red \
+--seneca.log=plugin:color,case:ADD
+[TIME] ly../..80/- DEBUG plugin color - ADD f2rv.. color:red
+[TIME] vy../..15/- DEBUG act    -     - IN  485n.. color:red {color=red}   CLIENT 
+[TIME] ly../..80/- DEBUG act    color - IN  485n.. color:red {color=red}   f2rv..
+[TIME] ly../..80/- DEBUG act    color - OUT 485n.. color:red {hex=#FF0000} f2rv..
+[TIME] vy../..15/- DEBUG act    -     - OUT 485n.. color:red {hex=#FF0000} CLIENT
+```
+
+The filter <code>plugin:color,case:ADD</code> picks out log entries of
+type _plugin_, where the _case_ is ADD. These entries indicate the
+action patterns that a plugin has registered.
+
+You've run this example in a single Node.js process up to now. Of
+course, the whole point is to run it a separate processes! Let's do that. First, here's the server:
+
+```js
+function color() {
+  this.add( 'color:red', function(args,done){
+    done(null, {hex:'#FF0000'});
+  })
+}
 
 
+var seneca = require('seneca')
+      
+seneca()
+  .use(color)
+  .listen()
+```
+
+Run this in one terminal window with:
+
+```sh
+$ node readme-color-service.js --seneca.log=type:act,regex:color:red
+```
+
+And on the client side:
+
+```js
+var seneca = require('seneca')
+      
+seneca()
+  .client()
+  .act('color:red')
+```
+
+And run with:
+
+```sh
+$ node readme-color-client.js --seneca.log=type:act,regex:color:red
+```
+
+You'll see the same log lines as before, just split over the two processes. The full source code is the [test folder](https://github.com/rjrodger/seneca-transport/tree/master/test).
+
+
+## Non-Seneca Clients
+
+... coming soon ...
+
+
+## Using the TCP Channel
+
+... coming soon ...
+
+
+## Writing Your Own Transport
+
+... coming soon ...
 
 
 ## Action Patterns
