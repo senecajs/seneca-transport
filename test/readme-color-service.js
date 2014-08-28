@@ -15,3 +15,4 @@ seneca()
 
 // node readme-color-service.js --seneca.log=type:act,regex:color:red
 
+// curl -d '{"color":"red"}' http://localhost:10101/act

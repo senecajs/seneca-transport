@@ -35,7 +35,7 @@ module.exports = function( options ) {
     web: {
       type:     'web',
       port:     10101,
-      host:     'localhost',
+      host:     '0.0.0.0',
       path:     '/act',
       protocol: 'http',
       timeout:  Math.max( so.timeout ? so.timeout-555 : 5555, 555 )
@@ -43,7 +43,7 @@ module.exports = function( options ) {
 
     tcp: {
       type:     'tcp',
-      host:     'localhost',
+      host:     '0.0.0.0',
       port:     10201,
       timeout:  Math.max( so.timeout ? so.timeout-555 : 5555, 555 )
     },

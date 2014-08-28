@@ -201,7 +201,57 @@ You'll see the same log lines as before, just split over the two processes. The 
 
 ## Non-Seneca Clients
 
-... coming soon ...
+The default transport mechanism for messages is HTTP. This means you can communicate easily with a Seneca micro-service from other platforms. By default, the <code>listen</code> method starts a web server on port 10101, listening on all interfaces. If you run the _readme-color-service.js_ script again (as above), you can talk to it by _POST_ing JSON data to the <code>/act</code> path. Here's an example using the command line _curl_ utility.
+
+```sh
+$ curl -d '{"color":"red"}' http://localhost:10101/act
+{"hex":"#FF0000"}
+```
+
+If you dump the response headers, you'll see some additional headers that give you contextual information. Let's use the <code>-v</code> option to _curl_ to see them:
+
+```sh
+$ curl -d '{"color":"red"}' -v http://localhost:10101/act
+...
+* Connected to localhost (127.0.0.1) port 10101 (#0)
+> POST /act HTTP/1.1
+> User-Agent: curl/7.30.0
+> Host: localhost:10101
+> Accept: */*
+> Content-Length: 15
+> Content-Type: application/x-www-form-urlencoded
+> 
+* upload completely sent off: 15 out of 15 bytes
+< HTTP/1.1 200 OK
+< Content-Type: application/json
+< Cache-Control: private, max-age=0, no-cache, no-store
+< Content-Length: 17
+< seneca-id: 9wu80xdsn1nu
+< seneca-kind: res
+< seneca-origin: curl/7.30.0
+< seneca-accept: sk5mjwcxxpvh/1409222334824/-
+< seneca-time-client-sent: 1409222493910
+< seneca-time-listen-recv: 1409222493910
+< seneca-time-listen-sent: 1409222493910
+< Date: Thu, 28 Aug 2014 10:41:33 GMT
+< Connection: keep-alive
+< 
+* Connection #0 to host localhost left intact
+{"hex":"#FF0000"}
+```
+
+You can get the message identifier from the _seneca-id_ header, and
+the identifier of the Seneca instance from _seneca-accept_.
+
+There are two structures that the submitted JSON document can take:
+
+   * Vanilla JSON containing your request message, plain and simple.
+   * OR; A JSON wrapper containing the client details
+
+The JSON wrapper follows the standard form of Seneca messages used in
+other contexts, such as message queue transports. However, the simple
+vanilla format is perfectly valid and provided explicitly for
+integration. The wrapper format is described below.
 
 
 ## Using the TCP Channel
