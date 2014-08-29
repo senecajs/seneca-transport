@@ -160,7 +160,7 @@ module.exports = function( options ) {
     var connections = []
 
     var listen = net.createServer(function(connection) {
-      seneca.log.info('listen', 'connection', listen_options, seneca, 
+      seneca.log.info('listen', 'connection', listen_options,
                       'remote', connection.remoteAddress, connection.remotePort)
       connection
         .pipe(json_parser_stream())
@@ -169,20 +169,22 @@ module.exports = function( options ) {
         .pipe(connection)
 
       connection.on('error',function(err){
-        seneca.log.error('listen', 'pipe-error', listen_options, seneca, err.stack||err)
+        seneca.log.error('listen', 'pipe-error', 
+                         listen_options, seneca, err.stack||err)
       })
 
       connections.push(connection)
     })
 
     listen.on('listening', function() {
-      seneca.log.info('listen', 'open', listen_options, seneca)
-      //done(null,listen)
+      seneca.log.info('listen', 'open', 
+                      listen_options)
       done()
     })
 
     listen.on('error', function(err) {
-      seneca.log.error('listen', 'net-error', listen_options, seneca, err.stack||err)
+      seneca.log.error('listen', 'net-error', 
+                       listen_options, seneca, err.stack||err)
     })
 
     listen.on('close', function() {
@@ -211,12 +213,12 @@ module.exports = function( options ) {
     var type           = args.type
     var client_options = seneca.util.clean(_.extend({},options[type],args))
 
-    make_client( make_send, client_options, clientdone )
+    make_client( seneca, make_send, client_options, clientdone )
 
 
     function make_send( spec, topic, send_done ) {
       seneca.log.debug('client', type, 'send-init', 
-                       spec, topic, client_options, seneca)
+                       spec, topic, client_options)
 
       function make_msger() {
         var msger = new stream.Duplex({objectMode:true})
@@ -447,7 +449,7 @@ module.exports = function( options ) {
     var type           = args.type
     var client_options = seneca.util.clean(_.extend({},options[type],args))
 
-    make_client( make_send, client_options, clientdone )
+    make_client( seneca, make_send, client_options, clientdone )
 
     function make_send( spec, topic, send_done ) {
       var fullurl = 
@@ -885,7 +887,17 @@ module.exports = function( options ) {
 
 
 
-  function make_client( make_send, client_options, clientdone ) {
+  function make_client( context_seneca, make_send, client_options, clientdone ) {
+    // legacy api
+    if( !seneca.seneca ) {
+      clientdone     = client_options
+      client_options = make_send
+      make_send      = context_seneca
+    }
+    else {
+      seneca = context_seneca
+    }
+
     var pins = resolve_pins( client_options )
     seneca.log.info( 'client', client_options, pins||'any', seneca )
 

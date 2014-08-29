@@ -301,7 +301,106 @@ $ node readme-color-client.js --seneca.log=type:act,regex:color:red \
 
 ## Using the TCP Channel
 
-... coming soon ...
+Also included in this plugin is a TCP transport mechanism. The HTTP
+mechanism offers easy integration, but it is necessarily slower. The
+TCP transport open a direct TCP connection to the server. The
+connection remains open, avoid connection overhead for each
+message. The client side of the TCP transport will also attempt to
+reconnect if the connection breaks, providing fault tolerance for
+server restarts.
+
+To use the TCP transport, specify a _type_ property to the
+<code>listen</code> and <code>client</code> methods, and give the
+value _tcp_. Here's the single script example again:
+
+
+```js
+seneca()
+  .use(color)
+  .listen({type:'tcp'})
+
+seneca()
+  .client({type:'tcp'})
+  .act('color:red')
+```
+
+The full source code is in the
+[readme-color-tcp.js](https://github.com/rjrodger/seneca-transport/blob/master/test/readme-color-tcp.js)
+file. When you run this script it would be great to verify that the right transport channels are being created. You'd like to see the configuration, and any connections that occur. By default, this information is printed with a log level of _INFO_, so you will see it if you don't use any log filters.
+
+Of course, we are using a log filter. So let's add another one to print the connectio details so we can sanity check the system. We want to print any log entries with a log level of _INFO_. Here's the command:
+
+```sh
+$ node readme-color-tcp.js --seneca.log=level:INFO \
+  --seneca.log=type:act,regex:color:red
+```
+
+This produces the log output:
+
+```sh
+[TIME] 6g../..49/- INFO  hello  Seneca/0.5.20/6g../..49/-
+[TIME] f1../..79/- INFO  hello  Seneca/0.5.20/f1../..79/-
+[TIME] f1../..79/- DEBUG act    -         - IN  wdfw.. color:red {color=red} CLIENT 
+[TIME] 6g../..49/- INFO  plugin transport - ACT b01d.. listen open {type=tcp,host=0.0.0.0,port=10201,...}
+[TIME] f1../..79/- INFO  plugin transport - ACT nid1.. client {type=tcp,host=0.0.0.0,port=10201,...} any
+[TIME] 6g../..49/- INFO  plugin transport - ACT b01d.. listen connection {type=tcp,host=0.0.0.0,port=10201,...} remote 127.0.0.1 52938
+[TIME] 6g../..49/- DEBUG act    color     - IN  bpwi.. color:red {color=red} mcx8i4slu68z UNGATE
+[TIME] 6g../..49/- DEBUG act    color     - OUT bpwi.. color:red {hex=#FF0000} mcx8i4slu68z
+[TIME] f1../..79/- DEBUG act    -         - OUT wdfw.. color:red {hex=#FF0000} CLIENT
+```
+
+The inbound and outbound log entries are as before. In addition, you
+can see the _INFO_ level entries. At startup, Seneca logs a "hello"
+entry with the identifier of the current instance execution. This
+identifier has the form:
+<code>Seneca/[12-random-chars]/[timestamp]/[tag]</code>.  This
+identifier can be used for debugging multi-process message flows. The
+second part is a local timestamp. The third is an optional tag, which
+you could provide with <code>seneca({tag:'foo'})</code>, although we
+don't use tags in this example.
+
+There are three _INFO_ level entries of interest. On the server-side,
+the listen facility logs the fact that it has opened a TCP port, and
+is now listening for connections. Then the client-side logs that is
+has opened a connection to the server. And finally the server logs the
+same thing.
+
+As with the HTTP transport example above, you can split this code into
+two processes by separating the client and server code. Here's the server:
+
+```js
+function color() {
+  this.add( 'color:red', function(args,done){
+    done(null, {hex:'#FF0000'});
+  })
+}
+
+var seneca = require('seneca')
+
+seneca()
+  .use(color)
+  .listen({type:'tcp'})
+```
+
+And here's the client:
+
+```js
+seneca()
+  .client({type:'tcp'})
+  .act('color:red')
+```
+
+HTTP and TCP are not the only transport mechanisms available. Of
+course, in true Seneca-style, the other mechanisms are available as
+plugins. Here's the list.
+
+   * [redis-transport](https://github.com/rjrodger/seneca-redis-transport): uses redis for a pub-sub message distribution model
+   * [beanstalk-transport](https://github.com/rjrodger/seneca-beanstalk-transport): uses beanstalkd for a message queue
+
+If you're written your own transport plugin (see below for
+instructions), and want to have it listed here, please submit a pull
+request.
+
 
 ## Multiple Channels
 
