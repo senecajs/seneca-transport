@@ -529,6 +529,12 @@ module.exports = function( options ) {
     }
     else out = config;
 
+    
+    _.each( options, function(v,k){
+      if( _.isObject(v) ) return;
+      out[k] =  ( void 0 === out[k] ? v : out[k] )
+    })
+
 
     // Default transport is web
     out.type = out.type || 'web'

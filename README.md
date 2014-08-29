@@ -201,14 +201,14 @@ You'll see the same log lines as before, just split over the two processes. The 
 
 ## Non-Seneca Clients
 
-The default transport mechanism for messages is HTTP. This means you can communicate easily with a Seneca micro-service from other platforms. By default, the <code>listen</code> method starts a web server on port 10101, listening on all interfaces. If you run the _readme-color-service.js_ script again (as above), you can talk to it by _POST_ing JSON data to the <code>/act</code> path. Here's an example using the command line _curl_ utility.
+The default transport mechanism for messages is HTTP. This means you can communicate easily with a Seneca micro-service from other platforms. By default, the <code>listen</code> method starts a web server on port 10101, listening on all interfaces. If you run the _readme-color-service.js_ script again (as above), you can talk to it by _POSTing_ JSON data to the <code>/act</code> path. Here's an example using the command line _curl_ utility.
 
 ```sh
 $ curl -d '{"color":"red"}' http://localhost:10101/act
 {"hex":"#FF0000"}
 ```
 
-If you dump the response headers, you'll see some additional headers that give you contextual information. Let's use the <code>-v</code> option to _curl_ to see them:
+If you dump the response headers, you'll see some additional headers that give you contextual information. Let's use the <code>-v</code> option of _curl_ to see them:
 
 ```sh
 $ curl -d '{"color":"red"}' -v http://localhost:10101/act
@@ -245,19 +245,66 @@ the identifier of the Seneca instance from _seneca-accept_.
 
 There are two structures that the submitted JSON document can take:
 
-   * Vanilla JSON containing your request message, plain and simple.
-   * OR; A JSON wrapper containing the client details
+   * Vanilla JSON containing your request message, plain and simple, as per the example above,
+   * OR: A JSON wrapper containing the client details along with the message data.
 
 The JSON wrapper follows the standard form of Seneca messages used in
 other contexts, such as message queue transports. However, the simple
 vanilla format is perfectly valid and provided explicitly for
 integration. The wrapper format is described below.
 
+If you need Seneca to listen on a particular port or host, you can
+specify these as options to the <code>listen</code> method. Both are
+optional.
+
+```js
+seneca()
+  .listen( { host:'192.168.1.2', port:80 } )
+```
+
+On the client side, either with your own code, or the Seneca client,
+you'll need to use matching host and port options.
+
+```bash
+$ curl -d '{"color":"red"}' http://192.168.1.2:80/act
+```
+
+```js
+seneca()
+  .client( { host:'192.168.1.2', port:80 } )
+```
+
+You can also set the host and port via the Seneca options facility. When
+using the options facility, you are setting the default options for
+all message transports. These can be overridden by arguments to individual
+<code>listen</code> and <code>client</code> calls.
+
+Let's run the color example again, but with a different port. On the server-side:
+
+```sh
+$ node readme-color-service.js --seneca.log=type:act,regex:color:red \
+  --seneca.options.transport.port=8888
+```
+
+And the client-side:
+
+```sh
+curl -d '{"color":"red"}' -v http://localhost:8888/act
+```
+OR
+
+```sh
+$ node readme-color-client.js --seneca.log=type:act,regex:color:red \
+  --seneca.options.transport.port=8888
+```
 
 ## Using the TCP Channel
 
 ... coming soon ...
 
+## Multiple Channels
+
+... coming soon ...
 
 ## Writing Your Own Transport
 
