@@ -94,7 +94,8 @@ node readme-color.js --seneca.log=type:act,regex:color:red
 
 This log filter restricts printed log entries to those that report
 inbound and outbound actions, and further, to those log lines that
-match the regular expression <code>/color=red/</code>. Here's what you'll see:
+match the regular expression <code>/color:red/</code>. Here's what
+you'll see:
 
 ```sh
 [TIME] vy../..15/- DEBUG act -     - IN  485n.. color:red {color=red}   CLIENT 
@@ -106,7 +107,7 @@ match the regular expression <code>/color=red/</code>. Here's what you'll see:
 The second field is the identifier of the Seneca instance. You can see
 that first the client (with an identifier of _vy../..15/-_) sends the
 message <code>{color=red}</code>. The message is sent over HTTP to the
-server ( with an identifier of _ly../..80/-_). The server performs the
+server (which has an identifier of _ly../..80/-_). The server performs the
 action, generating the result <code>{hex=#FF0000}</code>, and sending
 it back.
 
@@ -154,10 +155,11 @@ node readme-color.js --seneca.log=type:act,regex:color:red \
 The filter <code>plugin:color,case:ADD</code> picks out log entries of
 type _plugin_, where the plugin has the name _color_, and where the
 _case_ is ADD. These entries indicate the action patterns that a
-plugin has registered. In this case, there's only one _color:red_.
+plugin has registered. In this case, there's only one, _color:red_.
 
 You've run this example in a single Node.js process up to now. Of
-course, the whole point is to run it a separate processes! Let's do that. First, here's the server:
+course, the whole point is to run it a separate processes! Let's do
+that. First, here's the server:
 
 ```js
 function color() {
@@ -165,7 +167,6 @@ function color() {
     done(null, {hex:'#FF0000'});
   })
 }
-
 
 var seneca = require('seneca')
       
@@ -309,6 +310,8 @@ $ node readme-color-client.js --seneca.log=type:act,regex:color:red \
 ## Writing Your Own Transport
 
 ... coming soon ...
+
+<!-- message wrapper format -->
 
 
 ## Action Patterns
