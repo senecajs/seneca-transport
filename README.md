@@ -442,6 +442,25 @@ These all take additional configuration arguments, which are passed through from
    * path
    * any other configuration you need
 
+`role:transport,hook:client` should call the callback with an error, if any
+occured, and an object with `match` and `send` functions. `match` should
+return `true` if it can handle passed action and `false` otherwise. `send`
+should call the remote side with its passed parameters and call the callback
+when response is received.
+
+```js
+seneca.add('role:transport,hook:client,type:mytransport', function (args, done) {
+  var myRPC = new MyRPC()
+  done(null, {
+    send: function(args, done) {
+      myRPC.callRemoteMethod(args.foo, args, done)
+    },
+    match: function(args) {
+      return myRPC.has(args)
+    }
+  })
+})
+```
 
 ## Pattern Selection
 
