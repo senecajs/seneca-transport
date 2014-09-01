@@ -303,14 +303,14 @@ $ node readme-color-client.js --seneca.log=type:act,regex:color:red \
 
 Also included in this plugin is a TCP transport mechanism. The HTTP
 mechanism offers easy integration, but it is necessarily slower. The
-TCP transport open a direct TCP connection to the server. The
-connection remains open, avoid connection overhead for each
+TCP transport opens a direct TCP connection to the server. The
+connection remains open, avoiding connection overhead for each
 message. The client side of the TCP transport will also attempt to
 reconnect if the connection breaks, providing fault tolerance for
 server restarts.
 
 To use the TCP transport, specify a _type_ property to the
-<code>listen</code> and <code>client</code> methods, and give the
+<code>listen</code> and <code>client</code> methods, and give it the
 value _tcp_. Here's the single script example again:
 
 
@@ -326,9 +326,16 @@ seneca()
 
 The full source code is in the
 [readme-color-tcp.js](https://github.com/rjrodger/seneca-transport/blob/master/test/readme-color-tcp.js)
-file. When you run this script it would be great to verify that the right transport channels are being created. You'd like to see the configuration, and any connections that occur. By default, this information is printed with a log level of _INFO_, so you will see it if you don't use any log filters.
+file. When you run this script it would be great to verify that the
+right transport channels are being created. You'd like to see the
+configuration, and any connections that occur. By default, this
+information is printed with a log level of _INFO_, so you will see it
+if you don't use any log filters.
 
-Of course, we are using a log filter. So let's add another one to print the connectio details so we can sanity check the system. We want to print any log entries with a log level of _INFO_. Here's the command:
+Of course, we are using a log filter. So let's add another one to
+print the connection details so we can sanity check the system. We want
+to print any log entries with a log level of _INFO_. Here's the
+command:
 
 ```sh
 $ node readme-color-tcp.js --seneca.log=level:INFO \
@@ -353,7 +360,7 @@ The inbound and outbound log entries are as before. In addition, you
 can see the _INFO_ level entries. At startup, Seneca logs a "hello"
 entry with the identifier of the current instance execution. This
 identifier has the form:
-<code>Seneca/[12-random-chars]/[timestamp]/[tag]</code>.  This
+<code>Seneca/[version]/[12-random-chars]/[timestamp]/[tag]</code>.  This
 identifier can be used for debugging multi-process message flows. The
 second part is a local timestamp. The third is an optional tag, which
 you could provide with <code>seneca({tag:'foo'})</code>, although we
@@ -361,7 +368,7 @@ don't use tags in this example.
 
 There are three _INFO_ level entries of interest. On the server-side,
 the listen facility logs the fact that it has opened a TCP port, and
-is now listening for connections. Then the client-side logs that is
+is now listening for connections. Then the client-side logs that it
 has opened a connection to the server. And finally the server logs the
 same thing.
 
@@ -390,12 +397,16 @@ seneca()
   .act('color:red')
 ```
 
+You can cheat by running the HTTP examples with the additional command
+line option: <code>--seneca.options.transport.type=tcp</code>.
+
 HTTP and TCP are not the only transport mechanisms available. Of
 course, in true Seneca-style, the other mechanisms are available as
 plugins. Here's the list.
 
    * [redis-transport](https://github.com/rjrodger/seneca-redis-transport): uses redis for a pub-sub message distribution model
    * [beanstalk-transport](https://github.com/rjrodger/seneca-beanstalk-transport): uses beanstalkd for a message queue
+   * [loadbalance-transport](https://github.com/mmalecki/seneca-loadbalance-transport): a load-balancing transport over multiple Seneca servers
 
 If you're written your own transport plugin (see below for
 instructions), and want to have it listed here, please submit a pull
@@ -403,6 +414,8 @@ request.
 
 
 ## Multiple Channels
+
+
 
 ... coming soon ...
 
