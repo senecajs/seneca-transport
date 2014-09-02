@@ -92,6 +92,17 @@ each Seneca instance so we can see what's going on. Run the script with:
 node readme-color.js --seneca.log=type:act,regex:color:red
 ```
 
+_NOTE: when running the examples in this documentation, you'll find
+that most of the Node.js processes do not exit. This because they
+running in server mode. You'll need to kill all the Node.js processes
+between execution runs. The quickest way to do this is:
+
+```sh
+$ killall node
+```
+_
+
+
 This log filter restricts printed log entries to those that report
 inbound and outbound actions, and further, to those log lines that
 match the regular expression <code>/color:red/</code>. Here's what
@@ -415,9 +426,100 @@ request.
 
 ## Multiple Channels
 
+You can use multiple <code>listen</code> and <code>client<code>
+definitions on the same Seneca instance, in any order. By default, a
+single <code>client</code> definition will send all unrecognized
+action patterns over the network. When you have multiple client
+definitions, it's becuase you want to send some action patterns to one
+micro-service, and other patterns to other micro-services. To do this,
+you need to specify the patterns you are interested in. In Seneca,
+this is done with a _pin_.
+
+A Seneca _pin_ is a pattern for action patterns. You provide a list of
+property names and values that much match. Unlike ordinary action
+patterns, where the values are fixed, with a _pin_, you can use globs
+to match more than one value. For example, let's say you have the patterns:
+
+   * _foo:1, bar:zed-aaa_
+   * _foo:1, bar:zed-bbb_
+   * _foo:1, bar:zed-ccc_
+
+Then you can use these _pins_ to pick out the patterns you want:
+
+   * _foo:1_ matches _foo:1, bar:zed-aaa_; _foo:1, bar:zed-bbb_; _foo:1, bar:zed-ccc_
+   * _foo:1, bar:*_ also matches _foo:1, bar:zed-aaa_; _foo:1, bar:zed-bbb_; _foo:1, bar:zed-ccc_
+   * _foo:1, bar:*-aaa_ also matches only _foo:1, bar:zed-aaa_
+
+Let's extend the color service example. We'll have three separate
+services, all running in separate processes. They will listen on ports
+8081, 8082, and 8083 respectively. We'll use command line arguments for settings. Here's the service code (see [readme-many-colors-server.js](https://github.com/rjrodger/seneca-transport/blob/master/test/readme-many-colors-server.js)):
+
+```js
+var color  = process.argv[2]
+var hexval = process.argv[3]
+var port   = process.argv[4]
+
+var seneca = require('seneca')
+
+seneca()
+
+  .add( 'color:'+color, function(args,done){
+    done(null, {hex:'#'+hexval});
+  })
+
+  .listen( port )
+
+  .log.info('color',color,hexval,port)
+```
+
+This service takes in a color name, a color hexadecimal value, and a
+port number from the command line. You can also see how the listen
+method can take a single argument, the port number. To offer the
+_color:red_ service from above, run this script with:
+
+```sh
+node readme-many-colors-server.js red FF0000 8081
+```
+
+And you can test this with:
+
+```sh
+curl -d '{"color":"red"}' http://localhost:8081/act
+```
 
 
-... coming soon ...
+Of course, you need to use some log filters to pick out the activity
+you're interested in. In this case, you've used a
+<code>log.info</code> call to dump out settings. You'll also want to
+see the actions as the occur. Try this:
+
+```sh
+node readme-many-colors-server.js red FF0000 8081 --seneca.log=level:info --seneca.log=type:act,regex:color
+```
+
+And you'll get:
+
+```sh
+[TIME] mi../..66/- INFO  hello  Seneca/0.5.20/mi../..66/-
+[TIME] mi../..66/- INFO  color  red       FF0000 8081
+[TIME] mi../..66/- INFO  plugin transport -      ACT 7j.. listen {type=web,port=8081,host=0.0.0.0,path=/act,protocol=http,timeout=32778,msgprefix=seneca_,callmax=111111,msgidlen=12,role=transport,hook=listen}
+[TIME] mi../..66/- DEBUG act    -         -      IN  ux.. color:red {color=red} 9lyy2e9zrrg5 UNGATE
+[TIME] mi../..66/- DEBUG act    -         -      OUT ux.. color:red {hex=#FF0000} 9lyy2e9zrrg5
+```
+
+You can see the custom _INFO_ log at the top, and also the transport
+settings after that.
+
+You can run three of these servers, one each for red, green and
+blue. You can also run a client to connect them. 
+
+Let's make it interesting. The client will also listen so that it can
+handle incoming actions, and pass them on to the appropriate server by
+using a _pin_. The client will also define a new action that can
+aggregate color lookups.
+
+
+...
 
 ## Writing Your Own Transport
 

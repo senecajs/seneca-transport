@@ -23,6 +23,7 @@
     "connect-query": "^0.2.0",
     "connect-timeout": "^1.1.1",
     "gex": "~0.1.4",
+    "jsonic": "^0.1.1",
     "lru-cache": "~2.5.0",
     "nid": "~0.3.2",
     "patrun": "~0.2.0",

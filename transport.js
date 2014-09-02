@@ -11,6 +11,7 @@ var stream = require('stream')
 var _           = require('underscore')
 var patrun      = require('patrun')
 var gex         = require('gex')
+var jsonic      = require('jsonic')
 var connect     = require('connect')
 var request     = require('request')
 var lrucache    = require('lru-cache')
@@ -188,7 +189,7 @@ module.exports = function( options ) {
     })
 
     listen.on('close', function() {
-      seneca.log.info('listen', 'close', listen_options, seneca)
+      seneca.log.info('listen', 'close', listen_options)
     })
 
     listen.listen( listen_options.port, listen_options.host )
@@ -244,15 +245,15 @@ module.exports = function( options ) {
 
       }).on('connect', function() {
           seneca.log.debug('client', type, 'connect', 
-                           spec, topic, client_options, seneca)
+                           spec, topic, client_options)
 
       }).on('reconnect', function() {
           seneca.log.debug('client', type, 'reconnect', 
-                           spec, topic, client_options, seneca)
+                           spec, topic, client_options)
 
       }).on('disconnect', function(err) {
           seneca.log.debug('client', type, 'disconnect', 
-                           spec, topic, client_options, seneca, 
+                           spec, topic, client_options,
                            (err&&err.stack)||err)
 
       }).connect({
@@ -428,7 +429,7 @@ module.exports = function( options ) {
       })
     })
     
-    seneca.log.info('listen', listen_options, seneca)
+    seneca.log.info('listen', listen_options )
     var listen = app.listen( listen_options.port, listen_options.host )
 
     seneca.add('role:seneca,cmd:close',function( close_args, done ) {
@@ -457,7 +458,7 @@ module.exports = function( options ) {
             client_options.port+client_options.path
 
       seneca.log.debug('client', 'web', 'send', spec, topic, client_options, 
-                       fullurl, seneca)
+                       fullurl )
       
       send_done( null, function( args, done ) {
         var data = prepare_request( this, args, done )
@@ -587,6 +588,11 @@ module.exports = function( options ) {
     if( pins ) {
       pins = _.isArray(pins) ? pins : [pins]
     }
+
+    pins = _.map(pins,function(pin){
+      return _.isString(pin) ? jsonic(pin) : pin
+    })
+
     return pins
   }
 
@@ -785,13 +791,11 @@ module.exports = function( options ) {
     data.time.client_recv = Date.now()
 
     if( 'res' != data.kind ) {
-      return seneca.log.error('client', 'invalid-kind', client_options, 
-                       seneca, data)
+      return seneca.log.error('client', 'invalid-kind', client_options, data)
     }
 
     if( null == data.id ) {
-      return seneca.log.error('client', 'no-message-id', client_options, 
-                              seneca, data);
+      return seneca.log.error('client', 'no-message-id', client_options, data);
     }
 
     var callmeta = callmap.get(data.id)
@@ -800,8 +804,7 @@ module.exports = function( options ) {
       callmap.del( data.id )
     }
     else {
-      seneca.log.error('client', 'unknown-message-id', client_options, 
-                       seneca, data);
+      seneca.log.error('client', 'unknown-message-id', client_options, data);
       return false;
     }
 
@@ -818,8 +821,7 @@ module.exports = function( options ) {
       callmeta.done( err, result ) 
     }
     catch(e) {
-      seneca.log.error('client', 'callback-error', client_options, 
-                       seneca, data, e.stack||e)
+      seneca.log.error('client', 'callback-error', client_options, data, e.stack||e)
     }
 
     return true;
@@ -852,20 +854,17 @@ module.exports = function( options ) {
     if( null == data ) return respond(null);
 
     if( 'act' != data.kind ) {
-      seneca.log.error('listen', 'invalid-kind', listen_options, 
-                       seneca, data)
+      seneca.log.error('listen', 'invalid-kind', listen_options, data)
       return respond(null);
     }
 
     if( null == data.id ) {
-      seneca.log.error('listen', 'no-message-id', listen_options, 
-                       seneca, data)
+      seneca.log.error('listen', 'no-message-id', listen_options, data)
       return respond(null);
     }
 
     if( data.error ) {
-      seneca.log.error('listen', 'data-error', listen_options, 
-                       seneca, data )
+      seneca.log.error('listen', 'data-error', listen_options, data )
       return respond(null);
     }
 
@@ -899,7 +898,7 @@ module.exports = function( options ) {
     }
 
     var pins = resolve_pins( client_options )
-    seneca.log.info( 'client', client_options, pins||'any', seneca )
+    seneca.log.info( 'client', client_options, pins||'any' )
 
     if( pins ) {
       var argspatrun  = make_argspatrun( pins )

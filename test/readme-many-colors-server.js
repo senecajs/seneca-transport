@@ -12,8 +12,9 @@ seneca()
   })
 
   .listen( port )
+
   .log.info('color',color,hexval,port)
 
-// node readme-many-colors-server.js red FF000 8081 --seneca.log=level:info --seneca.log=type:act,regex:color
+// node readme-many-colors-server.js red FF0000 8081 --seneca.log=level:info --seneca.log=type:act,regex:color
 
 

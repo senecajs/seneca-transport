@@ -7,6 +7,22 @@ sleep 1
 echo 
 echo 
 
+
+curl -d '{"color":"red"}' http://localhost:10101/act
+echo
+echo 
+sleep 1
+
+curl -d '{"color":"green"}' http://localhost:10101/act
+echo
+echo 
+sleep 1
+
+curl -d '{"color":"blue"}' http://localhost:10101/act
+echo
+echo 
+sleep 1
+
 curl -d '{"list":"colors","names":["red","green","blue"]}' http://localhost:10101/act
 echo
 echo 

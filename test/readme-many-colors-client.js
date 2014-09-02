@@ -5,9 +5,9 @@ var seneca = require('seneca')
 
 seneca()
 
-  .client({ port:8081, pin:{color:'red'} })
-  .client({ port:8082, pin:{color:'green'} })
-  .client({ port:8083, pin:{color:'blue'} })
+  .client({ port:8081, pin:'color:red' })
+  .client({ port:8082, pin:'color:green' })
+  .client({ port:8083, pin:'color:blue' })
 
   .add( 'list:colors', function( args, done ){
     var seneca = this
@@ -29,7 +29,6 @@ seneca()
   .listen()
 
   .act({list:'colors',names:['blue','green','red']},console.log)
-
 
 // node readme-many-colors-client.js --seneca.log=type:act,regex:CLIENT
 
