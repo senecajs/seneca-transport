@@ -589,9 +589,11 @@ module.exports = function( options ) {
       pins = _.isArray(pins) ? pins : [pins]
     }
 
-    pins = _.map(pins,function(pin){
-      return _.isString(pin) ? jsonic(pin) : pin
-    })
+    if( pins ) {
+      pins = _.map(pins,function(pin){
+        return _.isString(pin) ? jsonic(pin) : pin
+      })
+    }
 
     return pins
   }
