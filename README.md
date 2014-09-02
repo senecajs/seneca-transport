@@ -620,7 +620,7 @@ protocol. In general the transport plugins, such as
 _seneca-redis-transport_ will handle this for you so that you only
 have to think in terms of JavaScript objects
 
-The JSON object is wrapper for the message data. The wrapper contains
+The JSON object is a wrapper for the message data. The wrapper contains
 some tracking fields to make debugging easier, these are:
 
    * _id_:     action identifier (appears in Seneca logs after IN/OUT)
@@ -628,10 +628,10 @@ some tracking fields to make debugging easier, these are:
    * _origin_: identifier of orginating Seneca instance, where action is submitted
    * _accept_: identifier of accepting Seneca instance, where action is performed
    * _time_:
-   *   _client_sent_: client timestamp when message sent 
-   *   _listen_recv_: server timestamp when message received 
-   *   _listen_sent_: server timestamp when response sent 
-   *   _client_recv_: client timestamp when response received 
+      *   _client_sent_: client timestamp when message sent 
+      *   _listen_recv_: server timestamp when message received 
+      *   _listen_sent_: server timestamp when response sent 
+      *   _client_recv_: client timestamp when response received 
    * _act_: action message data, as submitted to Seneca
    * _res_: response message data, as provided by Seneca
    * _error_: error message, if any
@@ -712,7 +712,7 @@ The primary options are:
   
    * _msgprefix_: a string to prefix to topic names so that they are namespaced
    * _callmax_: the maximum number of in-flight request/response messages to cache
-   * _msgidlen: length of the message indentifier string
+   * _msgidlen_: length of the message indentifier string
 
 These can be set within the top-level _transport_ property of the main
 Seneca options tree:
@@ -728,12 +728,18 @@ seneca({
 
 Each transport type forms a sub-level within the _transport_
 option. The recognized types depend on the transport plugins you have
-loaded. By default, _web_ and _tcp_ are available. To use _redis_, you
+loaded. By default, _web_ and _tcp_ are available. To use _redis_, for example, you
 need to do this:
 
 ```js
 var seneca = require('seneca')
-seneca()
+seneca({
+    transport:{
+      redis:{
+        timeout:500
+      }
+    }
+  })
 
   // assumes npm install seneca-redis-transport
   .use('redis-transport')
@@ -756,19 +762,19 @@ seneca({
 
 The transport-level options vary by transport. Here are the default ones for HTTP:
 
-   * _type_: 'web'
-   * _port_: 10101
-   * _host_: '0.0.0.0'
-   * _path_: '/act'
-   * _protocol_: 'http',
-   * _timeout_: 5555
+   * _type_: type name; constant: 'web'
+   * _port_: port number; default: 10101
+   * _host_: hostname; default: '0.0.0.0' (all interfaces)
+   * _path_: URL path to submit messages; default: '/act'
+   * _protocol_: HTTP protocol; default 'http'
+   * _timeout_: timeout in milliseconds; default: 5555
 
 And for TCP:
 
-   * _type_: 'tcp'
-   * _port_: 10101
-   * _host_: '0.0.0.0'
-   * _timeout_: 5555
+   * _type_: type name; constant: 'tcp'
+   * _port_: port number; default: 10201
+   * _host_: hostname; default: '0.0.0.0' (all interfaces)
+   * _timeout_: timeout in milliseconds; default: 5555
 
 The <code>client</code> and <code>listen</code> methods accept an
 options object as the primary way to specify options:
