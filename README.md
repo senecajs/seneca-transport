@@ -426,7 +426,7 @@ request.
 
 ## Multiple Channels
 
-You can use multiple <code>listen</code> and <code>client<code>
+You can use multiple <code>listen</code> and <code>client</code>
 definitions on the same Seneca instance, in any order. By default, a
 single <code>client</code> definition will send all unrecognized
 action patterns over the network. When you have multiple client
@@ -436,23 +436,25 @@ you need to specify the patterns you are interested in. In Seneca,
 this is done with a _pin_.
 
 A Seneca _pin_ is a pattern for action patterns. You provide a list of
-property names and values that much match. Unlike ordinary action
+property names and values that must match. Unlike ordinary action
 patterns, where the values are fixed, with a _pin_, you can use globs
 to match more than one value. For example, let's say you have the patterns:
 
-   * _foo:1, bar:zed-aaa_
-   * _foo:1, bar:zed-bbb_
-   * _foo:1, bar:zed-ccc_
+   * _foo:1,bar:zed-aaa_
+   * _foo:1,bar:zed-bbb_
+   * _foo:1,bar:zed-ccc_
 
 Then you can use these _pins_ to pick out the patterns you want:
 
-   * _foo:1_ matches _foo:1, bar:zed-aaa_; _foo:1, bar:zed-bbb_; _foo:1, bar:zed-ccc_
-   * _foo:1, bar:*_ also matches _foo:1, bar:zed-aaa_; _foo:1, bar:zed-bbb_; _foo:1, bar:zed-ccc_
-   * _foo:1, bar:*-aaa_ also matches only _foo:1, bar:zed-aaa_
+   * _foo:1_ matches _foo:1,bar:zed-aaa_; _foo:1,bar:zed-bbb_; _foo:1,bar:zed-ccc_
+   * _foo:1, bar:*_ also matches _foo:1,bar:zed-aaa_; _foo:1,bar:zed-bbb_; _foo:1,bar:zed-ccc_
+   * _foo:1, bar:*-aaa_ matches only _foo:1,bar:zed-aaa_
 
-Let's extend the color service example. We'll have three separate
+Let's extend the color service example. You'll have three separate
 services, all running in separate processes. They will listen on ports
-8081, 8082, and 8083 respectively. We'll use command line arguments for settings. Here's the service code (see [readme-many-colors-server.js](https://github.com/rjrodger/seneca-transport/blob/master/test/readme-many-colors-server.js)):
+8081, 8082, and 8083 respectively. You'll use command line arguments
+for settings. Here's the service code (see
+[readme-many-colors-server.js](https://github.com/rjrodger/seneca-transport/blob/master/test/readme-many-colors-server.js)):
 
 ```js
 var color  = process.argv[2]
@@ -473,20 +475,19 @@ seneca()
 ```
 
 This service takes in a color name, a color hexadecimal value, and a
-port number from the command line. You can also see how the listen
+port number from the command line. You can also see how the <code>listen</code>
 method can take a single argument, the port number. To offer the
-_color:red_ service from above, run this script with:
+_color:red_ service, run this script with:
 
 ```sh
-node readme-many-colors-server.js red FF0000 8081
+$ node readme-many-colors-server.js red FF0000 8081
 ```
 
-And you can test this with:
+And you can test with:
 
 ```sh
-curl -d '{"color":"red"}' http://localhost:8081/act
+$ curl -d '{"color":"red"}' http://localhost:8081/act
 ```
-
 
 Of course, you need to use some log filters to pick out the activity
 you're interested in. In this case, you've used a
@@ -494,7 +495,8 @@ you're interested in. In this case, you've used a
 see the actions as the occur. Try this:
 
 ```sh
-node readme-many-colors-server.js red FF0000 8081 --seneca.log=level:info --seneca.log=type:act,regex:color
+node readme-many-colors-server.js red FF0000 8081 --seneca.log=level:info \
+  --seneca.log=type:act,regex:color
 ```
 
 And you'll get:
@@ -503,91 +505,303 @@ And you'll get:
 [TIME] mi../..66/- INFO  hello  Seneca/0.5.20/mi../..66/-
 [TIME] mi../..66/- INFO  color  red       FF0000 8081
 [TIME] mi../..66/- INFO  plugin transport -      ACT 7j.. listen {type=web,port=8081,host=0.0.0.0,path=/act,protocol=http,timeout=32778,msgprefix=seneca_,callmax=111111,msgidlen=12,role=transport,hook=listen}
-[TIME] mi../..66/- DEBUG act    -         -      IN  ux.. color:red {color=red} 9lyy2e9zrrg5 UNGATE
-[TIME] mi../..66/- DEBUG act    -         -      OUT ux.. color:red {hex=#FF0000} 9lyy2e9zrrg5
+[TIME] mi../..66/- DEBUG act    -         -      IN  ux.. color:red {color=red} 9l..
+[TIME] mi../..66/- DEBUG act    -         -      OUT ux.. color:red {hex=#FF0000} 9l..
 ```
 
-You can see the custom _INFO_ log at the top, and also the transport
+You can see the custom _INFO_ log entry at the top, and also the transport
 settings after that.
 
-You can run three of these servers, one each for red, green and
-blue. You can also run a client to connect them. 
+Let's run three of these servers, one each for red, green and
+blue. Let's also run a client to connect to them.
 
-Let's make it interesting. The client will also listen so that it can
+Let's make it interesting. The client will <code>listen</code> so that it can
 handle incoming actions, and pass them on to the appropriate server by
 using a _pin_. The client will also define a new action that can
 aggregate color lookups.
 
+```js
+var seneca = require('seneca')
 
-...
+seneca()
+
+  // send matching actions out over the network
+  .client({ port:8081, pin:'color:red' })
+  .client({ port:8082, pin:'color:green' })
+  .client({ port:8083, pin:'color:blue' })
+
+  // an aggregration action that calls other actions
+  .add( 'list:colors', function( args, done ){
+    var seneca = this
+    var colors = {}
+
+    args.names.forEach(function( name ){
+      seneca.act({color:name}, function(err, result){
+        if( err ) return done(err);
+
+        colors[name] = result.hex
+        if( Object.keys(colors).length == args.names.length ) {
+          return done(null,colors)
+        }
+      })
+    })
+
+  })
+
+  .listen()
+
+  // this is a sanity check
+  .act({list:'colors',names:['blue','green','red']},console.log)
+```
+
+This code calls the <code>client</code> method three times. Each time,
+it specifies an action pattern _pin_, and a destination port. And
+action submitted to this Seneca instance via the <code>act</code>
+method will be matched against these _pin_ patterns. If there is a
+match, they will not be processed locally. Instead they will be sent
+out over the network to the micro-service that deals with them.
+
+In this code, you are using the default HTTP transport, and just
+changing the port number to connect to. This reflects the fact that
+each color micro-service runs on a separate port.
+
+The <code>listen<code> call at the bottom makes this "client" also
+listen for inbound messages. So if you run, say the _color:red_
+service, and also run the client, then you can send color:red messages
+to the client.
+
+You need to run four processes:
+
+```sh
+node readme-many-colors-server.js red FF0000 8081 --seneca.log=level:info --seneca.log=type:act,regex:color &
+node readme-many-colors-server.js green 00FF00 8082 --seneca.log=level:info --seneca.log=type:act,regex:color &
+node readme-many-colors-server.js blue 0000FF 8083 --seneca.log=level:info --seneca.log=type:act,regex:color &
+node readme-many-colors-client.js --seneca.log=type:act,regex:CLIENT &
+
+```
+
+And then you can test with:
+
+```sh
+$ curl -d '{"color":"red"}' http://localhost:10101/act
+$ curl -d '{"color":"green"}' http://localhost:10101/act
+$ curl -d '{"color":"blue"}' http://localhost:10101/act
+```
+
+These commands are all going via the client, which is listening on port 10101.
+
+The client code also includes an aggregation action,
+_list:colors_. This lets you call multiple color actions and return
+one result. This is a common micro-service pattern.
+
+The script
+[readme-many-colors.sh](https://github.com/rjrodger/seneca-transport/blob/master/test/readme-many-colors.sh)
+wraps all this up into one place for you so that it is easy to run.
+
+Seneca does not require you to use message transports. You can run
+everything in one process. But when the time comes, and you need to
+scale, or you need to break out micro-services, you have the option to
+do so.
+
+
+## Message Protocols
+
+There is no message protocol as such, as the data representation of
+the underlying message transport is used. However, the plain text
+message representation is JSON in all known transports.
+
+For the HTTP transport, message data is encoded as per the HTTP
+protocol. For the TCP transport, UTF8 JSON is used, with one
+well-formed JSON object per line (with a single "\n" as line
+terminator).
+
+For other transports, please see the documentation for the underlying
+protocol. In general the transport plugins, such as
+_seneca-redis-transport_ will handle this for you so that you only
+have to think in terms of JavaScript objects
+
+The JSON object is wrapper for the message data. The wrapper contains
+some tracking fields to make debugging easier, these are:
+
+   * _id_:     action identifier (appears in Seneca logs after IN/OUT)
+   * _kind_:   'act' for inbound actions, 'res' for outbound responses
+   * _origin_: identifier of orginating Seneca instance, where action is submitted
+   * _accept_: identifier of accepting Seneca instance, where action is performed
+   * _time_:
+   *   _client_sent_: client timestamp when message sent 
+   *   _listen_recv_: server timestamp when message received 
+   *   _listen_sent_: server timestamp when response sent 
+   *   _client_recv_: client timestamp when response received 
+   * _act_: action message data, as submitted to Seneca
+   * _res_: response message data, as provided by Seneca
+   * _error_: error message, if any
+   * _input_: input generating error, if any
+
 
 ## Writing Your Own Transport
 
-... coming soon ...
+To write your own transport, the best approach is to copy one of the existing ones:
 
-<!-- message wrapper format -->
+   * [transport.js](https://github.com/rjrodger/seneca-transport/blob/master/transport.js): disconnected or point-to-point
+   * [redis-transport.js](https://github.com/rjrodger/seneca-redis-transport/blob/master/redis-transport.js): publish/subscribe
+   * [beanstalk-transport.js](https://github.com/rjrodger/seneca-beanstalk-transport/blob/master/beanstalk-transport.js): message queue
 
+Choose a _type_ for your transport, say "foo". You will need to
+implement two patterns:
 
-## Action Patterns
+   * role:transport, hook:listen, type:foo
+   * role:transport, hook:client, type:foo
 
-### role:transport, cmd:listen
+To implement the client, use the template:
 
-Starts listening for actions. The <i>type</i> argument specifies the
-transport mechanism. Current built-ins are <i>direct</i> (which is
-HTTP), and <i>pubsub</i> (which is Redis).
+```js
+var transport_utils = seneca.export('transport/utils')
 
+function hook_client_redis( args, clientdone ) {
+  var seneca         = this
+  var type           = args.type
 
-### role:transport, cmd:client
+  // get your transport type default options
+  var client_options = seneca.util.clean(_.extend({},options[type],args))
 
-Create a Seneca instance that sends actions to a remote service.  The
-<i>type</i> argument specifies the transport mechanism.
+  transport_utils.make_client( make_send, client_options, clientdone )
 
-
-## Hook Patterns
-
-These patterns are called by the primary action patterns. Add your own for additional transport mechanisms. For example, [seneca-redis-transport](http://github.com/rjrodger/seneca-redis-transport) defines:
-
-   * role:transport, hook:listen, type:redis
-   * role:transport, hook:client, type:redis
-
-These all take additional configuration arguments, which are passed through from the primary actions:
-
-   * host
-   * port
-   * path
-   * any other configuration you need
-
-
-## Pattern Selection
-
-If you only want to transport certain action patterns, use the <i>pin</i> argument to pick these out. See the
-<i>test/client-pubsub-foo.js</i> and <i>test/service-pubsub-foo.js</i> files for an example.
-
-
-
-## Logging
-
-To see what this plugin is doing, try:
-
-```sh
-node your-app.js --seneca.log=plugin:transport
+  // implement your transport here
+  function make_send( spec, topic, send_done ) {
+    // see an existing transport for full details
+  }
+}  
 ```
 
-To skip the action logs, use:
+To implement the server, use the template:
 
-```sh
-node your-app.js --seneca.log=type:plugin,plugin:transport
+```js
+var transport_utils = seneca.export('transport/utils')
+
+function hook_listen_redis( args, done ) {
+  var seneca         = this
+  var type           = args.type
+
+  // get your transport type default options
+  var listen_options = seneca.util.clean(_.extend({},options[type],args))
+
+  // get inbound data, and...
+  transport_utils.handle_request( seneca, data, listen_options, function(out){
+    // see an existing transport for full details
+
+  })
+}
 ```
 
-For more on logging, see the [seneca logging example](http://senecajs.org/logging-example.html).
+Message transport code should be written very carefully as it will be
+subject to high load and many error conditions - have fun!
 
 
-## Test
 
-This module itself does not contain any direct reference to seneca, as
-it is a seneca dependency. However, seneca is needed to test it, so
+## Plugin Options
+
+The transport plugin family uses an extension to the normal Seneca
+options facility. As well as supporting the standard method for
+defining options (see [How to Write a
+Plugin](http://senecajs.org/write-a-plugin.html#wp-options)), you can
+also supply options via arguments to the <code>client</code> or
+<code>listen</code> methods, and via the type name of the transport
+under the top-level _transport_ property.
+
+The primary options are:
+  
+   * _msgprefix_: a string to prefix to topic names so that they are namespaced
+   * _callmax_: the maximum number of in-flight request/response messages to cache
+   * _msgidlen: length of the message indentifier string
+
+These can be set within the top-level _transport_ property of the main
+Seneca options tree:
+
+```js
+var seneca = require('seneca')
+seneca({
+  transport:{
+    msgprefix:'foo'
+  }
+})
+```
+
+Each transport type forms a sub-level within the _transport_
+option. The recognized types depend on the transport plugins you have
+loaded. By default, _web_ and _tcp_ are available. To use _redis_, you
+need to do this:
+
+```js
+var seneca = require('seneca')
+seneca()
+
+  // assumes npm install seneca-redis-transport
+  .use('redis-transport')
+
+  .listen({type:'redis'})
+```
+
+You can set transport-level options inside the type property:
+
+```js
+var seneca = require('seneca')
+seneca({
+  transport:{
+    tcp:{
+      timeout:1000
+    }
+  }
+})
+```
+
+The transport-level options vary by transport. Here are the default ones for HTTP:
+
+   * _type_: 'web'
+   * _port_: 10101
+   * _host_: '0.0.0.0'
+   * _path_: '/act'
+   * _protocol_: 'http',
+   * _timeout_: 5555
+
+And for TCP:
+
+   * _type_: 'tcp'
+   * _port_: 10101
+   * _host_: '0.0.0.0'
+   * _timeout_: 5555
+
+The <code>client</code> and <code>listen</code> methods accept an
+options object as the primary way to specify options:
+
+```js
+var seneca = require('seneca')
+seneca()
+  .client({timeout:1000})
+  .listen({timeout:2000})
+```
+
+As a convenience, you can specify the port and host as optional arguments:
+
+```js
+var seneca = require('seneca')
+seneca()
+  .client( 8080 )
+  .listen( 9090, 'localhost')
+```
+
+To see the options actually in use at any time, you can call the
+<code>seneca.options()</code> method. Or try
+
+```sh
+$ node seneca-script.js --seneca.log=type:options
+```
+
+## Testing
+
+This module itself does not contain any direct reference to Seneca, as
+it is a Seneca dependency. However, Seneca is needed to test it, so
 the test script will perform an _npm install seneca_ (if needed). This is not
-saved to _package.json_ however.
+saved to _package.json_.
 
 ```sh
 npm test

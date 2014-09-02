@@ -705,7 +705,6 @@ module.exports = function( options ) {
   function make_pinclient( resolvesend, argspatrun, done ) {  
     done(null, {
       id: nid(),
-      //toString: function(){ return 'pin-<<'+argspatrun.toString(function(o){return 'X'})+'>>-'+this.id },
       toString: function(){ return 'pin-'+argspatrun.mark+'-'+this.id },
       match: function( args ) {
         var match = !!argspatrun.find(args)
@@ -776,8 +775,6 @@ module.exports = function( options ) {
         })
 
         var topic = msgprefix+(sb.join('')).replace(/[^\w\d]+/g,'_')
-
-        //var topic = msgprefix + util.inspect(pin).replace(/[^\w\d]/g,'_')
         do_topic( topic )
       })
     }
