@@ -365,7 +365,7 @@ module.exports = function( options ) {
 
           next();
         } 
-        catch (err) {
+        catch(err) {
           err.body   = err.message+': '+bufstr
           err.status = 400
           next(err)
@@ -738,12 +738,12 @@ module.exports = function( options ) {
 
 
 
-  function update_output( output, err, out ) {
+  function update_output( input, output, err, out ) {
     output.res = out
 
     if( err ) {
-      output.error  = err
-      output.input = data
+      output.error = err
+      output.input = input
     }
 
     output.time.listen_sent = Date.now()
@@ -872,7 +872,7 @@ module.exports = function( options ) {
 
     try {
       seneca.act( input, function( err, out ) {
-        update_output(output,err,out)
+        update_output(input,output,err,out)
           
         respond(output)
       })
@@ -886,18 +886,20 @@ module.exports = function( options ) {
 
 
   function make_client( context_seneca, make_send, client_options, clientdone ) {
+    var instance = seneca
+
     // legacy api
-    if( !seneca.seneca ) {
+    if( !context_seneca.seneca ) {
       clientdone     = client_options
       client_options = make_send
       make_send      = context_seneca
     }
     else {
-      seneca = context_seneca
+      instance = context_seneca
     }
 
     var pins = resolve_pins( client_options )
-    seneca.log.info( 'client', client_options, pins||'any' )
+    instance.log.info( 'client', client_options, pins||'any' )
 
     if( pins ) {
       var argspatrun  = make_argspatrun( pins )
