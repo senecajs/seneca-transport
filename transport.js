@@ -33,6 +33,12 @@ module.exports = function( options ) {
     callmax:   111111,
     msgidlen:  12,
 
+    warn: {
+      unknown_message_id: false,
+      invalid_kind:       false,
+      no_message_id:      false,      
+    },
+
     web: {
       type:     'web',
       port:     10101,
@@ -170,8 +176,7 @@ module.exports = function( options ) {
         .pipe(connection)
 
       connection.on('error',function(err){
-        seneca.log.error('listen', 'pipe-error', 
-                         listen_options, seneca, err.stack||err)
+        seneca.log.error('listen', 'pipe-error', listen_options, err.stack||err)
       })
 
       connections.push(connection)
@@ -184,8 +189,7 @@ module.exports = function( options ) {
     })
 
     listen.on('error', function(err) {
-      seneca.log.error('listen', 'net-error', 
-                       listen_options, seneca, err.stack||err)
+      seneca.log.error('listen', 'net-error', listen_options, err.stack||err)
     })
 
     listen.on('close', function() {
@@ -790,11 +794,17 @@ module.exports = function( options ) {
     data.time.client_recv = Date.now()
 
     if( 'res' != data.kind ) {
-      return seneca.log.error('client', 'invalid-kind', client_options, data)
+      if( options.warn.invalid_kind ) {
+        seneca.log.error('client', 'invalid-kind', client_options, data)
+      }
+      return false
     }
 
     if( null == data.id ) {
-      return seneca.log.error('client', 'no-message-id', client_options, data);
+      if( options.warn.no_message_id ) {
+        seneca.log.error('client', 'no-message-id', client_options, data);
+      }
+      return false;
     }
 
     var callmeta = callmap.get(data.id)
@@ -803,7 +813,9 @@ module.exports = function( options ) {
       callmap.del( data.id )
     }
     else {
-      seneca.log.error('client', 'unknown-message-id', client_options, data);
+      if( options.warn.unknown_message_id ) {
+        seneca.log.warn('client', 'unknown-message-id', client_options, data);
+      }
       return false;
     }
 
@@ -853,12 +865,16 @@ module.exports = function( options ) {
     if( null == data ) return respond(null);
 
     if( 'act' != data.kind ) {
-      seneca.log.error('listen', 'invalid-kind', listen_options, data)
+      if( options.warn.invalid_kind ) {
+        seneca.log.warn('listen', 'invalid-kind', listen_options, data)
+      }
       return respond(null);
     }
 
     if( null == data.id ) {
-      seneca.log.error('listen', 'no-message-id', listen_options, data)
+      if( options.warn.no_message_id ) {
+        seneca.log.warn('listen', 'no-message-id', listen_options, data)
+      }
       return respond(null);
     }
 
@@ -926,7 +942,7 @@ module.exports = function( options ) {
         return JSON.parse( str )
       }
       catch( e ) {
-        seneca.log.error( 'json-parse', note, str, e.stack||e.message )
+        seneca.log.warn( 'json-parse', note, str, e.stack||e.message )
       }
     }
   }
@@ -939,7 +955,7 @@ module.exports = function( options ) {
         return JSON.stringify( obj )
       }
       catch( e ) {
-        seneca.log.error( 'json-stringify', note, obj, e.stack||e.message )
+        seneca.log.warn( 'json-stringify', note, obj, e.stack||e.message )
       }
     }
   }
