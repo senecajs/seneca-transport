@@ -409,9 +409,18 @@ module.exports = function( options ) {
       }
 
       handle_request( seneca, data, listen_options, function(out) {
-        var outjson = "{}"
-        if( null != out && out.res ) {
-          outjson = stringifyJSON(seneca,'listen-web',out.res)
+        var outjson  = "{}"
+        var iserror  = false
+        var httpcode = 200
+
+        if( null != out ) {
+          if( out.res ) {
+            outjson = stringifyJSON(seneca,'listen-web',out.res)
+          }
+          else if( out.error ) {
+            iserror = true
+            outjson = stringifyJSON(seneca,'listen-web-error',out.error)
+          }
         }
 
         var headers = {
@@ -428,7 +437,12 @@ module.exports = function( options ) {
         headers['seneca-time-listen-recv'] = out ? out.time.listen_recv : '0'
         headers['seneca-time-listen-sent'] = out ? out.time.listen_sent : '0'
         
-        res.writeHead( 200, headers )
+
+        if( iserror ) {
+          httpcode = 500
+        }
+
+        res.writeHead( httpcode, headers )
         res.end( outjson )
       })
     })
@@ -496,6 +510,10 @@ module.exports = function( options ) {
               client_sent: response.headers['seneca-time-client-sent'],
               listen_recv: response.headers['seneca-time-listen-recv'],
               listen_sent: response.headers['seneca-time-listen-sent'],
+            }
+
+            if( 200 !== response.statusCode ) {
+              data.error = body
             }
           }
 
@@ -746,7 +764,11 @@ module.exports = function( options ) {
     output.res = out
 
     if( err ) {
-      output.error = err
+      var errobj     = _.clone(err)
+      errobj.message = err.message
+      errobj.name    = err.name || 'Error'
+
+      output.error = errobj
       output.input = input
     }
 
@@ -822,8 +844,10 @@ module.exports = function( options ) {
     var err = null
     if( data.error ) {
       err = new Error( data.error.message )
-      err.details = data.error.details
-      err.raw     = data.error
+
+      _.each(data.error,function(v,k){
+        err[k] = v
+      })
     }
     
     var result = handle_entity(data.res)

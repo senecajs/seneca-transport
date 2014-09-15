@@ -104,4 +104,47 @@ describe('transport', function() {
         })
       })
   })
+
+
+  it('error-passing-http', function(fin){
+
+    require('seneca')({log:'silent'})
+      .use('../transport.js')
+      .add('a:1',function(args,done){
+        done(new Error('bad-wire'))
+      })
+      .listen(30303)
+
+    require('seneca')({log:'silent'})
+      .use('../transport.js')
+      .client(30303)
+      .act('a:1',function(err,out){
+        //console.log(err)
+        assert.equal('bad-wire',err.message)
+        fin()
+      })
+
+  })
+
+
+  it('error-passing-tcp', function(fin){
+
+    require('seneca')({log:'silent'})
+      .use('../transport.js')
+      .add('a:1',function(args,done){
+        done(new Error('bad-wire'))
+      })
+      .listen({type:'tcp',port:40404})
+
+    require('seneca')({log:'silent'})
+      .use('../transport.js')
+      .client({type:'tcp',port:40404})
+      .act('a:1',function(err,out){
+        //console.log(err)
+        assert.equal('bad-wire',err.message)
+        fin()
+      })
+
+  })
+
 })

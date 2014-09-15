@@ -1,6 +1,6 @@
 {
   "name": "seneca-transport",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Seneca transport",
   "main": "transport.js",
   "scripts": {
