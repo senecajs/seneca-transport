@@ -36,7 +36,7 @@ module.exports = function( options ) {
     warn: {
       unknown_message_id: false,
       invalid_kind:       false,
-      no_message_id:      false,      
+      no_message_id:      false,
     },
 
     web: {
@@ -56,7 +56,7 @@ module.exports = function( options ) {
     },
 
   },options)
-  
+
 
 
   // Pending callbacks for all transports.
@@ -94,12 +94,12 @@ module.exports = function( options ) {
   }
 
 
-  
+
   function cmd_listen( args, done ) {
     var seneca = this
 
     var listen_config = parseConfig(args)
-    var listen_args  = 
+    var listen_args  =
           seneca.util.clean(
             _.omit(
               _.extend({},listen_config,{role:plugin,hook:'listen'}),'cmd'))
@@ -115,7 +115,7 @@ module.exports = function( options ) {
     var seneca = this
 
     var client_config = parseConfig(args)
-    var client_args   = 
+    var client_args   =
           seneca.util.clean(
             _.omit(
               _.extend({},client_config,{role:plugin,hook:'client'}),'cmd'))
@@ -148,7 +148,7 @@ module.exports = function( options ) {
     var seneca         = this
     var type           = args.type
     var listen_options = seneca.util.clean(_.extend({},options[type],args))
-    
+
     function make_msger() {
       var msger = new stream.Duplex({objectMode:true})
       msger._read = function() {}
@@ -183,7 +183,7 @@ module.exports = function( options ) {
     })
 
     listen.on('listening', function() {
-      seneca.log.info('listen', 'open', 
+      seneca.log.info('listen', 'open',
                       listen_options)
       done()
     })
@@ -222,7 +222,7 @@ module.exports = function( options ) {
 
 
     function make_send( spec, topic, send_done ) {
-      seneca.log.debug('client', type, 'send-init', 
+      seneca.log.debug('client', type, 'send-init',
                        spec, topic, client_options)
 
       function make_msger() {
@@ -248,20 +248,20 @@ module.exports = function( options ) {
           .pipe( client )
 
       }).on('connect', function() {
-          seneca.log.debug('client', type, 'connect', 
+          seneca.log.debug('client', type, 'connect',
                            spec, topic, client_options)
 
       }).on('reconnect', function() {
-          seneca.log.debug('client', type, 'reconnect', 
+          seneca.log.debug('client', type, 'reconnect',
                            spec, topic, client_options)
 
       }).on('disconnect', function(err) {
-          seneca.log.debug('client', type, 'disconnect', 
+          seneca.log.debug('client', type, 'disconnect',
                            spec, topic, client_options,
                            (err&&err.stack)||err)
 
       }).connect({
-        port: client_options.port, 
+        port: client_options.port,
         host: client_options.host
       })
 
@@ -308,7 +308,7 @@ module.exports = function( options ) {
         var data = parseJSON( seneca, 'stream', jsonstr )
 
         if( data ) {
-          this.push(data)        
+          this.push(data)
         }
       }
 
@@ -329,9 +329,9 @@ module.exports = function( options ) {
     json_stringify._read = function() {}
     json_stringify._write = function( data, enc, done ) {
       var out = stringifyJSON( seneca, 'stream', data )
-    
+
       if( out ) {
-        this.push(out+'\n')        
+        this.push(out+'\n')
       }
 
       done()
@@ -339,7 +339,7 @@ module.exports = function( options ) {
 
     return json_stringify;
   }
-  
+
 
 
   function hook_listen_web( args, done ) {
@@ -368,7 +368,7 @@ module.exports = function( options ) {
             req.query||{} )
 
           next();
-        } 
+        }
         catch(err) {
           err.body   = err.message+': '+bufstr
           err.status = 400
@@ -428,7 +428,7 @@ module.exports = function( options ) {
           'Cache-Control':  'private, max-age=0, no-cache, no-store',
           'Content-Length': buffer.Buffer.byteLength(outjson),
         }
-        
+
         headers['seneca-id']     = out ? out.id : seneca.if
         headers['seneca-kind']   = 'res'
         headers['seneca-origin'] = out ? out.origin : 'UNKNOWN'
@@ -436,7 +436,7 @@ module.exports = function( options ) {
         headers['seneca-time-client-sent'] = out ? out.time.client_sent : '0'
         headers['seneca-time-listen-recv'] = out ? out.time.listen_recv : '0'
         headers['seneca-time-listen-sent'] = out ? out.time.listen_sent : '0'
-        
+
 
         if( iserror ) {
           httpcode = 500
@@ -446,7 +446,7 @@ module.exports = function( options ) {
         res.end( outjson )
       })
     })
-    
+
     seneca.log.info('listen', listen_options )
     var listen = app.listen( listen_options.port, listen_options.host )
 
@@ -471,20 +471,20 @@ module.exports = function( options ) {
     make_client( seneca, make_send, client_options, clientdone )
 
     function make_send( spec, topic, send_done ) {
-      var fullurl = 
+      var fullurl =
             'http://'+client_options.host+':'+
             client_options.port+client_options.path
 
-      seneca.log.debug('client', 'web', 'send', spec, topic, client_options, 
+      seneca.log.debug('client', 'web', 'send', spec, topic, client_options,
                        fullurl )
-      
+
       send_done( null, function( args, done ) {
         var data = prepare_request( this, args, done )
 
         var headers = {
-          'seneca-id':               data.id, 
-          'seneca-kind':             'req', 
-          'seneca-origin':           seneca.id, 
+          'seneca-id':               data.id,
+          'seneca-kind':             'req',
+          'seneca-origin':           seneca.id,
           'seneca-time-client-sent': data.time.client_sent
         }
 
@@ -521,7 +521,7 @@ module.exports = function( options ) {
         })
       })
     }
-  }  
+  }
 
 
 
@@ -554,7 +554,7 @@ module.exports = function( options ) {
     }
     else out = config;
 
-    
+
     _.each( options, function(v,k){
       if( _.isObject(v) ) return;
       out[k] =  ( void 0 === out[k] ? v : out[k] )
@@ -574,7 +574,7 @@ module.exports = function( options ) {
     out = _.extend({},base,out)
 
     if( 'web' == out.type || 'tcp' == out.type ) {
-      out.port = null == out.port ? base.port : out.port 
+      out.port = null == out.port ? base.port : out.port
       out.host = null == out.host ? base.host : out.host
       out.path = null == out.path ? base.path : out.path
     }
@@ -589,7 +589,7 @@ module.exports = function( options ) {
   // allow user to specify operations on result
   function handle_entity( raw ) {
     raw = _.isObject( raw ) ? raw : {}
-    
+
     if( raw.entity$ ) {
       return seneca.make$( raw )
     }
@@ -666,7 +666,7 @@ module.exports = function( options ) {
 
 
   function resolvetopic( opts, spec, args ) {
-    var msgprefix = (null == options.msgprefix ? '' : options.msgprefix) 
+    var msgprefix = (null == options.msgprefix ? '' : options.msgprefix)
     if( !spec.pin ) return function() { return msgprefix+'any' }
 
     var topicpin = _.clone(spec.pin)
@@ -704,7 +704,7 @@ module.exports = function( options ) {
 
 
   function make_anyclient( opts, make_send, done ) {
-    var msgprefix = (null == options.msgprefix ? '' : options.msgprefix) 
+    var msgprefix = (null == options.msgprefix ? '' : options.msgprefix)
     make_send( {}, msgprefix+'any', function( err, send ) {
       if( err ) return done(err);
       if( !_.isFunction(send) ) return done(seneca.fail('null-client',{opts:opts}));
@@ -712,7 +712,7 @@ module.exports = function( options ) {
       done( null, {
         id: nid(),
         toString: function(){ return 'any-'+this.id },
-        match: function( args ) { 
+        match: function( args ) {
           return !this.has(args)
         },
         send: function( args, done ) {
@@ -724,7 +724,7 @@ module.exports = function( options ) {
 
 
 
-  function make_pinclient( resolvesend, argspatrun, done ) {  
+  function make_pinclient( resolvesend, argspatrun, done ) {
     done(null, {
       id: nid(),
       toString: function(){ return 'pin-'+argspatrun.mark+'-'+this.id },
@@ -751,9 +751,9 @@ module.exports = function( options ) {
       kind:   'res',
       origin: input.origin,
       accept: seneca.id,
-      time: { 
-        client_sent:(input.time&&input.time.client_sent), 
-        listen_recv:Date.now() 
+      time: {
+        client_sent:(input.time&&input.time.client_sent),
+        listen_recv:Date.now()
       },
     }
   }
@@ -786,7 +786,7 @@ module.exports = function( options ) {
 
 
   function listen_topics( seneca, args, listen_options, do_topic ) {
-    var msgprefix = (null == options.msgprefix ? '' : options.msgprefix) 
+    var msgprefix = (null == options.msgprefix ? '' : options.msgprefix)
     var pins      = resolve_pins( args )
 
     if( pins ) {
@@ -849,11 +849,11 @@ module.exports = function( options ) {
         err[k] = v
       })
     }
-    
+
     var result = handle_entity(data.res)
 
     try {
-      callmeta.done( err, result ) 
+      callmeta.done( err, result )
     }
     catch(e) {
       seneca.log.error('client', 'callback-error', client_options, data, e.stack||e)
@@ -870,15 +870,16 @@ module.exports = function( options ) {
       done: _.bind(done,seneca),
       when: Date.now()
     }
-    callmap.set(args.actid$,callmeta) 
 
     var output = {
-      id:     args.actid$,
+      id:     nid(), // I don't know why but do not use the actid$ as the external action id.
       kind:   'act',
       origin: seneca.id,
       time:   { client_sent:Date.now() },
       act:    seneca.util.clean(args),
     }
+    
+    callmap.set(output.id, callmeta)
 
     return output;
   }
@@ -913,7 +914,6 @@ module.exports = function( options ) {
     try {
       seneca.act( input, function( err, out ) {
         update_output(input,output,err,out)
-          
         respond(output)
       })
     }
