@@ -98,7 +98,7 @@ module.exports = function( options ) {
   function cmd_listen( args, done ) {
     var seneca = this
 
-    var listen_config = parseConfig(args)
+    var listen_config = args.config // parseConfig(args)
     var listen_args  = 
           seneca.util.clean(
             _.omit(
@@ -114,7 +114,7 @@ module.exports = function( options ) {
   function cmd_client( args, done ) {
     var seneca = this
 
-    var client_config = parseConfig(args)
+    var client_config = args.config // parseConfig(args)
     var client_args   = 
           seneca.util.clean(
             _.omit(
@@ -196,6 +196,7 @@ module.exports = function( options ) {
       seneca.log.info('listen', 'close', listen_options)
     })
 
+    //console.log(listen_options)
     listen.listen( listen_options.port, listen_options.host )
 
 
@@ -524,7 +525,7 @@ module.exports = function( options ) {
   }  
 
 
-
+/*
   function parseConfig( args ) {
     var out = {}
 
@@ -581,7 +582,7 @@ module.exports = function( options ) {
 
     return out
   }
-
+*/
 
 
   // only support first level

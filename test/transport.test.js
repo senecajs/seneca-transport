@@ -53,7 +53,7 @@ describe('transport', function() {
     test.foo_pintest( 'transport', require, fin, 'web' )
   })
 
-  
+
   it('tcp-basic', function( fin ) {
 
     require('seneca')({log:'silent'})
