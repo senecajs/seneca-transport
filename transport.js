@@ -13,7 +13,7 @@ var patrun      = require('patrun')
 var gex         = require('gex')
 var jsonic      = require('jsonic')
 var connect     = require('connect')
-var request     = require('request')
+var needle      = require('needle')
 var lrucache    = require('lru-cache')
 var reconnect   = require('reconnect-net')
 var nid         = require('nid')
@@ -196,7 +196,6 @@ module.exports = function( options ) {
       seneca.log.info('listen', 'close', listen_options)
     })
 
-    //console.log(listen_options)
     listen.listen( listen_options.port, listen_options.host )
 
 
@@ -495,94 +494,45 @@ module.exports = function( options ) {
           headers: headers,
         }
 
-        request.post( reqopts, function(err,response,body) {
-
-          var data = {
-            kind:  'res',
-            res:   body,
-            error: err
-          }
-
-          if( response ) {
-            data.id     = response.headers['seneca-id'],
-            data.origin = response.headers['seneca-origin'],
-            data.accept = response.headers['seneca-accept'],
-            data.time = {
-              client_sent: response.headers['seneca-time-client-sent'],
-              listen_recv: response.headers['seneca-time-listen-recv'],
-              listen_sent: response.headers['seneca-time-listen-sent'],
+        needle.post( 
+          fullurl, 
+          args, 
+          {
+            json:    true,
+            headers: headers,
+            timeout: client_options.timeout,
+          },
+          function(err,res) {
+            var data = {
+              kind:  'res',
+              res:   res.body,
+              error: err
             }
 
-            if( 200 !== response.statusCode ) {
-              data.error = body
-            }
-          }
+            if( res ) {
+              data.id     = res.headers['seneca-id'],
+              data.origin = res.headers['seneca-origin'],
+              data.accept = res.headers['seneca-accept'],
+              data.time = {
+                client_sent: res.headers['seneca-time-client-sent'],
+                listen_recv: res.headers['seneca-time-listen-recv'],
+                listen_sent: res.headers['seneca-time-listen-sent'],
+              }
 
-          handle_response( seneca, data, client_options )
-        })
+              if( 200 !== res.statusCode ) {
+                data.error = res.body
+              }
+            }
+
+            handle_response( seneca, data, client_options )
+            
+          }
+        )
+
+
       })
     }
   }  
-
-
-/*
-  function parseConfig( args ) {
-    var out = {}
-
-    var config = args.config || args
-
-    if( _.isArray( config ) ) {
-      var arglen = config.length
-
-      if( 1 === arglen ) {
-        if( _.isObject( config[0] ) ) {
-          out = config[0]
-        }
-        else {
-          out.port = parseInt(config[0])
-        }
-      }
-      else if( 2 === arglen ) {
-        out.port = parseInt(config[0])
-        out.host = config[1]
-      }
-      else if( 3 === arglen ) {
-        out.port = parseInt(config[0])
-        out.host = config[1]
-        out.path = config[2]
-      }
-
-    }
-    else out = config;
-
-    
-    _.each( options, function(v,k){
-      if( _.isObject(v) ) return;
-      out[k] =  ( void 0 === out[k] ? v : out[k] )
-    })
-
-
-    // Default transport is web
-    out.type = out.type || 'web'
-
-    // Aliases.
-    if( 'direct' == out.type || 'http' == out.type ) {
-      out.type = 'web'
-    }
-
-    var base = options[out.type] || {}
-
-    out = _.extend({},base,out)
-
-    if( 'web' == out.type || 'tcp' == out.type ) {
-      out.port = null == out.port ? base.port : out.port 
-      out.host = null == out.host ? base.host : out.host
-      out.path = null == out.path ? base.path : out.path
-    }
-
-    return out
-  }
-*/
 
 
   // only support first level

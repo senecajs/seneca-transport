@@ -1,6 +1,6 @@
 {
   "name": "seneca-transport",
-  "version": "0.2.6",
+  "version": "0.6.0",
   "description": "Seneca transport",
   "main": "transport.js",
   "scripts": {
@@ -25,10 +25,10 @@
     "gex": "~0.1.4",
     "jsonic": "^0.1.1",
     "lru-cache": "~2.5.0",
+    "needle": "^0.7.10",
     "nid": "~0.3.2",
     "patrun": "~0.4.0",
     "reconnect-net": "0.0.0",
-    "request": "~2.40.0",
     "underscore": "~1.7.0"
   },
   "devDependencies": {
