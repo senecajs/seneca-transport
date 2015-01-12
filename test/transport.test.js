@@ -7,10 +7,10 @@
 
 var seneca  = require('seneca')
 
-var assert  = require('assert')
-var request = require('request')
+var assert = require('assert')
 
-var test = require('seneca-transport-test')
+var needle = require('needle')
+var test   = require('seneca-transport-test')
 
 
 
@@ -76,7 +76,7 @@ describe('transport', function() {
 
   it('web-basic', function( fin ) {
 
-    require('seneca')({log:'silent'})
+    require('seneca')({log:'silent',errhandler:fin})
       .use('../transport.js')
       .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )
       .listen({type:'web',port:20202})
@@ -93,15 +93,14 @@ describe('transport', function() {
         run_client( 'web', 20202, check )
 
         // special case for non-seneca clients
-        request.post({
-          url:  'http://localhost:20202/act',
-          json: {c:1,d:'A'}
-
-        },function(err,res,body){
-          if( err ) return fin(err)
-          assert.equal( '{"s":"1-A"}', JSON.stringify(body) )
-          check()
-        })
+        needle.post( 
+          'http://localhost:20202/act',
+          {c:1,d:'A'},{json:true},
+          function(err,res,body){
+            if( err ) return fin(err)
+            assert.equal( '{"s":"1-A"}', JSON.stringify(body) )
+            check()
+          })
       })
   })
 
@@ -119,8 +118,7 @@ describe('transport', function() {
       .use('../transport.js')
       .client(30303)
       .act('a:1',function(err,out){
-        //console.log(err)
-        assert.equal('bad-wire',err.message)
+        assert.equal('seneca: Action a:1 failed: bad-wire.',err.message)
         fin()
       })
 
@@ -141,7 +139,7 @@ describe('transport', function() {
       .client({type:'tcp',port:40404})
       .act('a:1',function(err,out){
         //console.log(err)
-        assert.equal('bad-wire',err.message)
+        assert.equal('seneca: Action a:1 failed: bad-wire.',err.message)
         fin()
       })
 

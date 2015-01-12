@@ -20,16 +20,16 @@
   "dependencies": {
     "async": "~0.9.0",
     "connect": "~3.0.2",
-    "connect-query": "^0.2.0",
-    "connect-timeout": "^1.1.1",
+    "connect-query": "~0.2.0",
+    "connect-timeout": "~1.1.1",
     "gex": "~0.1.4",
     "jsonic": "^0.1.1",
     "lru-cache": "~2.5.0",
     "needle": "^0.7.10",
     "nid": "~0.3.2",
-    "patrun": "~0.4.0",
+    "patrun": "~0.4.2",
     "reconnect-net": "0.0.0",
-    "underscore": "~1.7.0"
+    "lodash": "~2.4.1"
   },
   "devDependencies": {
     "mocha": "~1.20.1",

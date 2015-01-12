@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2014 Richard Rodger, MIT License */
+/* Copyright (c) 2013-2015 Richard Rodger, MIT License */
 "use strict";
 
 
@@ -8,7 +8,7 @@ var net    = require('net')
 var stream = require('stream')
 
 
-var _           = require('underscore')
+var _           = require('lodash')
 var patrun      = require('patrun')
 var gex         = require('gex')
 var jsonic      = require('jsonic')
@@ -419,7 +419,10 @@ module.exports = function( options ) {
           }
           else if( out.error ) {
             iserror = true
-            outjson = stringifyJSON(seneca,'listen-web-error',out.error)
+            outjson = stringifyJSON(seneca,'listen-web',out.error)
+            //outjson = stringifyJSON(
+            //  seneca,'listen-web-error',
+            //  _.extend({message:out.error.message},out.error))
           }
         }
 
@@ -715,7 +718,7 @@ module.exports = function( options ) {
     output.res = out
 
     if( err ) {
-      var errobj     = _.clone(err)
+      var errobj     = _.extend({},err)
       errobj.message = err.message
       errobj.name    = err.name || 'Error'
 
