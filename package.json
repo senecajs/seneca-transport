@@ -4,7 +4,8 @@
   "description": "Seneca transport",
   "main": "transport.js",
   "scripts": {
-    "test": "./test.sh"
+    "test": "./test.sh",
+    "build": "node_modules/.bin/docco transport.js -o doc"
   },
   "repository": {
     "type": "git",
@@ -32,6 +33,7 @@
     "lodash": "~2.4.1"
   },
   "devDependencies": {
+    "docco": "~0.6.3",
     "mocha": "~1.20.1",
     "seneca-transport-test": "~0.1.2"
   },
