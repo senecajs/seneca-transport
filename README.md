@@ -1,5 +1,5 @@
 seneca-transport - a [Seneca](http://senecajs.org) plugin
-======================================================
+=========================================================
 
 ## Seneca Transport Plugin
 
