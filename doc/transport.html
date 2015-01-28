@@ -31,6 +31,7 @@
             </div>
             
             <div class="content"><div class='highlight'><pre><span class="hljs-comment">/* Copyright (c) 2013-2015 Richard Rodger, MIT License */</span>
+<span class="hljs-comment">/* jshint node:true, asi:true, eqnull:true */</span>
 <span class="hljs-pi">"use strict"</span>;
 
 
@@ -54,6 +55,8 @@
 
 
 <span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( options )</span> </span>{
+  <span class="hljs-comment">/* jshint validthis:true */</span>
+
   <span class="hljs-keyword">var</span> seneca = <span class="hljs-keyword">this</span>
   <span class="hljs-keyword">var</span> plugin = <span class="hljs-string">'transport'</span>
 
@@ -367,14 +370,14 @@
         <span class="hljs-keyword">this</span>.linebuf.length = <span class="hljs-number">0</span>
         remain = endline+<span class="hljs-number">1</span>
 
-        <span class="hljs-keyword">if</span>( <span class="hljs-string">''</span> == jsonstr ) {
+        <span class="hljs-keyword">if</span>( <span class="hljs-string">''</span> === jsonstr ) {
           <span class="hljs-keyword">return</span> done();
         }
 
-        <span class="hljs-keyword">var</span> data = parseJSON( seneca, <span class="hljs-string">'stream'</span>, jsonstr )
+        <span class="hljs-keyword">var</span> outdata = parseJSON( seneca, <span class="hljs-string">'stream'</span>, jsonstr )
 
-        <span class="hljs-keyword">if</span>( data ) {
-          <span class="hljs-keyword">this</span>.push(data)        
+        <span class="hljs-keyword">if</span>( outdata ) {
+          <span class="hljs-keyword">this</span>.push(outdata)        
         }
       }
 
@@ -628,9 +631,9 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
             }
 
             <span class="hljs-keyword">if</span>( res ) {
-              data.id     = res.headers[<span class="hljs-string">'seneca-id'</span>],
-              data.origin = res.headers[<span class="hljs-string">'seneca-origin'</span>],
-              data.accept = res.headers[<span class="hljs-string">'seneca-accept'</span>],
+              data.id     = res.headers[<span class="hljs-string">'seneca-id'</span>]
+              data.origin = res.headers[<span class="hljs-string">'seneca-origin'</span>]
+              data.accept = res.headers[<span class="hljs-string">'seneca-accept'</span>]
               data.time = {
                 client_sent: res.headers[<span class="hljs-string">'seneca-time-client-sent'</span>],
                 listen_recv: res.headers[<span class="hljs-string">'seneca-time-listen-recv'</span>],

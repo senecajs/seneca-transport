@@ -8,20 +8,23 @@ micro-service messages. It's a built-in dependency of the Seneca
 module, so you don't need to include it manually. You use this plugin
 to wire up your micro-services so that they can talk to each other.
 
-[![Build Status](https://travis-ci.org/rjrodger/seneca-transport.png?branch=master)](https://travis-ci.org/rjrodger/seneca-transport)
+[![Gitter chat](https://badges.gitter.im/rjrodger/seneca-transport.png)](https://gitter.im/rjrodger/seneca-transport)
 
-[![NPM](https://nodei.co/npm/seneca-transport.png)](https://nodei.co/npm/seneca-transport/)
-[![NPM](https://nodei.co/npm-dl/seneca-transport.png)](https://nodei.co/npm-dl/seneca-transport/)
+Current Version: 0.6.1
+
+Tested on: Seneca 0.6.0, Node 0.10.35
+
+[![Build Status](https://travis-ci.org/rjrodger/seneca-transport.png?branch=master)](https://travis-ci.org/rjrodger/seneca-transport)
 
 For a gentle introduction to Seneca itself, see the
 [senecajs.org](http://senecajs.org) site.
 
+[Annotated Source](http://rjrodger.github.io/seneca-transport/doc/transport.html)
+
+
 If you're using this plugin module, feel free to contact me on twitter if you
 have any questions! :) [@rjrodger](http://twitter.com/rjrodger)
 
-Current Version: 0.2.6
-
-Tested on: Seneca 0.5.20, Node 0.10.31
 
 
 ### Install

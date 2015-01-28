@@ -1,4 +1,5 @@
 /* Copyright (c) 2013-2015 Richard Rodger, MIT License */
+/* jshint node:true, asi:true, eqnull:true */
 "use strict";
 
 
@@ -22,6 +23,8 @@ var query       = require('connect-query');
 
 
 module.exports = function( options ) {
+  /* jshint validthis:true */
+
   var seneca = this
   var plugin = 'transport'
 
@@ -301,14 +304,14 @@ module.exports = function( options ) {
         this.linebuf.length = 0
         remain = endline+1
 
-        if( '' == jsonstr ) {
+        if( '' === jsonstr ) {
           return done();
         }
 
-        var data = parseJSON( seneca, 'stream', jsonstr )
+        var outdata = parseJSON( seneca, 'stream', jsonstr )
 
-        if( data ) {
-          this.push(data)        
+        if( outdata ) {
+          this.push(outdata)        
         }
       }
 
@@ -513,9 +516,9 @@ module.exports = function( options ) {
             }
 
             if( res ) {
-              data.id     = res.headers['seneca-id'],
-              data.origin = res.headers['seneca-origin'],
-              data.accept = res.headers['seneca-accept'],
+              data.id     = res.headers['seneca-id']
+              data.origin = res.headers['seneca-origin']
+              data.accept = res.headers['seneca-accept']
               data.time = {
                 client_sent: res.headers['seneca-time-client-sent'],
                 listen_recv: res.headers['seneca-time-listen-recv'],
