@@ -494,15 +494,9 @@ module.exports = function( options ) {
           'seneca-time-client-sent': data.time.client_sent
         }
 
-        var reqopts = {
-          url:     fullurl,
-          json:    args,
-          headers: headers,
-        }
-
         needle.post( 
           fullurl, 
-          args, 
+          data.act, 
           {
             json:    true,
             headers: headers,

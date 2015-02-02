@@ -1,6 +1,6 @@
 {
   "name": "seneca-transport",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Seneca transport",
   "main": "transport.js",
   "scripts": {
@@ -22,13 +22,13 @@
     "async": "~0.9.0",
     "connect": "~3.0.2",
     "connect-query": "~0.2.0",
-    "connect-timeout": "~1.1.1",
+    "connect-timeout": "~1.5.0",
     "gex": "~0.2.0",
-    "jsonic": "~0.1.1",
+    "jsonic": "~0.1.2",
     "lru-cache": "~2.5.0",
-    "needle": "~0.7.10",
+    "needle": "~0.7.11",
     "nid": "~0.3.2",
-    "patrun": "~0.4.2",
+    "patrun": "~0.4.3",
     "reconnect-net": "0.0.0",
     "lodash": "~2.4.1"
   },
