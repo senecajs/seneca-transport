@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2014 Richard Rodger */
+/* Copyright (c) 2013-2015 Richard Rodger */
 "use strict";
 
 
@@ -12,12 +12,14 @@ var assert = require('assert')
 var needle = require('needle')
 var test   = require('seneca-transport-test')
 
+var no_t = {transport:false}
 
 process.setMaxListeners(999)
 
 
 function run_client( type, port, done ) {
-  require('seneca')({log:'silent'})
+  require('seneca')({log:'silent',default_plugins:no_t})
+    .use('../transport')
     .client({type:type,port:port})
     .ready( function() {
 
@@ -58,7 +60,8 @@ describe('transport', function() {
 
   it('tcp-basic', function( fin ) {
 
-    require('seneca')({log:'silent'})
+    require('seneca')({log:'silent',default_plugins:no_t})
+      .use('../transport.js')
       .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )
       .listen({type:'tcp',port:20102})
       .ready( function() {
@@ -77,8 +80,7 @@ describe('transport', function() {
 
 
   it('web-basic', function( fin ) {
-
-    require('seneca')({log:'silent',errhandler:fin})
+    require('seneca')({log:'silent',errhandler:fin,default_plugins:no_t})
       .use('../transport.js')
       .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )
       .listen({type:'web',port:20202})
@@ -109,7 +111,7 @@ describe('transport', function() {
 
   it('error-passing-http', function(fin){
 
-    require('seneca')({log:'silent'})
+    require('seneca')({log:'silent',default_plugins:no_t})
       .use('../transport.js')
       .add('a:1',function(args,done){
         done(new Error('bad-wire'))
@@ -129,14 +131,14 @@ describe('transport', function() {
 
   it('error-passing-tcp', function(fin){
 
-    require('seneca')({log:'silent'})
+    require('seneca')({log:'silent',default_plugins:no_t})
       .use('../transport.js')
       .add('a:1',function(args,done){
         done(new Error('bad-wire'))
       })
       .listen({type:'tcp',port:40404})
 
-    require('seneca')({log:'silent'})
+    require('seneca')({log:'silent',default_plugins:no_t})
       .use('../transport.js')
       .client({type:'tcp',port:40404})
       .act('a:1',function(err,out){
@@ -173,7 +175,8 @@ describe('transport', function() {
           {level:'debug', regex: /\{a=1\}/, handler:log_a},
           {level:'warn', regex: /own_message/, handler:own_a}
         ]},
-        timeout: 111
+        timeout: 111,
+        default_plugins:no_t
       })
             .use('../transport.js',{
               check:{message_loop:false},
@@ -187,7 +190,8 @@ describe('transport', function() {
         log:{map:[
           {level:'debug', regex: /\{b=1\}/, handler:log_b}
         ]},
-        timeout: 111
+        timeout: 111,
+        default_plugins:no_t
       })
             .use('../transport.js')
             .add('b:1',b)
@@ -263,7 +267,8 @@ describe('transport', function() {
           {level:'debug', regex: /\{a=1\}/, handler:log_a},
           {level:'warn', regex: /message_loop/, handler:loop_a}
         ]},
-        timeout: 111
+        timeout: 111,
+        default_plugins:no_t
       })
             .use('../transport.js',{
               check:{own_message:false},
@@ -277,7 +282,8 @@ describe('transport', function() {
         log:{map:[
           {level:'debug', regex: /\{b=1\}/, handler:log_b}
         ]},
-        timeout: 111
+        timeout: 111,
+        default_plugins:no_t
       })
             .use('../transport.js')
             .add('b:1',b)
@@ -288,7 +294,8 @@ describe('transport', function() {
         log:{map:[
           {level:'debug', regex: /\{c=1\}/, handler:log_c}
         ]},
-        timeout: 111
+        timeout: 111,
+        default_plugins:no_t
       })
             .use('../transport.js')
             .add('c:1',c)

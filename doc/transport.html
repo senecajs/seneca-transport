@@ -69,9 +69,16 @@
     msgidlen:  <span class="hljs-number">12</span>,
 
     warn: {
-      unknown_message_id: <span class="hljs-literal">false</span>,
-      invalid_kind:       <span class="hljs-literal">false</span>,
-      no_message_id:      <span class="hljs-literal">false</span>,      
+      unknown_message_id: <span class="hljs-literal">true</span>,
+      invalid_kind:       <span class="hljs-literal">true</span>,
+      no_message_id:      <span class="hljs-literal">true</span>,      
+      message_loop:       <span class="hljs-literal">true</span>,      
+      own_message:        <span class="hljs-literal">true</span>,
+    },
+
+    check: {
+      message_loop: <span class="hljs-literal">true</span>,
+      own_message: <span class="hljs-literal">true</span>
     },
 
     web: {
@@ -469,6 +476,8 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
           id:     req.headers[<span class="hljs-string">'seneca-id'</span>],
           kind:   <span class="hljs-string">'act'</span>,
           origin: req.headers[<span class="hljs-string">'seneca-origin'</span>],
+          track:  parseJSON(
+            seneca,<span class="hljs-string">'track-receive'</span>,req.headers[<span class="hljs-string">'seneca-track'</span>]) || [],
           time: {
             client_sent: req.headers[<span class="hljs-string">'seneca-time-client-sent'</span>],
           },
@@ -494,6 +503,7 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
           id:     seneca.idgen(),
           kind:   <span class="hljs-string">'act'</span>,
           origin: req.headers[<span class="hljs-string">'user-agent'</span>] || <span class="hljs-string">'UNKNOWN'</span>,
+          track:  [],
           time: {
             client_sent: <span class="hljs-built_in">Date</span>.now()
           },
@@ -512,24 +522,8 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
           }
           <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( out.error ) {
             iserror = <span class="hljs-literal">true</span>
-            outjson = stringifyJSON(seneca,<span class="hljs-string">'listen-web'</span>,out.error)</pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-7">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-7">&#182;</a>
-              </div>
-              <p>outjson = stringifyJSON(
- seneca,’listen-web-error’,
- _.extend({message:out.error.message},out.error))</p>
-
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>          }
+            outjson = stringifyJSON(seneca,<span class="hljs-string">'listen-web'</span>,out.error)
+          }
         }
 
         <span class="hljs-keyword">var</span> headers = {
@@ -542,11 +536,11 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
         headers[<span class="hljs-string">'seneca-kind'</span>]   = <span class="hljs-string">'res'</span>
         headers[<span class="hljs-string">'seneca-origin'</span>] = out ? out.origin : <span class="hljs-string">'UNKNOWN'</span>
         headers[<span class="hljs-string">'seneca-accept'</span>] = seneca.id
+        headers[<span class="hljs-string">'seneca-track'</span>]  = <span class="hljs-string">''</span>+(data.track ? data.track : [])
         headers[<span class="hljs-string">'seneca-time-client-sent'</span>] = out ? out.time.client_sent : <span class="hljs-string">'0'</span>
         headers[<span class="hljs-string">'seneca-time-listen-recv'</span>] = out ? out.time.listen_recv : <span class="hljs-string">'0'</span>
         headers[<span class="hljs-string">'seneca-time-listen-sent'</span>] = out ? out.time.listen_sent : <span class="hljs-string">'0'</span>
         
-
         <span class="hljs-keyword">if</span>( iserror ) {
           httpcode = <span class="hljs-number">500</span>
         }
@@ -569,11 +563,11 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
         </li>
         
         
-        <li id="section-8">
+        <li id="section-7">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-8">&#182;</a>
+                <a class="pilcrow" href="#section-7">&#182;</a>
               </div>
               <p>done(null,listen)</p>
 
@@ -606,18 +600,14 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
           <span class="hljs-string">'seneca-id'</span>:               data.id, 
           <span class="hljs-string">'seneca-kind'</span>:             <span class="hljs-string">'req'</span>, 
           <span class="hljs-string">'seneca-origin'</span>:           seneca.id, 
+          <span class="hljs-string">'seneca-track'</span>:            stringifyJSON(
+            seneca,<span class="hljs-string">'send-track'</span>,data.track||[]),
           <span class="hljs-string">'seneca-time-client-sent'</span>: data.time.client_sent
-        }
-
-        <span class="hljs-keyword">var</span> reqopts = {
-          url:     fullurl,
-          json:    args,
-          headers: headers,
         }
 
         needle.post( 
           fullurl, 
-          args, 
+          data.act, 
           {
             json:    <span class="hljs-literal">true</span>,
             headers: headers,
@@ -626,7 +616,7 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
           <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err,res)</span> </span>{
             <span class="hljs-keyword">var</span> data = {
               kind:  <span class="hljs-string">'res'</span>,
-              res:   res.body,
+              res:   res &amp;&amp; res.body,
               error: err
             }
 
@@ -658,11 +648,11 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
         </li>
         
         
-        <li id="section-9">
+        <li id="section-8">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-9">&#182;</a>
+                <a class="pilcrow" href="#section-8">&#182;</a>
               </div>
               <p>only support first level
 interim measure - deal with this in core seneca act api
@@ -706,11 +696,11 @@ allow user to specify operations on result</p>
         </li>
         
         
-        <li id="section-10">
+        <li id="section-9">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-10">&#182;</a>
+                <a class="pilcrow" href="#section-9">&#182;</a>
               </div>
               <p>can handle glob expressions :)</p>
 
@@ -729,11 +719,11 @@ allow user to specify operations on result</p>
         </li>
         
         
-        <li id="section-11">
+        <li id="section-10">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-11">&#182;</a>
+                <a class="pilcrow" href="#section-10">&#182;</a>
               </div>
               <p>handle previous patterns that match this pattern</p>
 
@@ -856,6 +846,7 @@ allow user to specify operations on result</p>
       kind:   <span class="hljs-string">'res'</span>,
       origin: input.origin,
       accept: seneca.id,
+      track:  input.track,
       time: { 
         client_sent:(input.time&amp;&amp;input.time.client_sent), 
         listen_recv:<span class="hljs-built_in">Date</span>.now() 
@@ -977,10 +968,17 @@ allow user to specify operations on result</p>
     }
     callmap.set(args.actid$,callmeta) 
 
+    <span class="hljs-keyword">var</span> track = []
+    <span class="hljs-keyword">if</span>( args.transport$ ) {
+      track = _.clone((args.transport$.track||[]))
+    }
+    track.push(seneca.id)
+
     <span class="hljs-keyword">var</span> output = {
       id:     args.actid$,
       kind:   <span class="hljs-string">'act'</span>,
       origin: seneca.id,
+      track:  track,
       time:   { client_sent:<span class="hljs-built_in">Date</span>.now() },
       act:    seneca.util.clean(args),
     }
@@ -1007,6 +1005,24 @@ allow user to specify operations on result</p>
       <span class="hljs-keyword">return</span> respond(<span class="hljs-literal">null</span>);
     }
 
+    <span class="hljs-keyword">if</span>( options.check.own_message &amp;&amp; callmap.has(data.id) ) {
+      <span class="hljs-keyword">if</span>( options.warn.own_message ) {
+        seneca.log.warn(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'own_message'</span>, listen_options, data)
+      }
+      <span class="hljs-keyword">return</span> respond(<span class="hljs-literal">null</span>);
+    }
+
+    <span class="hljs-keyword">if</span>( options.check.message_loop &amp;&amp;  _.isArray(data.track) ) {
+      <span class="hljs-keyword">for</span>( <span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; data.track.length; i++ ) {
+        <span class="hljs-keyword">if</span>( seneca.id === data.track[i] ) {
+          <span class="hljs-keyword">if</span>( options.warn.message_loop ) {
+            seneca.log.warn(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'message_loop'</span>, listen_options, data)
+          }
+          <span class="hljs-keyword">return</span> respond(<span class="hljs-literal">null</span>);
+        }
+      }
+    }
+
     <span class="hljs-keyword">if</span>( data.error ) {
       seneca.log.error(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'data-error'</span>, listen_options, data )
       <span class="hljs-keyword">return</span> respond(<span class="hljs-literal">null</span>);
@@ -1014,6 +1030,12 @@ allow user to specify operations on result</p>
 
     <span class="hljs-keyword">var</span> output = prepare_response( seneca, data )
     <span class="hljs-keyword">var</span> input  = handle_entity( data.act )
+
+    input.transport$ = {
+      track: data.track || []
+    }
+
+    input.actid$ = data.id
 
     <span class="hljs-keyword">try</span> {
       seneca.act( input, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( err, out )</span> </span>{
@@ -1036,11 +1058,11 @@ allow user to specify operations on result</p>
         </li>
         
         
-        <li id="section-12">
+        <li id="section-11">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-12">&#182;</a>
+                <a class="pilcrow" href="#section-11">&#182;</a>
               </div>
               <p>legacy api</p>
 
@@ -1108,11 +1130,11 @@ allow user to specify operations on result</p>
         </li>
         
         
-        <li id="section-13">
+        <li id="section-12">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-13">&#182;</a>
+                <a class="pilcrow" href="#section-12">&#182;</a>
               </div>
               <p>listen</p>
 
@@ -1124,11 +1146,11 @@ allow user to specify operations on result</p>
         </li>
         
         
-        <li id="section-14">
+        <li id="section-13">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-14">&#182;</a>
+                <a class="pilcrow" href="#section-13">&#182;</a>
               </div>
               <p>client</p>
 
@@ -1140,11 +1162,11 @@ allow user to specify operations on result</p>
         </li>
         
         
-        <li id="section-15">
+        <li id="section-14">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-15">&#182;</a>
+                <a class="pilcrow" href="#section-14">&#182;</a>
               </div>
               <p>utility</p>
 

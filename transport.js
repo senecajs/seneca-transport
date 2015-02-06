@@ -22,7 +22,7 @@ var timeout     = require('connect-timeout');
 var query       = require('connect-query');
 
 
-module.exports = function( options ) {
+module.exports = function transport( options ) {
   /* jshint validthis:true */
 
   var seneca = this

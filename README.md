@@ -10,7 +10,7 @@ to wire up your micro-services so that they can talk to each other.
 
 [![Gitter chat](https://badges.gitter.im/rjrodger/seneca-transport.png)](https://gitter.im/rjrodger/seneca-transport)
 
-Current Version: 0.6.2
+Current Version: 0.6.3
 
 Tested on: Seneca 0.6.1, Node 0.10.36
 
