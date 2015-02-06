@@ -37,9 +37,16 @@ module.exports = function( options ) {
     msgidlen:  12,
 
     warn: {
-      unknown_message_id: false,
-      invalid_kind:       false,
-      no_message_id:      false,      
+      unknown_message_id: true,
+      invalid_kind:       true,
+      no_message_id:      true,      
+      message_loop:       true,      
+      own_message:        true,
+    },
+
+    check: {
+      message_loop: true,
+      own_message: true
     },
 
     web: {
@@ -391,6 +398,8 @@ module.exports = function( options ) {
           id:     req.headers['seneca-id'],
           kind:   'act',
           origin: req.headers['seneca-origin'],
+          track:  parseJSON(
+            seneca,'track-receive',req.headers['seneca-track']) || [],
           time: {
             client_sent: req.headers['seneca-time-client-sent'],
           },
@@ -404,6 +413,7 @@ module.exports = function( options ) {
           id:     seneca.idgen(),
           kind:   'act',
           origin: req.headers['user-agent'] || 'UNKNOWN',
+          track:  [],
           time: {
             client_sent: Date.now()
           },
@@ -423,9 +433,6 @@ module.exports = function( options ) {
           else if( out.error ) {
             iserror = true
             outjson = stringifyJSON(seneca,'listen-web',out.error)
-            //outjson = stringifyJSON(
-            //  seneca,'listen-web-error',
-            //  _.extend({message:out.error.message},out.error))
           }
         }
 
@@ -439,11 +446,11 @@ module.exports = function( options ) {
         headers['seneca-kind']   = 'res'
         headers['seneca-origin'] = out ? out.origin : 'UNKNOWN'
         headers['seneca-accept'] = seneca.id
+        headers['seneca-track']  = ''+(data.track ? data.track : [])
         headers['seneca-time-client-sent'] = out ? out.time.client_sent : '0'
         headers['seneca-time-listen-recv'] = out ? out.time.listen_recv : '0'
         headers['seneca-time-listen-sent'] = out ? out.time.listen_sent : '0'
         
-
         if( iserror ) {
           httpcode = 500
         }
@@ -491,6 +498,8 @@ module.exports = function( options ) {
           'seneca-id':               data.id, 
           'seneca-kind':             'req', 
           'seneca-origin':           seneca.id, 
+          'seneca-track':            stringifyJSON(
+            seneca,'send-track',data.track||[]),
           'seneca-time-client-sent': data.time.client_sent
         }
 
@@ -505,7 +514,7 @@ module.exports = function( options ) {
           function(err,res) {
             var data = {
               kind:  'res',
-              res:   res.body,
+              res:   res && res.body,
               error: err
             }
 
@@ -702,6 +711,7 @@ module.exports = function( options ) {
       kind:   'res',
       origin: input.origin,
       accept: seneca.id,
+      track:  input.track,
       time: { 
         client_sent:(input.time&&input.time.client_sent), 
         listen_recv:Date.now() 
@@ -823,10 +833,17 @@ module.exports = function( options ) {
     }
     callmap.set(args.actid$,callmeta) 
 
+    var track = []
+    if( args.transport$ ) {
+      track = _.clone((args.transport$.track||[]))
+    }
+    track.push(seneca.id)
+
     var output = {
       id:     args.actid$,
       kind:   'act',
       origin: seneca.id,
+      track:  track,
       time:   { client_sent:Date.now() },
       act:    seneca.util.clean(args),
     }
@@ -853,6 +870,24 @@ module.exports = function( options ) {
       return respond(null);
     }
 
+    if( options.check.own_message && callmap.has(data.id) ) {
+      if( options.warn.own_message ) {
+        seneca.log.warn('listen', 'own_message', listen_options, data)
+      }
+      return respond(null);
+    }
+
+    if( options.check.message_loop &&  _.isArray(data.track) ) {
+      for( var i = 0; i < data.track.length; i++ ) {
+        if( seneca.id === data.track[i] ) {
+          if( options.warn.message_loop ) {
+            seneca.log.warn('listen', 'message_loop', listen_options, data)
+          }
+          return respond(null);
+        }
+      }
+    }
+
     if( data.error ) {
       seneca.log.error('listen', 'data-error', listen_options, data )
       return respond(null);
@@ -860,6 +895,12 @@ module.exports = function( options ) {
 
     var output = prepare_response( seneca, data )
     var input  = handle_entity( data.act )
+
+    input.transport$ = {
+      track: data.track || []
+    }
+
+    input.actid$ = data.id
 
     try {
       seneca.act( input, function( err, out ) {
