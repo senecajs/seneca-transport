@@ -1,6 +1,8 @@
 seneca-transport - a [Seneca](http://senecajs.org) plugin
 =========================================================
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/rjrodger/seneca-transport?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## Seneca Transport Plugin
 
 This plugin provides the HTTP and TCP transport channels for
