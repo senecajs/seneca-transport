@@ -812,6 +812,7 @@ module.exports = function transport( options ) {
     }
     
     var result = handle_entity(data.res)
+    if (_.isEmpty(result)) result = null
 
     try {
       callmeta.done( err, result ) 
