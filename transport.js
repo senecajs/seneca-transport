@@ -422,7 +422,7 @@ module.exports = function transport( options ) {
       }
 
       handle_request( seneca, data, listen_options, function(out) {
-        var outjson  = "{}"
+        var outjson  = "null"
         var iserror  = false
         var httpcode = 200
 
@@ -514,7 +514,7 @@ module.exports = function transport( options ) {
           function(err,res) {
             var data = {
               kind:  'res',
-              res:   res && res.body,
+              res:   res && res.body || null,
               error: err
             }
 
@@ -548,6 +548,11 @@ module.exports = function transport( options ) {
   // interim measure - deal with this in core seneca act api
   // allow user to specify operations on result
   function handle_entity( raw ) {
+
+    if(raw === undefined || raw === null) {
+      return raw
+    }
+    
     raw = _.isObject( raw ) ? raw : {}
     
     if( raw.entity$ ) {
@@ -803,15 +808,16 @@ module.exports = function transport( options ) {
     }
 
     var err = null
+    var result = null
     if( data.error ) {
       err = new Error( data.error.message )
 
       _.each(data.error,function(v,k){
         err[k] = v
       })
+    } else {
+      result = handle_entity(data.res)
     }
-    
-    var result = handle_entity(data.res)
 
     try {
       callmeta.done( err, result ) 
