@@ -107,8 +107,8 @@ module.exports = function transport( options ) {
   
   function cmd_listen( args, done ) {
     var seneca = this
-
-    var listen_config = args.config // parseConfig(args)
+    
+    var listen_config = args.config
     var listen_args  = 
           seneca.util.clean(
             _.omit(
@@ -124,7 +124,7 @@ module.exports = function transport( options ) {
   function cmd_client( args, done ) {
     var seneca = this
 
-    var client_config = args.config // parseConfig(args)
+    var client_config = args.config
     var client_args   = 
           seneca.util.clean(
             _.omit(
@@ -422,7 +422,7 @@ module.exports = function transport( options ) {
       }
 
       handle_request( seneca, data, listen_options, function(out) {
-        var outjson  = "{}"
+        var outjson  = "null"
         var iserror  = false
         var httpcode = 200
 
@@ -442,7 +442,7 @@ module.exports = function transport( options ) {
           'Content-Length': buffer.Buffer.byteLength(outjson),
         }
         
-        headers['seneca-id']     = out ? out.id : seneca.if
+        headers['seneca-id']     = out ? out.id : seneca.id
         headers['seneca-kind']   = 'res'
         headers['seneca-origin'] = out ? out.origin : 'UNKNOWN'
         headers['seneca-accept'] = seneca.id
@@ -514,7 +514,7 @@ module.exports = function transport( options ) {
           function(err,res) {
             var data = {
               kind:  'res',
-              res:   res && res.body,
+              res:   res && _.isObject(res.body) ? res.body : null,
               error: err
             }
 
@@ -534,11 +534,8 @@ module.exports = function transport( options ) {
             }
 
             handle_response( seneca, data, client_options )
-            
           }
         )
-
-
       })
     }
   }  
@@ -548,6 +545,8 @@ module.exports = function transport( options ) {
   // interim measure - deal with this in core seneca act api
   // allow user to specify operations on result
   function handle_entity( raw ) {
+    if( null == raw ) return raw;
+
     raw = _.isObject( raw ) ? raw : {}
     
     if( raw.entity$ ) {
@@ -642,7 +641,8 @@ module.exports = function transport( options ) {
       sb.push(',')
     })
 
-    return msgprefix+(sb.join('')).replace(/[^\w\d]+/g,'_')
+    var topic = msgprefix+(sb.join('')).replace(/[^\w\d]+/g,'_')
+    return topic;
   }
 
 
@@ -762,8 +762,12 @@ module.exports = function transport( options ) {
         })
 
         var topic = msgprefix+(sb.join('')).replace(/[^\w\d]+/g,'_')
+
         do_topic( topic )
       })
+
+      // TODO: die if no pins!!!
+      // otherwise no listener established and seneca ends without msg
     }
     else {
       do_topic( msgprefix+'any' )
@@ -802,7 +806,9 @@ module.exports = function transport( options ) {
       return false;
     }
 
-    var err = null
+    var err    = null
+    var result = null
+
     if( data.error ) {
       err = new Error( data.error.message )
 
@@ -810,9 +816,10 @@ module.exports = function transport( options ) {
         err[k] = v
       })
     }
+    else {
+      result = handle_entity(data.res)
+    }
     
-    var result = handle_entity(data.res)
-
     try {
       callmeta.done( err, result ) 
     }
