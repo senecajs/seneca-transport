@@ -838,7 +838,7 @@ module.exports = function transport( options ) {
       done: _.bind(done,seneca),
       when: Date.now()
     }
-    callmap.set(args.actid$,callmeta) 
+    callmap.set(args.meta$.id,callmeta) 
 
     var track = []
     if( args.transport$ ) {
@@ -847,7 +847,7 @@ module.exports = function transport( options ) {
     track.push(seneca.id)
 
     var output = {
-      id:     args.actid$,
+      id:     args.meta$.id,
       kind:   'act',
       origin: seneca.id,
       track:  track,
