@@ -17,8 +17,8 @@ var no_t = {transport:false}
 process.setMaxListeners(999)
 
 
-function run_client( type, port, done ) {
-  require('seneca')({log:'silent',default_plugins:no_t})
+function run_client( type, port, done, tag ) {
+  require('seneca')({tag:tag,log:'silent',default_plugins:no_t,debug:{short_logs:true}})
     .use('../transport')
     .client({type:type,port:port})
     .ready( function() {
@@ -60,7 +60,7 @@ describe('transport', function() {
 
   it('tcp-basic', function( fin ) {
 
-    require('seneca')({log:'silent',default_plugins:no_t})
+    require('seneca')({tag:'srv',log:'silent',default_plugins:no_t,debug:{short_logs:true}})
       .use('../transport.js')
       .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )
       .listen({type:'tcp',port:20102})
@@ -72,9 +72,9 @@ describe('transport', function() {
           if( 3 == count ) fin()
         }
 
-        run_client( 'tcp', 20102, check )
-        run_client( 'tcp', 20102, check )
-        run_client( 'tcp', 20102, check )
+        run_client( 'tcp', 20102, check, 'cln0' )
+        run_client( 'tcp', 20102, check, 'cln1' )
+        run_client( 'tcp', 20102, check, 'cln2' )
       })
   })
 
