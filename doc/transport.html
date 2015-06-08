@@ -54,7 +54,7 @@
 <span class="hljs-keyword">var</span> query       = <span class="hljs-built_in">require</span>(<span class="hljs-string">'connect-query'</span>);
 
 
-<span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( options )</span> </span>{
+<span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">transport</span>(<span class="hljs-params"> options </span>) </span>{
   <span class="hljs-comment">/* jshint validthis:true */</span>
 
   <span class="hljs-keyword">var</span> seneca = <span class="hljs-keyword">this</span>
@@ -161,9 +161,9 @@
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">cmd_inflight</span><span class="hljs-params">( args, done )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">cmd_inflight</span>(<span class="hljs-params"> args, done </span>) </span>{
     <span class="hljs-keyword">var</span> inflight = {}
-    callmap.forEach( <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(v,k)</span> </span>{
+    callmap.forEach( <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">v,k</span>) </span>{
       inflight[k] = v
     })
     done( <span class="hljs-literal">null</span>, inflight )
@@ -171,10 +171,10 @@
 
 
   
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">cmd_listen</span><span class="hljs-params">( args, done )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">cmd_listen</span>(<span class="hljs-params"> args, done </span>) </span>{
     <span class="hljs-keyword">var</span> seneca = <span class="hljs-keyword">this</span>
-
-    <span class="hljs-keyword">var</span> listen_config = args.config <span class="hljs-comment">// parseConfig(args)</span>
+    
+    <span class="hljs-keyword">var</span> listen_config = args.config
     <span class="hljs-keyword">var</span> listen_args  = 
           seneca.util.clean(
             _.omit(
@@ -187,10 +187,10 @@
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">cmd_client</span><span class="hljs-params">( args, done )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">cmd_client</span>(<span class="hljs-params"> args, done </span>) </span>{
     <span class="hljs-keyword">var</span> seneca = <span class="hljs-keyword">this</span>
 
-    <span class="hljs-keyword">var</span> client_config = args.config <span class="hljs-comment">// parseConfig(args)</span>
+    <span class="hljs-keyword">var</span> client_config = args.config
     <span class="hljs-keyword">var</span> client_args   = 
           seneca.util.clean(
             _.omit(
@@ -204,7 +204,7 @@
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">handle_legacy_types</span><span class="hljs-params">(type,done)</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">handle_legacy_types</span>(<span class="hljs-params">type,done</span>) </span>{
     <span class="hljs-keyword">var</span> ok = <span class="hljs-literal">false</span>
 
     <span class="hljs-keyword">if</span>( <span class="hljs-string">'pubsub'</span> == type ) {
@@ -220,18 +220,18 @@
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">hook_listen_tcp</span><span class="hljs-params">( args, done )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">hook_listen_tcp</span>(<span class="hljs-params"> args, done </span>) </span>{
     <span class="hljs-keyword">var</span> seneca         = <span class="hljs-keyword">this</span>
     <span class="hljs-keyword">var</span> type           = args.type
     <span class="hljs-keyword">var</span> listen_options = seneca.util.clean(_.extend({},options[type],args))
     
-    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_msger</span><span class="hljs-params">()</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_msger</span>(<span class="hljs-params"></span>) </span>{
       <span class="hljs-keyword">var</span> msger = <span class="hljs-keyword">new</span> stream.Duplex({objectMode:<span class="hljs-literal">true</span>})
-      msger._read = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{}
-      msger._write = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( data, enc , done )</span> </span>{
+      msger._read = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{}
+      msger._write = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> data, enc , done </span>) </span>{
         <span class="hljs-keyword">var</span> stream_instance = <span class="hljs-keyword">this</span>
 
-        handle_request( seneca, data, listen_options, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(out)</span> </span>{
+        handle_request( seneca, data, listen_options, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">out</span>) </span>{
           <span class="hljs-keyword">if</span>( <span class="hljs-literal">null</span> == out ) <span class="hljs-keyword">return</span> done();
           stream_instance.push(out)
           <span class="hljs-keyword">return</span> done();
@@ -242,7 +242,7 @@
 
     <span class="hljs-keyword">var</span> connections = []
 
-    <span class="hljs-keyword">var</span> listen = net.createServer(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(connection)</span> </span>{
+    <span class="hljs-keyword">var</span> listen = net.createServer(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">connection</span>) </span>{
       seneca.log.info(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'connection'</span>, listen_options,
                       <span class="hljs-string">'remote'</span>, connection.remoteAddress, connection.remotePort)
       connection
@@ -251,35 +251,35 @@
         .pipe(json_stringify_stream())
         .pipe(connection)
 
-      connection.on(<span class="hljs-string">'error'</span>,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err)</span></span>{
+      connection.on(<span class="hljs-string">'error'</span>,<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">err</span>)</span>{
         seneca.log.error(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'pipe-error'</span>, listen_options, err.stack||err)
       })
 
       connections.push(connection)
     })
 
-    listen.on(<span class="hljs-string">'listening'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+    listen.on(<span class="hljs-string">'listening'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
       seneca.log.info(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'open'</span>, 
                       listen_options)
       done()
     })
 
-    listen.on(<span class="hljs-string">'error'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err)</span> </span>{
+    listen.on(<span class="hljs-string">'error'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">err</span>) </span>{
       seneca.log.error(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'net-error'</span>, listen_options, err.stack||err)
     })
 
-    listen.on(<span class="hljs-string">'close'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+    listen.on(<span class="hljs-string">'close'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
       seneca.log.info(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'close'</span>, listen_options)
     })
 
     listen.listen( listen_options.port, listen_options.host )
 
 
-    seneca.add(<span class="hljs-string">'role:seneca,cmd:close'</span>,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( close_args, done )</span> </span>{
+    seneca.add(<span class="hljs-string">'role:seneca,cmd:close'</span>,<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> close_args, done </span>) </span>{
       <span class="hljs-keyword">var</span> closer = <span class="hljs-keyword">this</span>
 
       listen.close()
-      connections.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(con)</span></span>{
+      connections.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">con</span>)</span>{
         <span class="hljs-keyword">try</span> { con.destroy() } <span class="hljs-keyword">catch</span>(e) { seneca.log.error(e) }
       })
 
@@ -289,7 +289,7 @@
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">hook_client_tcp</span><span class="hljs-params">( args, clientdone )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">hook_client_tcp</span>(<span class="hljs-params"> args, clientdone </span>) </span>{
     <span class="hljs-keyword">var</span> seneca         = <span class="hljs-keyword">this</span>
     <span class="hljs-keyword">var</span> type           = args.type
     <span class="hljs-keyword">var</span> client_options = seneca.util.clean(_.extend({},options[type],args))
@@ -297,14 +297,14 @@
     make_client( seneca, make_send, client_options, clientdone )
 
 
-    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_send</span><span class="hljs-params">( spec, topic, send_done )</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_send</span>(<span class="hljs-params"> spec, topic, send_done </span>) </span>{
       seneca.log.debug(<span class="hljs-string">'client'</span>, type, <span class="hljs-string">'send-init'</span>, 
                        spec, topic, client_options)
 
-      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_msger</span><span class="hljs-params">()</span> </span>{
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_msger</span>(<span class="hljs-params"></span>) </span>{
         <span class="hljs-keyword">var</span> msger = <span class="hljs-keyword">new</span> stream.Duplex({objectMode:<span class="hljs-literal">true</span>})
-        msger._read = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{}
-        msger._write = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( data, enc, done )</span> </span>{
+        msger._read = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{}
+        msger._write = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> data, enc, done </span>) </span>{
           handle_response( seneca, data, client_options )
           <span class="hljs-keyword">return</span> done();
         }
@@ -314,7 +314,7 @@
       <span class="hljs-keyword">var</span> msger = make_msger()
       <span class="hljs-keyword">var</span> connections = []
 
-      <span class="hljs-keyword">var</span> clientconnect = reconnect( <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(client)</span> </span>{
+      <span class="hljs-keyword">var</span> clientconnect = reconnect( <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">client</span>) </span>{
         connections.push(client)
 
         client
@@ -323,15 +323,15 @@
           .pipe( json_stringify_stream() )
           .pipe( client )
 
-      }).on(<span class="hljs-string">'connect'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+      }).on(<span class="hljs-string">'connect'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
           seneca.log.debug(<span class="hljs-string">'client'</span>, type, <span class="hljs-string">'connect'</span>, 
                            spec, topic, client_options)
 
-      }).on(<span class="hljs-string">'reconnect'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+      }).on(<span class="hljs-string">'reconnect'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
           seneca.log.debug(<span class="hljs-string">'client'</span>, type, <span class="hljs-string">'reconnect'</span>, 
                            spec, topic, client_options)
 
-      }).on(<span class="hljs-string">'disconnect'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err)</span> </span>{
+      }).on(<span class="hljs-string">'disconnect'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">err</span>) </span>{
           seneca.log.debug(<span class="hljs-string">'client'</span>, type, <span class="hljs-string">'disconnect'</span>, 
                            spec, topic, client_options,
                            (err&amp;&amp;err.stack)||err)
@@ -341,16 +341,16 @@
         host: client_options.host
       })
 
-      send_done( <span class="hljs-literal">null</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( args, done )</span> </span>{
+      send_done( <span class="hljs-literal">null</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> args, done </span>) </span>{
         <span class="hljs-keyword">var</span> outmsg = prepare_request( <span class="hljs-keyword">this</span>, args, done )
         msger.push( outmsg )
       })
 
-      seneca.add(<span class="hljs-string">'role:seneca,cmd:close'</span>,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( close_args, done )</span> </span>{
+      seneca.add(<span class="hljs-string">'role:seneca,cmd:close'</span>,<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> close_args, done </span>) </span>{
         <span class="hljs-keyword">var</span> closer = <span class="hljs-keyword">this</span>
 
         clientconnect.disconnect()
-        connections.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(con)</span></span>{
+        connections.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">con</span>)</span>{
           <span class="hljs-keyword">try</span> { con.destroy() } <span class="hljs-keyword">catch</span>(e) { seneca.log.error(e) }
         })
 
@@ -361,11 +361,11 @@
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">json_parser_stream</span><span class="hljs-params">()</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">json_parser_stream</span>(<span class="hljs-params"></span>) </span>{
     <span class="hljs-keyword">var</span> json_parser = <span class="hljs-keyword">new</span> stream.Duplex({objectMode:<span class="hljs-literal">true</span>})
     json_parser.linebuf = []
-    json_parser._read   = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{}
-    json_parser._write  = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data,enc,done)</span> </span>{
+    json_parser._read   = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{}
+    json_parser._write  = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">data,enc,done</span>) </span>{
       <span class="hljs-keyword">var</span> str     = <span class="hljs-string">''</span>+data
       <span class="hljs-keyword">var</span> endline = -<span class="hljs-number">1</span>
       <span class="hljs-keyword">var</span> remain  = <span class="hljs-number">0</span>
@@ -400,10 +400,10 @@
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">json_stringify_stream</span><span class="hljs-params">()</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">json_stringify_stream</span>(<span class="hljs-params"></span>) </span>{
     <span class="hljs-keyword">var</span> json_stringify = <span class="hljs-keyword">new</span> stream.Duplex({objectMode:<span class="hljs-literal">true</span>})
-    json_stringify._read = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{}
-    json_stringify._write = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( data, enc, done )</span> </span>{
+    json_stringify._read = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{}
+    json_stringify._write = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> data, enc, done </span>) </span>{
       <span class="hljs-keyword">var</span> out = stringifyJSON( seneca, <span class="hljs-string">'stream'</span>, data )
     
       <span class="hljs-keyword">if</span>( out ) {
@@ -418,7 +418,7 @@
   
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">hook_listen_web</span><span class="hljs-params">( args, done )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">hook_listen_web</span>(<span class="hljs-params"> args, done </span>) </span>{
     <span class="hljs-keyword">var</span> seneca         = <span class="hljs-keyword">this</span>
     <span class="hljs-keyword">var</span> type           = args.type
     <span class="hljs-keyword">var</span> listen_options = seneca.util.clean(_.extend({},options[type],args))
@@ -443,11 +443,11 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
             
             <div class="content"><div class='highlight'><pre>    app.use( query() )
 
-    app.use( <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( req, res, next )</span> </span>{
+    app.use( <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> req, res, next </span>) </span>{
       <span class="hljs-keyword">var</span> buf = []
       req.setEncoding(<span class="hljs-string">'utf8'</span>)
-      req.on(<span class="hljs-string">'data'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(chunk)</span> </span>{ buf.push(chunk) })
-      req.on(<span class="hljs-string">'end'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+      req.on(<span class="hljs-string">'data'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">chunk</span>) </span>{ buf.push(chunk) })
+      req.on(<span class="hljs-string">'end'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
         <span class="hljs-keyword">try</span> {
           <span class="hljs-keyword">var</span> bufstr = buf.join(<span class="hljs-string">''</span>)
           req.body = _.extend(
@@ -465,7 +465,7 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
       })
     })
 
-    app.use( <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( req, res, next )</span> </span>{
+    app.use( <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> req, res, next </span>) </span>{
       <span class="hljs-keyword">if</span>( <span class="hljs-number">0</span> !== req.url.indexOf(listen_options.path) ) <span class="hljs-keyword">return</span> next();
 
       <span class="hljs-keyword">var</span> data
@@ -511,8 +511,8 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
         }
       }
 
-      handle_request( seneca, data, listen_options, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(out)</span> </span>{
-        <span class="hljs-keyword">var</span> outjson  = <span class="hljs-string">"{}"</span>
+      handle_request( seneca, data, listen_options, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">out</span>) </span>{
+        <span class="hljs-keyword">var</span> outjson  = <span class="hljs-string">"null"</span>
         <span class="hljs-keyword">var</span> iserror  = <span class="hljs-literal">false</span>
         <span class="hljs-keyword">var</span> httpcode = <span class="hljs-number">200</span>
 
@@ -532,7 +532,7 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
           <span class="hljs-string">'Content-Length'</span>: buffer.Buffer.byteLength(outjson),
         }
         
-        headers[<span class="hljs-string">'seneca-id'</span>]     = out ? out.id : seneca.if
+        headers[<span class="hljs-string">'seneca-id'</span>]     = out ? out.id : seneca.id
         headers[<span class="hljs-string">'seneca-kind'</span>]   = <span class="hljs-string">'res'</span>
         headers[<span class="hljs-string">'seneca-origin'</span>] = out ? out.origin : <span class="hljs-string">'UNKNOWN'</span>
         headers[<span class="hljs-string">'seneca-accept'</span>] = seneca.id
@@ -553,7 +553,7 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
     seneca.log.info(<span class="hljs-string">'listen'</span>, listen_options )
     <span class="hljs-keyword">var</span> listen = app.listen( listen_options.port, listen_options.host )
 
-    seneca.add(<span class="hljs-string">'role:seneca,cmd:close'</span>,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( close_args, done )</span> </span>{
+    seneca.add(<span class="hljs-string">'role:seneca,cmd:close'</span>,<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> close_args, done </span>) </span>{
       <span class="hljs-keyword">var</span> closer = <span class="hljs-keyword">this</span>
 
       listen.close()
@@ -578,14 +578,14 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">hook_client_web</span><span class="hljs-params">( args, clientdone )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">hook_client_web</span>(<span class="hljs-params"> args, clientdone </span>) </span>{
     <span class="hljs-keyword">var</span> seneca         = <span class="hljs-keyword">this</span>
     <span class="hljs-keyword">var</span> type           = args.type
     <span class="hljs-keyword">var</span> client_options = seneca.util.clean(_.extend({},options[type],args))
 
     make_client( seneca, make_send, client_options, clientdone )
 
-    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_send</span><span class="hljs-params">( spec, topic, send_done )</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_send</span>(<span class="hljs-params"> spec, topic, send_done </span>) </span>{
       <span class="hljs-keyword">var</span> fullurl = 
             <span class="hljs-string">'http://'</span>+client_options.host+<span class="hljs-string">':'</span>+
             client_options.port+client_options.path
@@ -593,7 +593,7 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
       seneca.log.debug(<span class="hljs-string">'client'</span>, <span class="hljs-string">'web'</span>, <span class="hljs-string">'send'</span>, spec, topic, client_options, 
                        fullurl )
       
-      send_done( <span class="hljs-literal">null</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( args, done )</span> </span>{
+      send_done( <span class="hljs-literal">null</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> args, done </span>) </span>{
         <span class="hljs-keyword">var</span> data = prepare_request( <span class="hljs-keyword">this</span>, args, done )
 
         <span class="hljs-keyword">var</span> headers = {
@@ -613,10 +613,10 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
             headers: headers,
             timeout: client_options.timeout,
           },
-          <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err,res)</span> </span>{
+          <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">err,res</span>) </span>{
             <span class="hljs-keyword">var</span> data = {
               kind:  <span class="hljs-string">'res'</span>,
-              res:   res &amp;&amp; res.body,
+              res:   res &amp;&amp; _.isObject(res.body) ? res.body : <span class="hljs-literal">null</span>,
               error: err
             }
 
@@ -636,11 +636,8 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
             }
 
             handle_response( seneca, data, client_options )
-            
           }
         )
-
-
       })
     }
   }</pre></div></div>
@@ -660,14 +657,16 @@ allow user to specify operations on result</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">handle_entity</span><span class="hljs-params">( raw )</span> </span>{
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">handle_entity</span>(<span class="hljs-params"> raw </span>) </span>{
+    <span class="hljs-keyword">if</span>( <span class="hljs-literal">null</span> == raw ) <span class="hljs-keyword">return</span> raw;
+
     raw = _.isObject( raw ) ? raw : {}
     
     <span class="hljs-keyword">if</span>( raw.entity$ ) {
       <span class="hljs-keyword">return</span> seneca.make$( raw )
     }
     <span class="hljs-keyword">else</span> {
-      _.each( raw, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(v,k)</span> </span>{
+      _.each( raw, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">v,k</span>) </span>{
         <span class="hljs-keyword">if</span>( _.isObject(v) &amp;&amp; v.entity$ ) {
           raw[k] = seneca.make$( v )
         }
@@ -678,14 +677,14 @@ allow user to specify operations on result</p>
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">resolve_pins</span><span class="hljs-params">( opts )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">resolve_pins</span>(<span class="hljs-params"> opts </span>) </span>{
     <span class="hljs-keyword">var</span> pins = opts.pin || opts.pins
     <span class="hljs-keyword">if</span>( pins ) {
       pins = _.isArray(pins) ? pins : [pins]
     }
 
     <span class="hljs-keyword">if</span>( pins ) {
-      pins = _.map(pins,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pin)</span></span>{
+      pins = _.map(pins,<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">pin</span>)</span>{
         <span class="hljs-keyword">return</span> _.isString(pin) ? jsonic(pin) : pin
       })
     }
@@ -706,10 +705,10 @@ allow user to specify operations on result</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_argspatrun</span><span class="hljs-params">( pins )</span> </span>{
-    <span class="hljs-keyword">var</span> argspatrun = patrun(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pat,data)</span> </span>{
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_argspatrun</span>(<span class="hljs-params"> pins </span>) </span>{
+    <span class="hljs-keyword">var</span> argspatrun = patrun(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">pat,data</span>) </span>{
       <span class="hljs-keyword">var</span> gexers = {}
-      _.each(pat, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(v,k)</span> </span>{
+      _.each(pat, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">v,k</span>) </span>{
         <span class="hljs-keyword">if</span>( _.isString(v) &amp;&amp; ~v.indexOf(<span class="hljs-string">'*'</span>) ) {
           <span class="hljs-keyword">delete</span> pat[k]
           gexers[k] = gex(v)
@@ -733,9 +732,9 @@ allow user to specify operations on result</p>
       <span class="hljs-keyword">var</span> prevfind = prev[<span class="hljs-number">0</span>] &amp;&amp; prev[<span class="hljs-number">0</span>].find
       <span class="hljs-keyword">var</span> prevdata = prev[<span class="hljs-number">0</span>] &amp;&amp; <span class="hljs-keyword">this</span>.findexact(prev[<span class="hljs-number">0</span>].match)
 
-      <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(args,data)</span> </span>{
+      <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">args,data</span>) </span>{
         <span class="hljs-keyword">var</span> out = data
-        _.each(gexers,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(g,k)</span> </span>{
+        _.each(gexers,<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">g,k</span>) </span>{
           <span class="hljs-keyword">var</span> v = <span class="hljs-literal">null</span>==args[k]?<span class="hljs-string">''</span>:args[k]
           <span class="hljs-keyword">if</span>( <span class="hljs-literal">null</span> == g.on( v ) ) { out = <span class="hljs-literal">null</span> }
         })
@@ -748,7 +747,7 @@ allow user to specify operations on result</p>
       }
     })
 
-    _.each( pins, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( pin )</span> </span>{
+    _.each( pins, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> pin </span>) </span>{
       <span class="hljs-keyword">var</span> spec = { pin:pin }
       argspatrun.add(pin,spec)
     })
@@ -760,35 +759,36 @@ allow user to specify operations on result</p>
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">resolvetopic</span><span class="hljs-params">( opts, spec, args )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">resolvetopic</span>(<span class="hljs-params"> opts, spec, args </span>) </span>{
     <span class="hljs-keyword">var</span> msgprefix = (<span class="hljs-literal">null</span> == options.msgprefix ? <span class="hljs-string">''</span> : options.msgprefix) 
-    <span class="hljs-keyword">if</span>( !spec.pin ) <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{ <span class="hljs-keyword">return</span> msgprefix+<span class="hljs-string">'any'</span> }
+    <span class="hljs-keyword">if</span>( !spec.pin ) <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{ <span class="hljs-keyword">return</span> msgprefix+<span class="hljs-string">'any'</span> }
 
     <span class="hljs-keyword">var</span> topicpin = _.clone(spec.pin)
 
     <span class="hljs-keyword">var</span> topicargs = {}
-    _.each(topicpin, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(v,k)</span> </span>{ topicargs[k]=args[k] })
+    _.each(topicpin, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">v,k</span>) </span>{ topicargs[k]=args[k] })
 
     <span class="hljs-keyword">var</span> sb = []
-    _.each( _.keys(topicargs).sort(), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(k)</span></span>{
+    _.each( _.keys(topicargs).sort(), <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">k</span>)</span>{
       sb.push(k)
       sb.push(<span class="hljs-string">'='</span>)
       sb.push(topicargs[k])
       sb.push(<span class="hljs-string">','</span>)
     })
 
-    <span class="hljs-keyword">return</span> msgprefix+(sb.join(<span class="hljs-string">''</span>)).replace(<span class="hljs-regexp">/[^\w\d]+/g</span>,<span class="hljs-string">'_'</span>)
+    <span class="hljs-keyword">var</span> topic = msgprefix+(sb.join(<span class="hljs-string">''</span>)).replace(<span class="hljs-regexp">/[^\w\d]+/g</span>,<span class="hljs-string">'_'</span>)
+    <span class="hljs-keyword">return</span> topic;
   }
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_resolvesend</span><span class="hljs-params">( opts, sendmap, make_send )</span> </span>{
-    <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( spec, args, done )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_resolvesend</span>(<span class="hljs-params"> opts, sendmap, make_send </span>) </span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> spec, args, done </span>) </span>{
       <span class="hljs-keyword">var</span> topic = resolvetopic(opts,spec,args)
       <span class="hljs-keyword">var</span> send = sendmap[topic]
       <span class="hljs-keyword">if</span>( send ) <span class="hljs-keyword">return</span> done(<span class="hljs-literal">null</span>,send);
 
-      make_send(spec,topic,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err,send)</span></span>{
+      make_send(spec,topic,<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">err,send</span>)</span>{
         <span class="hljs-keyword">if</span>( err ) <span class="hljs-keyword">return</span> done(err)
         sendmap[topic] = send
         done(<span class="hljs-literal">null</span>,send)
@@ -798,19 +798,19 @@ allow user to specify operations on result</p>
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_anyclient</span><span class="hljs-params">( opts, make_send, done )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_anyclient</span>(<span class="hljs-params"> opts, make_send, done </span>) </span>{
     <span class="hljs-keyword">var</span> msgprefix = (<span class="hljs-literal">null</span> == options.msgprefix ? <span class="hljs-string">''</span> : options.msgprefix) 
-    make_send( {}, msgprefix+<span class="hljs-string">'any'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( err, send )</span> </span>{
+    make_send( {}, msgprefix+<span class="hljs-string">'any'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> err, send </span>) </span>{
       <span class="hljs-keyword">if</span>( err ) <span class="hljs-keyword">return</span> done(err);
       <span class="hljs-keyword">if</span>( !_.isFunction(send) ) <span class="hljs-keyword">return</span> done(seneca.fail(<span class="hljs-string">'null-client'</span>,{opts:opts}));
 
       done( <span class="hljs-literal">null</span>, {
         id: nid(),
-        toString: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{ <span class="hljs-keyword">return</span> <span class="hljs-string">'any-'</span>+<span class="hljs-keyword">this</span>.id },
-        match: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( args )</span> </span>{ 
+        toString: <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>)</span>{ <span class="hljs-keyword">return</span> <span class="hljs-string">'any-'</span>+<span class="hljs-keyword">this</span>.id },
+        match: <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> args </span>) </span>{ 
           <span class="hljs-keyword">return</span> !<span class="hljs-keyword">this</span>.has(args)
         },
-        send: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( args, done )</span> </span>{
+        send: <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> args, done </span>) </span>{
           send.call(<span class="hljs-keyword">this</span>,args,done)
         }
       })
@@ -819,18 +819,18 @@ allow user to specify operations on result</p>
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_pinclient</span><span class="hljs-params">( resolvesend, argspatrun, done )</span> </span>{  
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_pinclient</span>(<span class="hljs-params"> resolvesend, argspatrun, done </span>) </span>{  
     done(<span class="hljs-literal">null</span>, {
       id: nid(),
-      toString: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{ <span class="hljs-keyword">return</span> <span class="hljs-string">'pin-'</span>+argspatrun.mark+<span class="hljs-string">'-'</span>+<span class="hljs-keyword">this</span>.id },
-      match: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( args )</span> </span>{
+      toString: <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>)</span>{ <span class="hljs-keyword">return</span> <span class="hljs-string">'pin-'</span>+argspatrun.mark+<span class="hljs-string">'-'</span>+<span class="hljs-keyword">this</span>.id },
+      match: <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> args </span>) </span>{
         <span class="hljs-keyword">var</span> match = !!argspatrun.find(args)
         <span class="hljs-keyword">return</span> match
       },
-      send: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( args, done )</span> </span>{
+      send: <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> args, done </span>) </span>{
         <span class="hljs-keyword">var</span> seneca = <span class="hljs-keyword">this</span>
         <span class="hljs-keyword">var</span> spec = argspatrun.find(args)
-        resolvesend(spec,args,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, send)</span></span>{
+        resolvesend(spec,args,<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">err, send</span>)</span>{
           <span class="hljs-keyword">if</span>( err ) <span class="hljs-keyword">return</span> done(err);
           send.call(seneca,args,done)
         })
@@ -840,7 +840,7 @@ allow user to specify operations on result</p>
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">prepare_response</span><span class="hljs-params">( seneca, input )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">prepare_response</span>(<span class="hljs-params"> seneca, input </span>) </span>{
     <span class="hljs-keyword">return</span> {
       id:     input.id,
       kind:   <span class="hljs-string">'res'</span>,
@@ -856,7 +856,7 @@ allow user to specify operations on result</p>
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">update_output</span><span class="hljs-params">( input, output, err, out )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">update_output</span>(<span class="hljs-params"> input, output, err, out </span>) </span>{
     output.res = out
 
     <span class="hljs-keyword">if</span>( err ) {
@@ -873,7 +873,7 @@ allow user to specify operations on result</p>
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">catch_act_error</span><span class="hljs-params">( seneca, e, listen_options, input, output )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">catch_act_error</span>(<span class="hljs-params"> seneca, e, listen_options, input, output </span>) </span>{
     seneca.log.error(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'act-error'</span>, listen_options, e.stack || e )
     output.error = e
     output.input = input
@@ -881,15 +881,15 @@ allow user to specify operations on result</p>
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">listen_topics</span><span class="hljs-params">( seneca, args, listen_options, do_topic )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">listen_topics</span>(<span class="hljs-params"> seneca, args, listen_options, do_topic </span>) </span>{
     <span class="hljs-keyword">var</span> msgprefix = (<span class="hljs-literal">null</span> == options.msgprefix ? <span class="hljs-string">''</span> : options.msgprefix) 
     <span class="hljs-keyword">var</span> pins      = resolve_pins( args )
 
     <span class="hljs-keyword">if</span>( pins ) {
-      _.each( seneca.findpins( pins ), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pin)</span> </span>{
+      _.each( seneca.findpins( pins ), <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">pin</span>) </span>{
 
         <span class="hljs-keyword">var</span> sb = []
-        _.each( _.keys(pin).sort(), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(k)</span></span>{
+        _.each( _.keys(pin).sort(), <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">k</span>)</span>{
           sb.push(k)
           sb.push(<span class="hljs-string">'='</span>)
           sb.push(pin[k])
@@ -897,9 +897,25 @@ allow user to specify operations on result</p>
         })
 
         <span class="hljs-keyword">var</span> topic = msgprefix+(sb.join(<span class="hljs-string">''</span>)).replace(<span class="hljs-regexp">/[^\w\d]+/g</span>,<span class="hljs-string">'_'</span>)
+
         do_topic( topic )
-      })
-    }
+      })</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>TODO: die if no pins!!!
+otherwise no listener established and seneca ends without msg</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    }
     <span class="hljs-keyword">else</span> {
       do_topic( msgprefix+<span class="hljs-string">'any'</span> )
     }
@@ -907,7 +923,7 @@ allow user to specify operations on result</p>
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">handle_response</span><span class="hljs-params">( seneca, data, client_options )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">handle_response</span>(<span class="hljs-params"> seneca, data, client_options </span>) </span>{
     data.time = data.time || {}
     data.time.client_recv = <span class="hljs-built_in">Date</span>.now()
 
@@ -937,17 +953,20 @@ allow user to specify operations on result</p>
       <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
     }
 
-    <span class="hljs-keyword">var</span> err = <span class="hljs-literal">null</span>
+    <span class="hljs-keyword">var</span> err    = <span class="hljs-literal">null</span>
+    <span class="hljs-keyword">var</span> result = <span class="hljs-literal">null</span>
+
     <span class="hljs-keyword">if</span>( data.error ) {
       err = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>( data.error.message )
 
-      _.each(data.error,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(v,k)</span></span>{
+      _.each(data.error,<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">v,k</span>)</span>{
         err[k] = v
       })
     }
+    <span class="hljs-keyword">else</span> {
+      result = handle_entity(data.res)
+    }
     
-    <span class="hljs-keyword">var</span> result = handle_entity(data.res)
-
     <span class="hljs-keyword">try</span> {
       callmeta.done( err, result ) 
     }
@@ -960,13 +979,13 @@ allow user to specify operations on result</p>
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">prepare_request</span><span class="hljs-params">( seneca, args, done )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">prepare_request</span>(<span class="hljs-params"> seneca, args, done </span>) </span>{
     <span class="hljs-keyword">var</span> callmeta = {
       args: args,
       done: _.bind(done,seneca),
       when: <span class="hljs-built_in">Date</span>.now()
     }
-    callmap.set(args.actid$,callmeta) 
+    callmap.set(args.meta$.id,callmeta) 
 
     <span class="hljs-keyword">var</span> track = []
     <span class="hljs-keyword">if</span>( args.transport$ ) {
@@ -975,7 +994,7 @@ allow user to specify operations on result</p>
     track.push(seneca.id)
 
     <span class="hljs-keyword">var</span> output = {
-      id:     args.actid$,
+      id:     args.meta$.id,
       kind:   <span class="hljs-string">'act'</span>,
       origin: seneca.id,
       track:  track,
@@ -988,7 +1007,7 @@ allow user to specify operations on result</p>
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">handle_request</span><span class="hljs-params">( seneca, data, listen_options, respond )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">handle_request</span>(<span class="hljs-params"> seneca, data, listen_options, respond </span>) </span>{
     <span class="hljs-keyword">if</span>( <span class="hljs-literal">null</span> == data ) <span class="hljs-keyword">return</span> respond(<span class="hljs-literal">null</span>);
 
     <span class="hljs-keyword">if</span>( <span class="hljs-string">'act'</span> != data.kind ) {
@@ -1038,7 +1057,7 @@ allow user to specify operations on result</p>
     input.actid$ = data.id
 
     <span class="hljs-keyword">try</span> {
-      seneca.act( input, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( err, out )</span> </span>{
+      seneca.act( input, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> err, out </span>) </span>{
         update_output(input,output,err,out)
           
         respond(output)
@@ -1052,17 +1071,17 @@ allow user to specify operations on result</p>
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_client</span><span class="hljs-params">( context_seneca, make_send, client_options, clientdone )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_client</span>(<span class="hljs-params"> context_seneca, make_send, client_options, clientdone </span>) </span>{
     <span class="hljs-keyword">var</span> instance = seneca</pre></div></div>
             
         </li>
         
         
-        <li id="section-11">
+        <li id="section-12">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-11">&#182;</a>
+                <a class="pilcrow" href="#section-12">&#182;</a>
               </div>
               <p>legacy api</p>
 
@@ -1084,13 +1103,13 @@ allow user to specify operations on result</p>
       <span class="hljs-keyword">var</span> argspatrun  = make_argspatrun( pins )
       <span class="hljs-keyword">var</span> resolvesend = make_resolvesend( client_options, {}, make_send )
 
-      make_pinclient( resolvesend, argspatrun, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( err, send )</span> </span>{
+      make_pinclient( resolvesend, argspatrun, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> err, send </span>) </span>{
         <span class="hljs-keyword">if</span>( err ) <span class="hljs-keyword">return</span> clientdone(err);
         clientdone( <span class="hljs-literal">null</span>, send )
       })
     }
     <span class="hljs-keyword">else</span> {
-      make_anyclient( client_options, make_send, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( err, send )</span> </span>{
+      make_anyclient( client_options, make_send, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> err, send </span>) </span>{
         <span class="hljs-keyword">if</span>( err ) <span class="hljs-keyword">return</span> clientdone(err);
         clientdone( <span class="hljs-literal">null</span>, send )
       })
@@ -1099,7 +1118,7 @@ allow user to specify operations on result</p>
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">parseJSON</span><span class="hljs-params">( seneca, note, str )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">parseJSON</span>(<span class="hljs-params"> seneca, note, str </span>) </span>{
     <span class="hljs-keyword">if</span>( str ) {
       <span class="hljs-keyword">try</span> {
         <span class="hljs-keyword">return</span> <span class="hljs-built_in">JSON</span>.parse( str )
@@ -1112,7 +1131,7 @@ allow user to specify operations on result</p>
 
 
 
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">stringifyJSON</span><span class="hljs-params">( seneca, note, obj )</span> </span>{
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">stringifyJSON</span>(<span class="hljs-params"> seneca, note, obj </span>) </span>{
     <span class="hljs-keyword">if</span>( obj ) {
       <span class="hljs-keyword">try</span> {
         <span class="hljs-keyword">return</span> <span class="hljs-built_in">JSON</span>.stringify( obj )
@@ -1130,11 +1149,11 @@ allow user to specify operations on result</p>
         </li>
         
         
-        <li id="section-12">
+        <li id="section-13">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-12">&#182;</a>
+                <a class="pilcrow" href="#section-13">&#182;</a>
               </div>
               <p>listen</p>
 
@@ -1146,11 +1165,11 @@ allow user to specify operations on result</p>
         </li>
         
         
-        <li id="section-13">
+        <li id="section-14">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-13">&#182;</a>
+                <a class="pilcrow" href="#section-14">&#182;</a>
               </div>
               <p>client</p>
 
@@ -1162,11 +1181,11 @@ allow user to specify operations on result</p>
         </li>
         
         
-        <li id="section-14">
+        <li id="section-15">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-14">&#182;</a>
+                <a class="pilcrow" href="#section-15">&#182;</a>
               </div>
               <p>utility</p>
 
