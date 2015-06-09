@@ -568,7 +568,7 @@ In this code, you are using the default HTTP transport, and just
 changing the port number to connect to. This reflects the fact that
 each color micro-service runs on a separate port.
 
-The <code>listen<code> call at the bottom makes this "client" also
+The `listen` call at the bottom makes this "client" also
 listen for inbound messages. So if you run, say the _color:red_
 service, and also run the client, then you can send color:red messages
 to the client.
