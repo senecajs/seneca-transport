@@ -716,7 +716,7 @@ properties:
    * `send( args, done )`: a function that performs the transport, and calls `done` with the result when received
 
 See the `make_anyclient` and `make_pinclient` functions in
-[transport.js](blob/master/transport.js) for implementation examples.
+[transport.js](transport.js) for implementation examples.
 
 Message transport code should be written very carefully as it will be
 subject to high load and many error conditions.
