@@ -655,6 +655,13 @@ implement two patterns:
    * role:transport, hook:listen, type:foo
    * role:transport, hook:client, type:foo
 
+Rather than writing all of the code yourself, and dealing with all the
+messy details, you can take advantage of the built-in message
+serialization and error handling by using the utility functions that
+the _transport_ plugin exports. These utility functions can be called
+in a specific sequence, providing a template for the implementation of
+a message transport:
+
 To implement the client, use the template:
 
 ```js
@@ -696,9 +703,23 @@ function hook_listen_redis( args, done ) {
 }
 ```
 
-Message transport code should be written very carefully as it will be
-subject to high load and many error conditions - have fun!
+If you do not wish to use a template, you can implement transports
+using entirely custom code. In this case, you need to need to provide
+results from the _hook_ actions. For the _role:transport,hook:listen_
+action, this is easy, as no result is required. For
+_role:transport,hook:client_, you need to provide an object with
+properties:
 
+   * `id`: an identifier for the client
+   * `toString`: a string description for debug logs
+   * `match( args )`: return _true_ if the client can transport the given args (i.e. they match the client action pattern)
+   * `send( args, done )`: a function that performs the transport, and calls `done` with the result when received
+
+See the `make_anyclient` and `make_pinclient` functions in
+[transport.js](blob/master/transport.js) for implementation examples.
+
+Message transport code should be written very carefully as it will be
+subject to high load and many error conditions.
 
 
 ## Plugin Options
