@@ -662,6 +662,11 @@ the _transport_ plugin exports. These utility functions can be called
 in a specific sequence, providing a template for the implementation of
 a message transport:
 
+The transport utility functions provide the concept of topics. Each
+message pattern is encoded as a topic string (alphanumeric) that could
+be used with a message queue server. You do not need to use topics,
+but they can be convenient to separate message flows.
+
 To implement the client, use the template:
 
 ```js
@@ -677,8 +682,23 @@ function hook_client_redis( args, clientdone ) {
   transport_utils.make_client( make_send, client_options, clientdone )
 
   // implement your transport here
+  // see an existing transport for full example
+  // make_send is called per topic
   function make_send( spec, topic, send_done ) {
-    // see an existing transport for full details
+  
+    // setup topic in transport mechanism
+     
+    // send the args over the transport
+    send_done( null, function( args, done ) {
+
+      // create message JSON
+      var outbound_message = transport_utils.prepare_request( seneca, args, done )
+
+      // send JSON using your transport API
+
+      // don't call done - that only happens if there's a response!
+      // this will be done for you
+    })
   }
 }  
 ```
@@ -695,10 +715,22 @@ function hook_listen_redis( args, done ) {
   // get your transport type default options
   var listen_options = seneca.util.clean(_.extend({},options[type],args))
 
-  // get inbound data, and...
-  transport_utils.handle_request( seneca, data, listen_options, function(out){
-    // see an existing transport for full details
+  // get the list of topics
+  var topics = tu.listen_topics( seneca, args, listen_options )
 
+  topics.forEach( function(topic) {
+
+    // "listen" on the topic - implementation dependent!
+
+    // handle inbound messages
+    transport_utils.handle_request( seneca, data, listen_options, function(out){
+
+      // there may be no result!
+      if( null == out ) return ...;
+    
+      // otherwise, send the result back
+      // don't forget to stringifyJSON(out) if necessary
+    })
   })
 }
 ```

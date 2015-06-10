@@ -35,7 +35,9 @@ module.exports = function( options ) {
     var type           = args.type
     var listen_options = seneca.util.clean(_.extend({},options[type],args))
 
-    tu.listen_topics( seneca, args, listen_options, function(topic) {
+    var topics = tu.listen_topics( seneca, args, listen_options )
+    
+    topics.forEach( function(topic) {
       seneca.log.debug('listen', 'subscribe', topic+'_act', 
                        listen_options, seneca)
 
@@ -50,9 +52,8 @@ module.exports = function( options ) {
       })
     })
 
-    seneca.add('role:seneca,cmd:close',function( close_args, done ) {
-      var closer = this
-      closer.prior(close_args,done)
+    tu.close( seneca, function( done ) {
+      done()
     })
 
     seneca.log.info('listen', 'open', listen_options, seneca)
@@ -83,9 +84,8 @@ module.exports = function( options ) {
       })
     }
 
-    seneca.add('role:seneca,cmd:close',function( close_args, done ) {
-      var closer = this
-      closer.prior(close_args,done)
+    tu.close( seneca, function( done ) {
+      done()
     })
   }
 }

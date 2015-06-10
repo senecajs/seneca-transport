@@ -108,7 +108,7 @@ module.exports = function transport( options ) {
   
   function cmd_listen( args, done ) {
     var seneca = this
-    
+
     var listen_config = args.config
     var listen_args  = 
           seneca.util.clean(

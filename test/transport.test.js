@@ -360,6 +360,7 @@ describe('transport', function() {
 
   it('testmem-topic-star', function(fin){
     seneca({tag:'srv',timeout:5555,log:'silent',debug:{short_logs:true}})
+      .use('../transport')
       .use( './memtest-transport.js' )
       .add('foo:1',function(args,done){
         assert.equal('aaa',args.meta$.id)
@@ -375,6 +376,7 @@ describe('transport', function() {
         seneca({tag:'cln',timeout:5555,log:'silent',
                 debug:{short_logs:true}})
 
+          .use('../transport')
           .use( './memtest-transport.js' )
         
           .client( {type:'memtest', pin:'foo:*'} )
