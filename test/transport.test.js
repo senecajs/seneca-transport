@@ -32,7 +32,8 @@ function run_client( type, port, done, tag ) {
           if(err) return fin(err);
               
           assert.equal( '{"s":"1-AA"}', JSON.stringify(out) )
-          done()
+
+          this.close(done)
         })
       })
     })
@@ -65,11 +66,14 @@ describe('transport', function() {
       .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )
       .listen({type:'tcp',port:20102})
       .ready( function() {
+        var seneca = this
 
         var count = 0
         function check() {
           count++
-          if( 3 == count ) fin()
+          if( 3 == count ) {
+            seneca.close(fin)
+          }
         }
 
         run_client( 'tcp', 20102, check, 'cln0' )

@@ -209,16 +209,14 @@ module.exports = function transport( options ) {
 
     listen.listen( listen_options.port, listen_options.host )
 
-
-    seneca.add('role:seneca,cmd:close',function( close_args, done ) {
-      var closer = this
-
+    tu.close( seneca, function(done){
       listen.close()
+
       connections.forEach(function(con){
         try { con.destroy() } catch(e) { seneca.log.error(e) }
       })
 
-      closer.prior(close_args,done)
+      done()
     })
   }
 
@@ -281,15 +279,14 @@ module.exports = function transport( options ) {
         msger.push( outmsg )
       })
 
-      seneca.add('role:seneca,cmd:close',function( close_args, done ) {
-        var closer = this
-
+      tu.close( seneca, function( done ) {
         clientconnect.disconnect()
+
         connections.forEach(function(con){
           try { con.destroy() } catch(e) { seneca.log.error(e) }
         })
 
-        closer.prior(close_args,done)
+        done()
       })
     }
   }
@@ -464,14 +461,11 @@ module.exports = function transport( options ) {
     seneca.log.info('listen', listen_options )
     var listen = app.listen( listen_options.port, listen_options.host )
 
-    seneca.add('role:seneca,cmd:close',function( close_args, done ) {
-      var closer = this
-
+    tu.close( seneca, function( done ) {
       listen.close()
-      closer.prior(close_args,done)
+      done()
     })
 
-    //done(null,listen)
     done()
   }
 
@@ -537,6 +531,10 @@ module.exports = function transport( options ) {
             tu.handle_response( seneca, data, client_options )
           }
         )
+      })
+
+      tu.close( seneca, function( done ) {
+        done()
       })
     }
   }  
