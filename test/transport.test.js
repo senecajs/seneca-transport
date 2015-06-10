@@ -149,6 +149,7 @@ describe('transport', function() {
   })
 
 
+  // NOTE: SENECA_LOG=all will break this test as it counts log entries
   it('own-message', function(fin){
     
     // a -> b -> a
@@ -239,6 +240,7 @@ describe('transport', function() {
   })
 
 
+  // NOTE: SENECA_LOG=all will break this test as it counts log entries
   it('message-loop', function(fin){
     
     // a -> b -> c -> a
@@ -350,4 +352,47 @@ describe('transport', function() {
 
     }
   })
+
+
+  it('testmem-topic-star', function(fin){
+    seneca({tag:'srv',timeout:5555,log:'silent',debug:{short_logs:true}})
+      .use( './memtest-transport.js' )
+      .add('foo:1',function(args,done){
+        assert.equal('aaa',args.meta$.id)
+        done(null,{bar:1})
+      })
+      .add('foo:2',function(args,done){
+        assert.equal('bbb',args.meta$.id)
+        done(null,{bar:2})
+      })
+      .listen( {type:'memtest',pin:'foo:*'} )
+      .ready(function(){
+
+        seneca({tag:'cln',timeout:5555,log:'silent',
+                debug:{short_logs:true}})
+
+          .use( './memtest-transport.js' )
+        
+          .client( {type:'memtest', pin:'foo:*'} )
+        
+          .start(fin)
+
+          .wait('foo:1,actid$:aaa')
+          .step(function(out){
+            assert.ok(1,out.bar)
+            return true;
+          })
+
+          .wait('foo:2,actid$:bbb')
+          .step(function(out){
+            assert.ok(2,out.bar)
+            return true;
+          })
+        
+          .end()
+      })
+  })
+
+
+
 })
