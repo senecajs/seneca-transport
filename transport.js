@@ -14,8 +14,9 @@ var connect   = require('connect')
 var needle    = require('needle')
 var lrucache  = require('lru-cache')
 var reconnect = require('reconnect-net')
-var timeout   = require('connect-timeout');
-var query     = require('connect-query');
+var timeout   = require('connect-timeout')
+var query     = require('connect-query')
+var jsonic    = require('jsonic')
 
 
 var make_tu = require('./lib/transport-utils.js')
@@ -373,6 +374,7 @@ module.exports = function transport( options ) {
           req.body = _.extend(
             {},
             0 < bufstr.length ? tu.parseJSON(seneca,'req-body',bufstr) : {},
+            (req.query && req.query.args$) ? jsonic(req.query.args$) : {},
             req.query||{} )
 
           next();

@@ -113,6 +113,34 @@ describe('transport', function() {
   })
 
 
+  it('web-query', function( fin ) {
+    require('seneca')({log:'silent',errhandler:fin,default_plugins:no_t})
+      .use('../transport.js')
+      .add( 'a:1', function(args,done){done(null,this.util.clean(args))} )
+      .listen({type:'web',port:20302})
+      .ready( function() {
+
+        ;needle.get( 
+          'http://localhost:20302/act?a=1&b=2',
+          function(err,res,body){
+            if( err ) return fin(err)
+            assert.equal(1,body.a)
+            assert.equal(2,body.b)
+
+        ;needle.get( 
+          'http://localhost:20302/act?args$=a:1,b:2,c:{d:3}',
+          function(err,res,body){
+            if( err ) return fin(err)
+            assert.equal(1,body.a)
+            assert.equal(2,body.b)
+            assert.equal(3,body.c.d)
+
+        ;fin() 
+
+       }) }) })
+  })
+
+
   it('error-passing-http', function(fin){
 
     require('seneca')({log:'silent',default_plugins:no_t})
