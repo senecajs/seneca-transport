@@ -385,17 +385,96 @@ describe('transport', function() {
 
           .wait('foo:1,actid$:aaa')
           .step(function(out){
-            assert.ok(1,out.bar)
+            assert.equal(1,out.bar)
             return true;
           })
 
           .wait('foo:2,actid$:bbb')
           .step(function(out){
-            assert.ok(2,out.bar)
+            assert.equal(2,out.bar)
             return true;
           })
         
           .end()
+      })
+  })
+
+
+  it('catchall-ordering', function(fin){
+    seneca({tag:'srv',timeout:5555,log:'silent',debug:{short_logs:true}})
+      .use('../transport')
+      .use( './memtest-transport.js' )
+
+      .add('foo:1',function(args,done){
+        done(null,{FOO:1})
+      })
+
+      .add('bar:1',function(args,done){
+        done(null,{BAR:1})
+      })
+
+      .listen( {type:'memtest', dest:'D0', pin:'foo:*'} )
+      .listen( {type:'memtest', dest:'D1'} )
+
+      .ready(function(){
+
+        do_catchall_first()
+
+        function do_catchall_first(err) {
+          seneca({tag:'cln0',timeout:5555,log:'silent',
+                  debug:{short_logs:true}})
+
+            .use('../transport')
+            .use( './memtest-transport.js' )
+          
+            .client( {type:'memtest', dest:'D1' } )
+            .client( {type:'memtest', dest:'D0', pin:'foo:*'} )
+          
+            .start(fin)
+
+            .wait('foo:1')
+            .step(function(out){
+              assert.equal(1,out.FOO)
+              return true;
+            })
+
+            .wait('bar:1')
+            .step(function(out){
+              assert.equal(1,out.BAR)
+              return true;
+            })
+
+            .end( do_catchall_last )
+        }
+
+        function do_catchall_last(err) {
+          if(err) return fin(err);
+
+          seneca({tag:'cln1',timeout:5555,log:'silent',
+                  debug:{short_logs:true}})
+
+            .use('../transport')
+            .use( './memtest-transport.js' )
+          
+            .client( {type:'memtest', dest:'D0', pin:'foo:*'} )
+            .client( {type:'memtest', dest:'D1'} )
+  
+            .start(fin)
+
+            .wait('foo:1')
+            .step(function(out){
+              assert.equal(1,out.FOO)
+              return true;
+            })
+
+            .wait('bar:1')
+            .step(function(out){
+              assert.equal(1,out.BAR)
+              return true;
+            })
+
+            .end()
+        }
       })
   })
 
