@@ -18,6 +18,12 @@ var timeout   = require('connect-timeout')
 var query     = require('connect-query')
 var jsonic    = require('jsonic')
 
+var error = require('eraro')({
+  package:  'seneca',
+  msgmap:   ERRMSGMAP(),
+  override: true
+})
+
 
 var make_tu = require('./lib/transport-utils.js')
 
@@ -166,6 +172,15 @@ module.exports = function transport( options ) {
       msger._read = function() {}
       msger._write = function( data, enc , done ) {
         var stream_instance = this
+
+        if( util.isError(data) ) {
+          var out = tu.prepare_response(seneca,{})
+          out.input = data.input
+          out.error = error('invalid_json',{input:data.input})
+
+          stream_instance.push(out)
+          return done()
+        }
 
         tu.handle_request( seneca, data, listen_options, function(out) {
           if( null == out ) return done();
@@ -447,9 +462,12 @@ module.exports = function transport( options ) {
         headers['seneca-origin'] = out ? out.origin : 'UNKNOWN'
         headers['seneca-accept'] = seneca.id
         headers['seneca-track']  = ''+(data.track ? data.track : [])
-        headers['seneca-time-client-sent'] = out ? out.time.client_sent : '0'
-        headers['seneca-time-listen-recv'] = out ? out.time.listen_recv : '0'
-        headers['seneca-time-listen-sent'] = out ? out.time.listen_sent : '0'
+        headers['seneca-time-client-sent'] = 
+          out && out.item ? out.time.client_sent : '0'
+        headers['seneca-time-listen-recv'] = 
+          out && out.item ? out.time.listen_recv : '0'
+        headers['seneca-time-listen-sent'] = 
+          out && out.item ? out.time.listen_sent : '0'
         
         if( iserror ) {
           httpcode = 500
@@ -546,5 +564,13 @@ module.exports = function transport( options ) {
     name:      plugin,
     exportmap: { utils: tu },
     options:   options
+  }
+}
+
+
+// Error code messages.
+function ERRMSGMAP() {
+  return {
+    'invalid_json':'Invalid JSON: <%=input%>.',
   }
 }
