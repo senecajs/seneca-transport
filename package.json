@@ -1,6 +1,6 @@
 {
   "name": "seneca-transport",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "Seneca transport",
   "main": "transport.js",
   "scripts": {
@@ -36,7 +36,8 @@
   "files": [
     "README.md",
     "LICENSE.txt",
-    "transport.js"
+    "transport.js",
+    "lib/transport-utils.js",
   ],
   "devDependencies": {
     "seneca": "plugin",
