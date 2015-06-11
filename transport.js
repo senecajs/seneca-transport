@@ -386,9 +386,21 @@ module.exports = function transport( options ) {
       req.on('end', function() {
         try {
           var bufstr = buf.join('')
+
+          var bodydata = 
+                0 < bufstr.length ? tu.parseJSON(seneca,'req-body',bufstr) : {}
+
+          if( util.isError(bodydata) ) {
+            var out = tu.prepare_response(seneca,{})
+            out.input = bufstr
+            out.error = error('invalid_json',{input:bufstr})
+            send_response(res,out,{})
+            return;
+          }
+
           req.body = _.extend(
             {},
-            0 < bufstr.length ? tu.parseJSON(seneca,'req-body',bufstr) : {},
+            bodydata,
             (req.query && req.query.args$) ? jsonic(req.query.args$) : {},
             req.query||{} )
 
@@ -436,48 +448,12 @@ module.exports = function transport( options ) {
         }
       }
 
-      tu.handle_request( seneca, data, listen_options, function(out) {
-        var outjson  = "null"
-        var iserror  = false
-        var httpcode = 200
-
-        if( null != out ) {
-          if( out.res ) {
-            outjson = tu.stringifyJSON(seneca,'listen-web',out.res)
-          }
-          else if( out.error ) {
-            iserror = true
-            outjson = tu.stringifyJSON(seneca,'listen-web',out.error)
-          }
-        }
-
-        var headers = {
-          'Content-Type':   'application/json',
-          'Cache-Control':  'private, max-age=0, no-cache, no-store',
-          'Content-Length': buffer.Buffer.byteLength(outjson),
-        }
-        
-        headers['seneca-id']     = out ? out.id : seneca.id
-        headers['seneca-kind']   = 'res'
-        headers['seneca-origin'] = out ? out.origin : 'UNKNOWN'
-        headers['seneca-accept'] = seneca.id
-        headers['seneca-track']  = ''+(data.track ? data.track : [])
-        headers['seneca-time-client-sent'] = 
-          out && out.item ? out.time.client_sent : '0'
-        headers['seneca-time-listen-recv'] = 
-          out && out.item ? out.time.listen_recv : '0'
-        headers['seneca-time-listen-sent'] = 
-          out && out.item ? out.time.listen_sent : '0'
-        
-        if( iserror ) {
-          httpcode = 500
-        }
-
-        res.writeHead( httpcode, headers )
-        res.end( outjson )
+      tu.handle_request( seneca, data, listen_options, function(out){
+        send_response(res,out,data)
       })
     })
     
+
     seneca.log.info('listen', listen_options )
     var listen = app.listen( listen_options.port, listen_options.host )
 
@@ -485,6 +461,47 @@ module.exports = function transport( options ) {
       listen.close()
       done()
     })
+
+    function send_response(res,out,data) {
+      var outjson  = "null"
+      var iserror  = false
+      var httpcode = 200
+
+      if( null != out ) {
+        if( out.res ) {
+          outjson = tu.stringifyJSON(seneca,'listen-web',out.res)
+        }
+        else if( out.error ) {
+          iserror = true
+          outjson = tu.stringifyJSON(seneca,'listen-web',out.error)
+        }
+      }
+
+      var headers = {
+        'Content-Type':   'application/json',
+        'Cache-Control':  'private, max-age=0, no-cache, no-store',
+        'Content-Length': buffer.Buffer.byteLength(outjson),
+      }
+      
+      headers['seneca-id']     = out ? out.id : seneca.id
+      headers['seneca-kind']   = 'res'
+      headers['seneca-origin'] = out ? out.origin : 'UNKNOWN'
+      headers['seneca-accept'] = seneca.id
+      headers['seneca-track']  = ''+(data.track ? data.track : [])
+      headers['seneca-time-client-sent'] = 
+        out && out.item ? out.time.client_sent : '0'
+      headers['seneca-time-listen-recv'] = 
+        out && out.item ? out.time.listen_recv : '0'
+      headers['seneca-time-listen-sent'] = 
+        out && out.item ? out.time.listen_sent : '0'
+      
+      if( iserror ) {
+        httpcode = 500
+      }
+
+      res.writeHead( httpcode, headers )
+      res.end( outjson )
+    }
 
     done()
   }
