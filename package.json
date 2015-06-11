@@ -37,7 +37,7 @@
     "README.md",
     "LICENSE.txt",
     "transport.js",
-    "lib/transport-utils.js",
+    "lib/transport-utils.js"
   ],
   "devDependencies": {
     "seneca": "plugin",
