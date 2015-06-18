@@ -174,7 +174,6 @@ describe('transport', function() {
       .use('../transport.js')
       .client({type:'tcp',port:40404})
       .act('a:1',function(err,out){
-        //console.log(err)
         assert.equal('seneca: Action a:1 failed: bad-wire.',err.message)
         fin()
       })

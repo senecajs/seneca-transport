@@ -194,8 +194,8 @@ module.exports = function transport( options ) {
     var connections = []
 
     var listen = net.createServer(function(connection) {
-      seneca.log.info('listen', 'connection', listen_options,
-                      'remote', connection.remoteAddress, connection.remotePort)
+      seneca.log.debug('listen', 'connection', listen_options,
+                       'remote', connection.remoteAddress, connection.remotePort)
       connection
         .pipe(json_parser_stream())
         .pipe(make_msger())
@@ -210,8 +210,8 @@ module.exports = function transport( options ) {
     })
 
     listen.on('listening', function() {
-      seneca.log.info('listen', 'open', 
-                      listen_options)
+      seneca.log.debug('listen', 'open', 
+                       listen_options)
       done()
     })
 
@@ -220,7 +220,7 @@ module.exports = function transport( options ) {
     })
 
     listen.on('close', function() {
-      seneca.log.info('listen', 'close', listen_options)
+      seneca.log.debug('listen', 'close', listen_options)
     })
 
     listen.listen( listen_options.port, listen_options.host )
@@ -454,7 +454,7 @@ module.exports = function transport( options ) {
     })
     
 
-    seneca.log.info('listen', listen_options )
+    seneca.log.debug('listen', listen_options )
     var listen = app.listen( listen_options.port, listen_options.host )
 
     tu.close( seneca, function( done ) {
