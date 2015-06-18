@@ -14,7 +14,7 @@ For a gentle introduction to Seneca itself, see the
 
 ## Support
 
-Current Version: 0.7.0
+Current Version: 0.7.1
 
 Tested on: [Seneca](/rjrodger/seneca) 0.6.2
 
@@ -875,6 +875,8 @@ npm test
 
 ## Releases
 
+   * 0.7.1: fixed log levels
+   * 0.7.0: all logs now debug level
    * 0.2.6: fixed error transmit bug https://github.com/rjrodger/seneca/issues/63
 
 
