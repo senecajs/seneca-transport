@@ -16,7 +16,7 @@ For a gentle introduction to Seneca itself, see the
 
 Current Version: 0.7.1
 
-Tested on: [Seneca](/rjrodger/seneca) 0.6.2
+Tested on: [Seneca](//github.com/rjrodger/seneca) 0.6.2
 
 [![Build Status](https://travis-ci.org/rjrodger/seneca-transport.png?branch=master)](https://travis-ci.org/rjrodger/seneca-transport)
 
@@ -24,10 +24,11 @@ Built and tested against versions: `0.10, 0.11, 0.12, iojs`
 
 [Annotated Source](http://rjrodger.github.io/seneca-transport/doc/transport.html)
 
-If you're using this plugin module, feel free to contact me on twitter if you
-have any questions! :) [@rjrodger](http://twitter.com/rjrodger)
+If you're using this module, and need help, you can:
 
-[![Gitter chat](https://badges.gitter.im/rjrodger/seneca-transport.png)](https://gitter.im/rjrodger/seneca-transport)
+   * Post a [github issue](//github.com/rjrodger/seneca-transport/issues),
+   * Tweet to [@senecajs](http://twitter.com/senecajs),
+   * Ask on the [![Gitter chat](https://badges.gitter.im/rjrodger/seneca-transport.png)](https://gitter.im/rjrodger/seneca-transport).
 
 
 ### Install

@@ -272,8 +272,8 @@
     <span class="hljs-keyword">var</span> connections = []
 
     <span class="hljs-keyword">var</span> listen = net.createServer(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">connection</span>) </span>{
-      seneca.log.info(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'connection'</span>, listen_options,
-                      <span class="hljs-string">'remote'</span>, connection.remoteAddress, connection.remotePort)
+      seneca.log.debug(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'connection'</span>, listen_options,
+                       <span class="hljs-string">'remote'</span>, connection.remoteAddress, connection.remotePort)
       connection
         .pipe(json_parser_stream())
         .pipe(make_msger())
@@ -288,8 +288,8 @@
     })
 
     listen.on(<span class="hljs-string">'listening'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
-      seneca.log.info(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'open'</span>, 
-                      listen_options)
+      seneca.log.debug(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'open'</span>, 
+                       listen_options)
       done()
     })
 
@@ -298,7 +298,7 @@
     })
 
     listen.on(<span class="hljs-string">'close'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
-      seneca.log.info(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'close'</span>, listen_options)
+      seneca.log.debug(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'close'</span>, listen_options)
     })
 
     listen.listen( listen_options.port, listen_options.host )
@@ -476,9 +476,21 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
       req.on(<span class="hljs-string">'end'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
         <span class="hljs-keyword">try</span> {
           <span class="hljs-keyword">var</span> bufstr = buf.join(<span class="hljs-string">''</span>)
+
+          <span class="hljs-keyword">var</span> bodydata = 
+                <span class="hljs-number">0</span> &lt; bufstr.length ? tu.parseJSON(seneca,<span class="hljs-string">'req-body'</span>,bufstr) : {}
+
+          <span class="hljs-keyword">if</span>( util.isError(bodydata) ) {
+            <span class="hljs-keyword">var</span> out = tu.prepare_response(seneca,{})
+            out.input = bufstr
+            out.error = error(<span class="hljs-string">'invalid_json'</span>,{input:bufstr})
+            send_response(res,out,{})
+            <span class="hljs-keyword">return</span>;
+          }
+
           req.body = _.extend(
             {},
-            <span class="hljs-number">0</span> &lt; bufstr.length ? tu.parseJSON(seneca,<span class="hljs-string">'req-body'</span>,bufstr) : {},
+            bodydata,
             (req.query &amp;&amp; req.query.args$) ? jsonic(req.query.args$) : {},
             req.query||{} )
 
@@ -538,55 +550,60 @@ GETs can have side-effects, this is not a web server, or a REST API</p>
         }
       }
 
-      tu.handle_request( seneca, data, listen_options, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">out</span>) </span>{
-        <span class="hljs-keyword">var</span> outjson  = <span class="hljs-string">"null"</span>
-        <span class="hljs-keyword">var</span> iserror  = <span class="hljs-literal">false</span>
-        <span class="hljs-keyword">var</span> httpcode = <span class="hljs-number">200</span>
-
-        <span class="hljs-keyword">if</span>( <span class="hljs-literal">null</span> != out ) {
-          <span class="hljs-keyword">if</span>( out.res ) {
-            outjson = tu.stringifyJSON(seneca,<span class="hljs-string">'listen-web'</span>,out.res)
-          }
-          <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( out.error ) {
-            iserror = <span class="hljs-literal">true</span>
-            outjson = tu.stringifyJSON(seneca,<span class="hljs-string">'listen-web'</span>,out.error)
-          }
-        }
-
-        <span class="hljs-keyword">var</span> headers = {
-          <span class="hljs-string">'Content-Type'</span>:   <span class="hljs-string">'application/json'</span>,
-          <span class="hljs-string">'Cache-Control'</span>:  <span class="hljs-string">'private, max-age=0, no-cache, no-store'</span>,
-          <span class="hljs-string">'Content-Length'</span>: buffer.Buffer.byteLength(outjson),
-        }
-        
-        headers[<span class="hljs-string">'seneca-id'</span>]     = out ? out.id : seneca.id
-        headers[<span class="hljs-string">'seneca-kind'</span>]   = <span class="hljs-string">'res'</span>
-        headers[<span class="hljs-string">'seneca-origin'</span>] = out ? out.origin : <span class="hljs-string">'UNKNOWN'</span>
-        headers[<span class="hljs-string">'seneca-accept'</span>] = seneca.id
-        headers[<span class="hljs-string">'seneca-track'</span>]  = <span class="hljs-string">''</span>+(data.track ? data.track : [])
-        headers[<span class="hljs-string">'seneca-time-client-sent'</span>] = 
-          out &amp;&amp; out.item ? out.time.client_sent : <span class="hljs-string">'0'</span>
-        headers[<span class="hljs-string">'seneca-time-listen-recv'</span>] = 
-          out &amp;&amp; out.item ? out.time.listen_recv : <span class="hljs-string">'0'</span>
-        headers[<span class="hljs-string">'seneca-time-listen-sent'</span>] = 
-          out &amp;&amp; out.item ? out.time.listen_sent : <span class="hljs-string">'0'</span>
-        
-        <span class="hljs-keyword">if</span>( iserror ) {
-          httpcode = <span class="hljs-number">500</span>
-        }
-
-        res.writeHead( httpcode, headers )
-        res.end( outjson )
+      tu.handle_request( seneca, data, listen_options, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">out</span>)</span>{
+        send_response(res,out,data)
       })
     })
     
-    seneca.log.info(<span class="hljs-string">'listen'</span>, listen_options )
+
+    seneca.log.debug(<span class="hljs-string">'listen'</span>, listen_options )
     <span class="hljs-keyword">var</span> listen = app.listen( listen_options.port, listen_options.host )
 
     tu.close( seneca, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> done </span>) </span>{
       listen.close()
       done()
     })
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">send_response</span>(<span class="hljs-params">res,out,data</span>) </span>{
+      <span class="hljs-keyword">var</span> outjson  = <span class="hljs-string">"null"</span>
+      <span class="hljs-keyword">var</span> iserror  = <span class="hljs-literal">false</span>
+      <span class="hljs-keyword">var</span> httpcode = <span class="hljs-number">200</span>
+
+      <span class="hljs-keyword">if</span>( <span class="hljs-literal">null</span> != out ) {
+        <span class="hljs-keyword">if</span>( out.res ) {
+          outjson = tu.stringifyJSON(seneca,<span class="hljs-string">'listen-web'</span>,out.res)
+        }
+        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( out.error ) {
+          iserror = <span class="hljs-literal">true</span>
+          outjson = tu.stringifyJSON(seneca,<span class="hljs-string">'listen-web'</span>,out.error)
+        }
+      }
+
+      <span class="hljs-keyword">var</span> headers = {
+        <span class="hljs-string">'Content-Type'</span>:   <span class="hljs-string">'application/json'</span>,
+        <span class="hljs-string">'Cache-Control'</span>:  <span class="hljs-string">'private, max-age=0, no-cache, no-store'</span>,
+        <span class="hljs-string">'Content-Length'</span>: buffer.Buffer.byteLength(outjson),
+      }
+      
+      headers[<span class="hljs-string">'seneca-id'</span>]     = out ? out.id : seneca.id
+      headers[<span class="hljs-string">'seneca-kind'</span>]   = <span class="hljs-string">'res'</span>
+      headers[<span class="hljs-string">'seneca-origin'</span>] = out ? out.origin : <span class="hljs-string">'UNKNOWN'</span>
+      headers[<span class="hljs-string">'seneca-accept'</span>] = seneca.id
+      headers[<span class="hljs-string">'seneca-track'</span>]  = <span class="hljs-string">''</span>+(data.track ? data.track : [])
+      headers[<span class="hljs-string">'seneca-time-client-sent'</span>] = 
+        out &amp;&amp; out.item ? out.time.client_sent : <span class="hljs-string">'0'</span>
+      headers[<span class="hljs-string">'seneca-time-listen-recv'</span>] = 
+        out &amp;&amp; out.item ? out.time.listen_recv : <span class="hljs-string">'0'</span>
+      headers[<span class="hljs-string">'seneca-time-listen-sent'</span>] = 
+        out &amp;&amp; out.item ? out.time.listen_sent : <span class="hljs-string">'0'</span>
+      
+      <span class="hljs-keyword">if</span>( iserror ) {
+        httpcode = <span class="hljs-number">500</span>
+      }
+
+      res.writeHead( httpcode, headers )
+      res.end( outjson )
+    }
 
     done()
   }
