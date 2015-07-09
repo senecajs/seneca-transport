@@ -204,7 +204,7 @@ describe('transport', function() {
 
       var a = require('seneca')({
         log:{map:[
-          {level:'debug', regex: /\{a=1\}/, handler:log_a},
+          {level:'debug', regex: /\{a:1\}/, handler:log_a},
           {level:'warn', regex: /own_message/, handler:own_a}
         ]},
         timeout: 111,
@@ -220,7 +220,7 @@ describe('transport', function() {
 
       var b = require('seneca')({
         log:{map:[
-          {level:'debug', regex: /\{b=1\}/, handler:log_b}
+          {level:'debug', regex: /\{b:1\}/, handler:log_b}
         ]},
         timeout: 111,
         default_plugins:no_t
@@ -297,7 +297,7 @@ describe('transport', function() {
 
       var a = require('seneca')({
         log:{map:[
-          {level:'debug', regex: /\{a=1\}/, handler:log_a},
+          {level:'debug', regex: /\{a:1\}/, handler:log_a},
           {level:'warn', regex: /message_loop/, handler:loop_a}
         ]},
         timeout: 111,
@@ -313,7 +313,7 @@ describe('transport', function() {
 
       var b = require('seneca')({
         log:{map:[
-          {level:'debug', regex: /\{b=1\}/, handler:log_b}
+          {level:'debug', regex: /\{b:1\}/, handler:log_b}
         ]},
         timeout: 111,
         default_plugins:no_t
@@ -325,7 +325,7 @@ describe('transport', function() {
 
       var c = require('seneca')({
         log:{map:[
-          {level:'debug', regex: /\{c=1\}/, handler:log_c}
+          {level:'debug', regex: /\{c:1\}/, handler:log_c}
         ]},
         timeout: 111,
         default_plugins:no_t
@@ -390,11 +390,11 @@ describe('transport', function() {
       .use('../transport')
       .use( './memtest-transport.js' )
       .add('foo:1',function(args,done){
-        assert.equal('aaa',args.meta$.id)
+        assert.equal('aaa/AAA',args.meta$.id)
         done(null,{bar:1})
       })
       .add('foo:2',function(args,done){
-        assert.equal('bbb',args.meta$.id)
+        assert.equal('bbb/BBB',args.meta$.id)
         done(null,{bar:2})
       })
       .listen( {type:'memtest',pin:'foo:*'} )
@@ -410,13 +410,13 @@ describe('transport', function() {
         
           .start(fin)
 
-          .wait('foo:1,actid$:aaa')
+          .wait('foo:1,id$:aaa/AAA')
           .step(function(out){
             assert.equal(1,out.bar)
             return true;
           })
 
-          .wait('foo:2,actid$:bbb')
+          .wait('foo:2,id$:bbb/BBB')
           .step(function(out){
             assert.equal(2,out.bar)
             return true;

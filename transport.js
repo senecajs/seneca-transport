@@ -44,6 +44,7 @@ module.exports = function transport( options ) {
     warn: {
       unknown_message_id: true,
       invalid_kind:       true,
+      invalid_origin:     true,
       no_message_id:      true,      
       message_loop:       true,      
       own_message:        true,
