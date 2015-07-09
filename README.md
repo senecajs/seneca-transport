@@ -14,9 +14,9 @@ For a gentle introduction to Seneca itself, see the
 
 ## Support
 
-Current Version: 0.7.1
+Current Version: 0.7.2
 
-Tested on: [Seneca](//github.com/rjrodger/seneca) 0.6.2
+Tested on: [Seneca](//github.com/rjrodger/seneca) 0.6.3
 
 [![Build Status](https://travis-ci.org/rjrodger/seneca-transport.png?branch=master)](https://travis-ci.org/rjrodger/seneca-transport)
 
