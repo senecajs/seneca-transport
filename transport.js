@@ -1,6 +1,6 @@
 /* Copyright (c) 2013-2015 Richard Rodger, MIT License */
 /* jshint node:true, asi:true, eqnull:true */
-"use strict";
+'use strict'
 
 
 var buffer = require('buffer')
@@ -28,7 +28,7 @@ var error = require('eraro')({
 var make_tu = require('./lib/transport-utils.js')
 
 
-module.exports = function transport( options ) {
+module.exports = function transport (options) {
   /* jshint validthis:true */
 
   var seneca = this
@@ -45,9 +45,9 @@ module.exports = function transport( options ) {
       unknown_message_id: true,
       invalid_kind:       true,
       invalid_origin:     true,
-      no_message_id:      true,      
-      message_loop:       true,      
-      own_message:        true,
+      no_message_id:      true,
+      message_loop:       true,
+      own_message:        true
     },
 
     check: {
@@ -61,64 +61,55 @@ module.exports = function transport( options ) {
       host:     '0.0.0.0',
       path:     '/act',
       protocol: 'http',
-      timeout:  Math.max( so.timeout ? so.timeout-555 : 5555, 555 )
+      timeout:  Math.max( so.timeout ? so.timeout - 555 : 5555, 555 )
     },
 
     tcp: {
       type:     'tcp',
       host:     '0.0.0.0',
       port:     10201,
-      timeout:  Math.max( so.timeout ? so.timeout-555 : 5555, 555 )
-    },
-
-  },options)
-  
-
+      timeout:  Math.max( so.timeout ? so.timeout - 555 : 5555, 555 )
+    }
+  }, options)
 
   // Pending callbacks for all transports.
-  var callmap = lrucache( options.callmax )
+  var callmap = lrucache(options.callmax)
 
   // Utility functions, bound to this transport context
-  var tu = make_tu( { callmap:callmap, seneca:seneca, options:options } )
+  var tu = make_tu({ callmap: callmap, seneca: seneca, options: options })
 
+  seneca.add({ role: plugin, cmd: 'inflight' }, cmd_inflight)
 
-  seneca.add({role:plugin,cmd:'inflight'}, cmd_inflight)
+  seneca.add({ role: plugin, cmd: 'listen' }, cmd_listen)
+  seneca.add({ role: plugin, cmd: 'client' }, cmd_client)
 
-  seneca.add({role:plugin,cmd:'listen'}, cmd_listen)
-  seneca.add({role:plugin,cmd:'client'}, cmd_client)
+  seneca.add({ role: plugin, hook: 'listen', type: 'tcp' }, hook_listen_tcp)
+  seneca.add({ role: plugin, hook: 'client', type: 'tcp' }, hook_client_tcp)
 
-
-  seneca.add({role:plugin,hook:'listen',type:'tcp'}, hook_listen_tcp)
-  seneca.add({role:plugin,hook:'client',type:'tcp'}, hook_client_tcp)
-
-  seneca.add({role:plugin,hook:'listen',type:'web'}, hook_listen_web)
-  seneca.add({role:plugin,hook:'client',type:'web'}, hook_client_web)
+  seneca.add({ role: plugin, hook: 'listen', type: 'web' }, hook_listen_web)
+  seneca.add({ role: plugin, hook: 'client', type: 'web' }, hook_client_web)
 
   // Aliases.
-  seneca.add({role:plugin,hook:'listen',type:'http'}, hook_listen_web)
-  seneca.add({role:plugin,hook:'client',type:'http'}, hook_client_web)
+  seneca.add({ role: plugin, hook: 'listen', type: 'http' }, hook_listen_web)
+  seneca.add({ role: plugin, hook: 'client', type: 'http' }, hook_client_web)
 
   // Legacy API.
-  seneca.add({role:plugin,hook:'listen',type:'direct'}, hook_listen_web)
-  seneca.add({role:plugin,hook:'client',type:'direct'}, hook_client_web)
+  seneca.add({ role: plugin, hook: 'listen', type: 'direct' }, hook_listen_web)
+  seneca.add({ role: plugin, hook: 'client', type: 'direct' }, hook_client_web)
 
-
-
-  function cmd_inflight( args, done ) {
+  function cmd_inflight (args, done) {
     var inflight = {}
-    callmap.forEach( function(v,k) {
+    callmap.forEach(function (v, k) {
       inflight[k] = v
     })
-    done( null, inflight )
+    done(null, inflight)
   }
 
-
-  
   function cmd_listen( args, done ) {
     var seneca = this
 
     var listen_config = args.config
-    var listen_args  = 
+    var listen_args  =
           seneca.util.clean(
             _.omit(
               _.extend({},listen_config,{role:plugin,hook:'listen'}),'cmd'))
@@ -128,13 +119,11 @@ module.exports = function transport( options ) {
     }
   }
 
-
-
   function cmd_client( args, done ) {
     var seneca = this
 
     var client_config = args.config
-    var client_args   = 
+    var client_args   =
           seneca.util.clean(
             _.omit(
               _.extend({},client_config,{role:plugin,hook:'client'}),'cmd'))
@@ -167,7 +156,7 @@ module.exports = function transport( options ) {
     var seneca         = this
     var type           = args.type
     var listen_options = seneca.util.clean(_.extend({},options[type],args))
-    
+
     function make_msger() {
       var msger = new stream.Duplex({objectMode:true})
       msger._read = function() {}
@@ -211,7 +200,7 @@ module.exports = function transport( options ) {
     })
 
     listen.on('listening', function() {
-      seneca.log.debug('listen', 'open', 
+      seneca.log.debug('listen', 'open',
                        listen_options)
       done()
     })
@@ -248,7 +237,7 @@ module.exports = function transport( options ) {
 
 
     function make_send( spec, topic, send_done ) {
-      seneca.log.debug('client', type, 'send-init', 
+      seneca.log.debug('client', type, 'send-init',
                        spec, topic, client_options)
 
       function make_msger() {
@@ -274,20 +263,20 @@ module.exports = function transport( options ) {
           .pipe( client )
 
       }).on('connect', function() {
-          seneca.log.debug('client', type, 'connect', 
+          seneca.log.debug('client', type, 'connect',
                            spec, topic, client_options)
 
       }).on('reconnect', function() {
-          seneca.log.debug('client', type, 'reconnect', 
+          seneca.log.debug('client', type, 'reconnect',
                            spec, topic, client_options)
 
       }).on('disconnect', function(err) {
-          seneca.log.debug('client', type, 'disconnect', 
+          seneca.log.debug('client', type, 'disconnect',
                            spec, topic, client_options,
                            (err&&err.stack)||err)
 
       }).connect({
-        port: client_options.port, 
+        port: client_options.port,
         host: client_options.host
       })
 
@@ -333,7 +322,7 @@ module.exports = function transport( options ) {
         var outdata = tu.parseJSON( seneca, 'stream', jsonstr )
 
         if( outdata ) {
-          this.push(outdata)        
+          this.push(outdata)
         }
       }
 
@@ -354,9 +343,9 @@ module.exports = function transport( options ) {
     json_stringify._read = function() {}
     json_stringify._write = function( data, enc, done ) {
       var out = tu.stringifyJSON( seneca, 'stream', data )
-    
+
       if( out ) {
-        this.push(out+'\n')        
+        this.push(out+'\n')
       }
 
       done()
@@ -364,7 +353,7 @@ module.exports = function transport( options ) {
 
     return json_stringify;
   }
-  
+
 
 
   function hook_listen_web( args, done ) {
@@ -388,7 +377,7 @@ module.exports = function transport( options ) {
         try {
           var bufstr = buf.join('')
 
-          var bodydata = 
+          var bodydata =
                 0 < bufstr.length ? tu.parseJSON(seneca,'req-body',bufstr) : {}
 
           if( util.isError(bodydata) ) {
@@ -406,7 +395,7 @@ module.exports = function transport( options ) {
             req.query||{} )
 
           next();
-        } 
+        }
         catch(err) {
           err.body   = err.message+': '+bufstr
           err.status = 400
@@ -453,7 +442,7 @@ module.exports = function transport( options ) {
         send_response(res,out,data)
       })
     })
-    
+
 
     seneca.log.debug('listen', listen_options )
     var listen = app.listen( listen_options.port, listen_options.host )
@@ -483,19 +472,19 @@ module.exports = function transport( options ) {
         'Cache-Control':  'private, max-age=0, no-cache, no-store',
         'Content-Length': buffer.Buffer.byteLength(outjson),
       }
-      
-      headers['seneca-id']     = out ? out.id : seneca.id
+
+      headers['seneca-id']     = (out && out.id) ? out.id : seneca.id
       headers['seneca-kind']   = 'res'
-      headers['seneca-origin'] = out ? out.origin : 'UNKNOWN'
+      headers['seneca-origin'] = (out && out.origin) ? out.origin : 'UNKNOWN'
       headers['seneca-accept'] = seneca.id
-      headers['seneca-track']  = ''+(data.track ? data.track : [])
-      headers['seneca-time-client-sent'] = 
-        out && out.item ? out.time.client_sent : '0'
-      headers['seneca-time-listen-recv'] = 
-        out && out.item ? out.time.listen_recv : '0'
-      headers['seneca-time-listen-sent'] = 
-        out && out.item ? out.time.listen_sent : '0'
-      
+      headers['seneca-track']  = '' + (data.track ? data.track : [])
+      headers['seneca-time-client-sent'] =
+        (out && out.item) ? out.time.client_sent : '0'
+      headers['seneca-time-listen-recv'] =
+        (out && out.item) ? out.time.listen_recv : '0'
+      headers['seneca-time-listen-sent'] =
+        (out && out.item) ? out.time.listen_sent : '0'
+
       if( iserror ) {
         httpcode = 500
       }
@@ -517,28 +506,28 @@ module.exports = function transport( options ) {
     tu.make_client( seneca, make_send, client_options, clientdone )
 
     function make_send( spec, topic, send_done ) {
-      var fullurl = 
+      var fullurl =
             'http://'+client_options.host+':'+
             client_options.port+client_options.path
 
-      seneca.log.debug('client', 'web', 'send', spec, topic, client_options, 
+      seneca.log.debug('client', 'web', 'send', spec, topic, client_options,
                        fullurl )
-      
+
       send_done( null, function( args, done ) {
         var data = tu.prepare_request( this, args, done )
 
         var headers = {
-          'seneca-id':               data.id, 
-          'seneca-kind':             'req', 
-          'seneca-origin':           seneca.id, 
+          'seneca-id':               data.id,
+          'seneca-kind':             'req',
+          'seneca-origin':           seneca.id,
           'seneca-track':            tu.stringifyJSON(
             seneca,'send-track',data.track||[]),
           'seneca-time-client-sent': data.time.client_sent
         }
 
-        needle.post( 
-          fullurl, 
-          data.act, 
+        needle.post(
+          fullurl,
+          data.act,
           {
             json:    true,
             headers: headers,
@@ -575,7 +564,7 @@ module.exports = function transport( options ) {
         done()
       })
     }
-  }  
+  }
 
 
   return {
