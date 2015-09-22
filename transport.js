@@ -20,12 +20,11 @@ var Reconnect = require('reconnect-core')
 var Timeout = require('connect-timeout')
 var TransportUtil = require('./lib/transport-utils.js')
 
-
 // Declare internals
 
 var internals = {
   error: Eraro({
-    package:  'seneca',
+    package: 'seneca',
     msgmap: {
       'invalid_json': 'Invalid JSON: <%=input%>.'
     },
@@ -38,7 +37,7 @@ var internals = {
     warn: {
       unknown_message_id: true,
       invalid_kind: true,
-      invalid_origin:true,
+      invalid_origin: true,
       no_message_id: true,
       message_loop: true,
       own_message: true
@@ -64,7 +63,6 @@ var internals = {
   },
   plugin: 'transport'
 }
-
 
 module.exports = function (options) {
   var seneca = this
@@ -109,53 +107,48 @@ module.exports = function (options) {
   }
 }
 
-
 internals.inflight = function (callmap) {
   return function (args, callback) {
     var inflight = {}
-    callmap.forEach(function(val, key) {
+    callmap.forEach(function (val, key) {
       inflight[key] = val
     })
     callback(null, inflight)
   }
 }
 
-
 internals.listen = function (args, callback) {
   var seneca = this
 
   var config = _.extend({}, args.config, { role: internals.plugin, hook: 'listen' })
   var listen_args = seneca.util.clean(_.omit(config, 'cmd'))
-  var legacyError = internals.legacyError(listen_args.type)
+  var legacyError = internals.legacyError(seneca, listen_args.type)
   if (legacyError) {
     return callback(legacyError)
   }
   seneca.act(listen_args, callback)
 }
 
-
 internals.client = function (args, callback) {
   var seneca = this
 
   var config = _.extend({}, args.config, { role: internals.plugin, hook: 'client' })
   var client_args = seneca.util.clean(_.omit(config, 'cmd'))
-  var legacyError = internals.legacyError(client_args.type)
+  var legacyError = internals.legacyError(seneca, client_args.type)
   if (legacyError) {
     return callback(legacyError)
   }
   seneca.act(client_args, callback)
 }
 
-
-internals.legacyError = function (type) {
+internals.legacyError = function (seneca, type) {
   if (type === 'pubsub') {
-    return seneca.fail('plugin-needed', { name:'seneca-redis-transport' })
+    return seneca.fail('plugin-needed', { name: 'seneca-redis-transport' })
   }
   if (type === 'queue') {
-    return seneca.fail('plugin-needed', { name:'seneca-beanstalkd-transport' })
+    return seneca.fail('plugin-needed', { name: 'seneca-beanstalkd-transport' })
   }
 }
-
 
 internals.hookListenTcp = function (options, transportUtil) {
   return function (args, callback) {
@@ -173,7 +166,7 @@ internals.hookListenTcp = function (options, transportUtil) {
         .pipe(internals.jsonStringifyStream(seneca, transportUtil))
         .pipe(connection)
 
-      connection.on('error', function(err) {
+      connection.on('error', function (err) {
         seneca.log.error('listen', 'pipe-error', listenOptions, err && err.stack)
       })
 
@@ -203,7 +196,6 @@ internals.hookListenTcp = function (options, transportUtil) {
   }
 }
 
-
 internals.hookClientTcp = function (options, transportUtil) {
   return function (args, callback) {
     var seneca = this
@@ -224,21 +216,17 @@ internals.hookClientTcp = function (options, transportUtil) {
           .pipe(msger)
           .pipe(internals.jsonStringifyStream(seneca, transportUtil))
           .pipe(client)
-
       }).on('connect', function () {
           seneca.log.debug('client', type, 'connect', spec, topic, clientOptions)
-
-      }).on('reconnect', function () {
+        }).on('reconnect', function () {
           seneca.log.debug('client', type, 'reconnect', spec, topic, clientOptions)
-
-      }).on('disconnect', function (err) {
+        }).on('disconnect', function (err) {
           seneca.log.debug('client', type, 'disconnect', spec, topic, clientOptions,
                            (err && err.stack) || err)
-
-      }).connect({
-        port: clientOptions.port,
-        host: clientOptions.host
-      })
+        }).connect({
+          port: clientOptions.port,
+          host: clientOptions.host
+        })
 
       send_done(null, function (args, done) {
         var outmsg = transportUtil.prepare_request(this, args, done)
@@ -256,7 +244,6 @@ internals.hookClientTcp = function (options, transportUtil) {
     transportUtil.make_client(seneca, send, clientOptions, callback)
   }
 }
-
 
 internals.hookListenWeb = function (options, transportUtil) {
   return function (args, callback) {
@@ -286,7 +273,6 @@ internals.hookListenWeb = function (options, transportUtil) {
   }
 }
 
-
 internals.hookClientWeb = function (options, transportUtil) {
   return function (args, callback) {
     var seneca = this
@@ -311,9 +297,9 @@ internals.hookClientWeb = function (options, transportUtil) {
           url,
           data.act,
           {
-            json:    true,
+            json: true,
             headers: headers,
-            timeout: clientOptions.timeout,
+            timeout: clientOptions.timeout
           },
           function (err, res) {
             var data = {
@@ -329,7 +315,7 @@ internals.hookClientWeb = function (options, transportUtil) {
               data.time = {
                 client_sent: res.headers['seneca-time-client-sent'],
                 listen_recv: res.headers['seneca-time-listen-recv'],
-                listen_sent: res.headers['seneca-time-listen-sent'],
+                listen_sent: res.headers['seneca-time-listen-sent']
               }
 
               if (res.statusCode !== 200) {
@@ -350,7 +336,6 @@ internals.hookClientWeb = function (options, transportUtil) {
     transportUtil.make_client(seneca, send, clientOptions, callback)
   }
 }
-
 
 internals.setBody = function (seneca, transportUtil) {
   return function (req, res, next) {
@@ -378,8 +363,7 @@ internals.setBody = function (seneca, transportUtil) {
           req.query || {})
 
         next()
-      }
-      catch (err) {
+      } catch (err) {
         err.body = err.message + ': ' + bufstr
         err.status = 400
         next(err)
@@ -388,28 +372,27 @@ internals.setBody = function (seneca, transportUtil) {
   }
 }
 
-
 internals.trackHeaders = function (listenOptions, seneca, transportUtil) {
   return function (req, res, next) {
     if (req.url.indexOf(listenOptions.path) !== 0) {
       return next()
     }
     var data
-    if (!!req.headers['seneca-id']) {
+    if (req.headers['seneca-id']) {
       data = {
         id: req.headers['seneca-id'],
         kind: 'act',
         origin: req.headers['seneca-origin'],
         track: transportUtil.parseJSON(seneca, 'track-receive', req.headers['seneca-track']) || [],
         time: {
-          client_sent: req.headers['seneca-time-client-sent'],
+          client_sent: req.headers['seneca-time-client-sent']
         },
         act: req.body
       }
     }
 
     // convenience for non-seneca clients
-    else {
+    if (!req.headers['seneca-id']) {
       data = {
         id: seneca.idgen(),
         kind: 'act',
@@ -418,7 +401,7 @@ internals.trackHeaders = function (listenOptions, seneca, transportUtil) {
         time: {
           client_sent: Date.now()
         },
-        act: req.body,
+        act: req.body
       }
     }
 
@@ -435,21 +418,20 @@ internals.sendResponse = function (seneca, transportUtil, res, out, data) {
 
   if (out && out.res) {
     outJson = transportUtil.stringifyJSON(seneca, 'listen-web', out.res)
-  }
-  else if (out && out.error) {
+  } else if (out && out.error) {
     isError = true
     outJson = transportUtil.stringifyJSON(seneca, 'listen-web', out.error)
   }
 
   var headers = {
-    'Content-Type':   'application/json',
-    'Cache-Control':  'private, max-age=0, no-cache, no-store',
-    'Content-Length': Buffer.Buffer.byteLength(outJson),
+    'Content-Type': 'application/json',
+    'Cache-Control': 'private, max-age=0, no-cache, no-store',
+    'Content-Length': Buffer.Buffer.byteLength(outJson)
   }
 
   headers['seneca-id'] = out && out.id ? out.id : seneca.id
   headers['seneca-kind'] = 'res'
-  headers['seneca-origin'] = out && out.origin ? out.origin: 'UNKNOWN'
+  headers['seneca-origin'] = out && out.origin ? out.origin : 'UNKNOWN'
   headers['seneca-accept'] = seneca.id
   headers['seneca-track'] = '' + (data.track ? data.track : [])
   headers['seneca-time-client-sent'] =
@@ -466,7 +448,6 @@ internals.sendResponse = function (seneca, transportUtil, res, out, data) {
   res.writeHead(httpcode, headers)
   res.end(outJson)
 }
-
 
 internals.closeConnections = function (connections, seneca) {
   connections.forEach(function (con) {
@@ -552,7 +533,6 @@ internals.jsonStreamParser = function (seneca, transportUtil) {
   return parser
 }
 
-
 internals.jsonStringifyStream = function (seneca, transportUtil) {
   var stringify = new Stream.Duplex({ objectMode: true })
   stringify._read = function () {}
@@ -568,7 +548,6 @@ internals.jsonStringifyStream = function (seneca, transportUtil) {
 
   return stringify
 }
-
 
 internals.reconnect = Reconnect(function () {
   var args = [].slice.call(arguments)
