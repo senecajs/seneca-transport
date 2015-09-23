@@ -68,7 +68,7 @@ module.exports = function (options) {
   var seneca = this
   var settings = Hoek.applyToDefaults(internals.defaults, options)
   var callmap = LruCache(settings.callmax)
-  var transportUtil = TransportUtil({
+  var transportUtil = new TransportUtil({
     callmap: callmap,
     seneca: seneca,
     options: settings
@@ -161,9 +161,9 @@ internals.hookListenTcp = function (options, transportUtil) {
       seneca.log.debug('listen', 'connection', listenOptions,
                        'remote', connection.remoteAddress, connection.remotePort)
       connection
-        .pipe(internals.jsonStreamParser(seneca, transportUtil))
+        .pipe(internals.jsonStreamParser(seneca))
         .pipe(internals.requestMessager(seneca, listenOptions, transportUtil))
-        .pipe(internals.jsonStringifyStream(seneca, transportUtil))
+        .pipe(internals.jsonStringifyStream(seneca))
         .pipe(connection)
 
       connection.on('error', function (err) {
@@ -188,7 +188,7 @@ internals.hookListenTcp = function (options, transportUtil) {
 
     listener.listen(listenOptions.port, listenOptions.host)
 
-    transportUtil.close(seneca, function (next) {
+    TransportUtil.close(seneca, function (next) {
       listener.close()
       internals.closeConnections(connections, seneca)
       next()
@@ -212,9 +212,9 @@ internals.hookClientTcp = function (options, transportUtil) {
         connections.push(client)
 
         client
-          .pipe(internals.jsonStreamParser(seneca, transportUtil))
+          .pipe(internals.jsonStreamParser(seneca))
           .pipe(msger)
-          .pipe(internals.jsonStringifyStream(seneca, transportUtil))
+          .pipe(internals.jsonStringifyStream(seneca))
           .pipe(client)
       }).on('connect', function () {
           seneca.log.debug('client', type, 'connect', spec, topic, clientOptions)
@@ -233,7 +233,7 @@ internals.hookClientTcp = function (options, transportUtil) {
         msger.push(outmsg)
       })
 
-      transportUtil.close(seneca, function (done) {
+      TransportUtil.close(seneca, function (done) {
         clientconnect.disconnect()
 
         internals.closeConnections(connections, seneca)
@@ -264,7 +264,7 @@ internals.hookListenWeb = function (options, transportUtil) {
     seneca.log.debug('listen', listenOptions)
     var listener = app.listen(listenOptions.port, listenOptions.host)
 
-    transportUtil.close(seneca, function (done) {
+    TransportUtil.close(seneca, function (done) {
       listener.close()
       done()
     })
@@ -328,7 +328,7 @@ internals.hookClientWeb = function (options, transportUtil) {
         )
       })
 
-      transportUtil.close(seneca, function (done) {
+      TransportUtil.close(seneca, function (done) {
         done()
       })
     }
@@ -496,7 +496,7 @@ internals.clientMessager = function (seneca, options, transportUtil) {
   return messager
 }
 
-internals.jsonStreamParser = function (seneca, transportUtil) {
+internals.jsonStreamParser = function (seneca) {
   var parser = new Stream.Duplex({ objectMode: true })
   parser.linebuf = []
   parser._read = function () {}
@@ -533,7 +533,7 @@ internals.jsonStreamParser = function (seneca, transportUtil) {
   return parser
 }
 
-internals.jsonStringifyStream = function (seneca, transportUtil) {
+internals.jsonStringifyStream = function (seneca) {
   var stringify = new Stream.Duplex({ objectMode: true })
   stringify._read = function () {}
   stringify._write = function (data, enc, callback) {
