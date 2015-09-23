@@ -3,7 +3,6 @@
 'use strict'
 
 // Load modules
-
 var _ = require('lodash')
 var Hoek = require('hoek')
 var LruCache = require('lru-cache')
@@ -12,7 +11,6 @@ var TransportUtil = require('./lib/transport-utils.js')
 var Http = require('./lib/http')
 
 // Declare internals
-
 var internals = {
   defaults: {
     msgprefix: 'seneca_',
