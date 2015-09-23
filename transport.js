@@ -351,7 +351,7 @@ internals.setBody = function (seneca, transportUtil) {
         var bodydata = bufstr.length ? transportUtil.parseJSON(seneca, 'req-body', bufstr) : {}
 
         if (Util.isError(bodydata)) {
-          var out = transportUtil.prepare_response(seneca, {})
+          var out = TransportUtil.prepareResponse(seneca, {})
           out.input = bufstr
           out.error = internals.error('invalid_json', { input: bufstr })
           internals.sendResponse(seneca, transportUtil, res, out, {})
@@ -466,7 +466,7 @@ internals.requestMessager = function (seneca, options, transportUtil) {
     var stream = this
 
     if (Util.isError(data)) {
-      var out = transportUtil.prepare_response(seneca, {})
+      var out = TransportUtil.prepareResponse(seneca, {})
       out.input = data.input
       out.error = internals.error('invalid_json', { input: data.input })
 
