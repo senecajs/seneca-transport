@@ -348,7 +348,7 @@ internals.setBody = function (seneca, transportUtil) {
       try {
         var bufstr = buf.join('')
 
-        var bodydata = bufstr.length ? transportUtil.parseJSON(seneca, 'req-body', bufstr) : {}
+        var bodydata = bufstr.length ? TransportUtil.parseJSON(seneca, 'req-body', bufstr) : {}
 
         if (Util.isError(bodydata)) {
           var out = TransportUtil.prepareResponse(seneca, {})
@@ -383,7 +383,7 @@ internals.trackHeaders = function (listenOptions, seneca, transportUtil) {
         id: req.headers['seneca-id'],
         kind: 'act',
         origin: req.headers['seneca-origin'],
-        track: transportUtil.parseJSON(seneca, 'track-receive', req.headers['seneca-track']) || [],
+        track: TransportUtil.parseJSON(seneca, 'track-receive', req.headers['seneca-track']) || [],
         time: {
           client_sent: req.headers['seneca-time-client-sent']
         },
@@ -516,7 +516,7 @@ internals.jsonStreamParser = function (seneca, transportUtil) {
         return callback()
       }
 
-      var outdata = transportUtil.parseJSON(seneca, 'stream', jsonstr)
+      var outdata = TransportUtil.parseJSON(seneca, 'stream', jsonstr)
 
       if (outdata) {
         this.push(outdata)
