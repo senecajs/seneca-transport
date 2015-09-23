@@ -9,7 +9,7 @@ var Hoek = require('hoek')
 var LruCache = require('lru-cache')
 var Tcp = require('./lib/tcp')
 var TransportUtil = require('./lib/transport-utils.js')
-var Web = require('./lib/web')
+var Http = require('./lib/http')
 
 // Declare internals
 
@@ -65,16 +65,16 @@ module.exports = function (options) {
   seneca.add({ role: internals.plugin, hook: 'listen', type: 'tcp' }, Tcp.listen(settings, transportUtil))
   seneca.add({ role: internals.plugin, hook: 'client', type: 'tcp' }, Tcp.client(settings, transportUtil))
 
-  seneca.add({ role: internals.plugin, hook: 'listen', type: 'web' }, Web.listen(settings, transportUtil))
-  seneca.add({ role: internals.plugin, hook: 'client', type: 'web' }, Web.client(settings, transportUtil))
+  seneca.add({ role: internals.plugin, hook: 'listen', type: 'web' }, Http.listen(settings, transportUtil))
+  seneca.add({ role: internals.plugin, hook: 'client', type: 'web' }, Http.client(settings, transportUtil))
 
   // Aliases.
-  seneca.add({ role: internals.plugin, hook: 'listen', type: 'http' }, Web.listen(settings, transportUtil))
-  seneca.add({ role: internals.plugin, hook: 'client', type: 'http' }, Web.client(settings, transportUtil))
+  seneca.add({ role: internals.plugin, hook: 'listen', type: 'http' }, Http.listen(settings, transportUtil))
+  seneca.add({ role: internals.plugin, hook: 'client', type: 'http' }, Http.client(settings, transportUtil))
 
   // Legacy API.
-  seneca.add({ role: internals.plugin, hook: 'listen', type: 'direct' }, Web.listen(settings, transportUtil))
-  seneca.add({ role: internals.plugin, hook: 'client', type: 'direct' }, Web.client(settings, transportUtil))
+  seneca.add({ role: internals.plugin, hook: 'listen', type: 'direct' }, Http.listen(settings, transportUtil))
+  seneca.add({ role: internals.plugin, hook: 'client', type: 'direct' }, Http.client(settings, transportUtil))
 
   return {
     name: internals.plugin,
