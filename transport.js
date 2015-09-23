@@ -289,7 +289,7 @@ internals.hookClientWeb = function (options, transportUtil) {
           'seneca-id': data.id,
           'seneca-kind': 'req',
           'seneca-origin': seneca.id,
-          'seneca-track': transportUtil.stringifyJSON(seneca, 'send-track', data.track || []),
+          'seneca-track': TransportUtil.stringifyJSON(seneca, 'send-track', data.track || []),
           'seneca-time-client-sent': data.time.client_sent
         }
 
@@ -417,10 +417,10 @@ internals.sendResponse = function (seneca, transportUtil, res, out, data) {
   var httpcode = 200
 
   if (out && out.res) {
-    outJson = transportUtil.stringifyJSON(seneca, 'listen-web', out.res)
+    outJson = TransportUtil.stringifyJSON(seneca, 'listen-web', out.res)
   } else if (out && out.error) {
     isError = true
-    outJson = transportUtil.stringifyJSON(seneca, 'listen-web', out.error)
+    outJson = TransportUtil.stringifyJSON(seneca, 'listen-web', out.error)
   }
 
   var headers = {
@@ -537,7 +537,7 @@ internals.jsonStringifyStream = function (seneca, transportUtil) {
   var stringify = new Stream.Duplex({ objectMode: true })
   stringify._read = function () {}
   stringify._write = function (data, enc, callback) {
-    var out = transportUtil.stringifyJSON(seneca, 'stream', data)
+    var out = TransportUtil.stringifyJSON(seneca, 'stream', data)
 
     if (out) {
       this.push(out + '\n')
