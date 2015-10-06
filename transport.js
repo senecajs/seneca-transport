@@ -4,7 +4,6 @@
 
 // Load modules
 var _ = require('lodash')
-var Hoek = require('hoek')
 var LruCache = require('lru-cache')
 var Tcp = require('./lib/tcp')
 var TransportUtil = require('./lib/transport-utils.js')
@@ -48,7 +47,7 @@ var internals = {
 
 module.exports = function (options) {
   var seneca = this
-  var settings = Hoek.applyToDefaults(internals.defaults, options)
+  var settings = seneca.util.deepextend(internals.defaults, options)
   var callmap = LruCache(settings.callmax)
   var transportUtil = new TransportUtil({
     callmap: callmap,
