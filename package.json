@@ -20,7 +20,6 @@
   "author": "Richard Rodger (http://richardrodger.com)",
   "license": "MIT",
   "dependencies": {
-    "async": "0.9.2",
     "connect": "3.0.2",
     "connect-query": "0.2.0",
     "connect-timeout": "1.5.0",
@@ -29,11 +28,11 @@
     "jsonic": "0.2.0",
     "lodash": "2.4.2",
     "lru-cache": "2.6.4",
-    "ndjson": "^1.4.2",
-    "needle": "0.9.2",
+    "ndjson": "1.4.2",
     "nid": "0.3.2",
     "patrun": "0.4.3",
-    "reconnect-core": "1.0.1"
+    "reconnect-core": "1.0.1",
+    "wreck": "6.3.0"
   },
   "files": [
     "README.md",
@@ -42,8 +41,9 @@
     "lib/transport-utils.js"
   ],
   "devDependencies": {
+    "async": "1.4.2",
     "docco": "0.7.0",
-    "fastbench": "^1.0.0",
+    "fastbench": "1.0.0",
     "jshint": "2.8.0",
     "mocha": "2.1.0",
     "seneca": "plugin",
