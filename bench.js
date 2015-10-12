@@ -2,17 +2,16 @@
 
 var Bench = require('fastbench')
 var Seneca = require('seneca')
-
+var Transport = require('./')
 
 var color = function () {
   this.add('color:red', function (args, callback) {
-    callback(null, { hex:'#FF0000' });
+    callback(null, { hex: '#FF0000' })
   })
 }
 
-Seneca({ log: 'silent' }).use(color).listen()
-var seneca = Seneca({ log: 'silent' })
-
+Seneca({ log: 'silent', default_plugins: { tranport: false } }).use(color).use(Transport).listen()
+var seneca = Seneca({ log: 'silent', default_plugins: { tranport: false } }).use(Transport)
 
 var run = Bench([
   function benchSetTimeout (callback) {
@@ -20,10 +19,8 @@ var run = Bench([
   }
 ], 1000)
 
-// run them two times
 run(function () {
   process.exit(0)
 })
-
 
 // Baseline before refactor is 2872 ms on mid 2015 retina pro
