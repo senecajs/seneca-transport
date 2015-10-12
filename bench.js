@@ -10,18 +10,13 @@ var color = function () {
   })
 }
 
-var publishedServer = Seneca({ log: 'silent', default_plugins: { tranport: true }, transport: { port: 9998 } })
-  .use(color).listen()
+Seneca({ log: 'silent', default_plugins: { tranport: true }, transport: { port: 9998 } }).use(color).listen()
 var publishedClient = Seneca({ log: 'silent', default_plugins: { tranport: true }, transport: { port: 9998 } })
   .client()
 
-
-var localServer = Seneca({ log: 'silent', default_plugins: { tranport: false }, transport: { port: 9999 } })
-  .use(color).use(Transport).listen()
+Seneca({ log: 'silent', default_plugins: { tranport: false }, transport: { port: 9999 } }).use(color).use(Transport).listen()
 var localClient = Seneca({ log: 'silent', default_plugins: { tranport: false }, transport: { port: 9999 } })
   .use(Transport).client()
-
-
 
 exports.compare = {
   'published transport': function (done) {
@@ -33,5 +28,3 @@ exports.compare = {
 }
 
 Bench.runMain()
-
-// Baseline before refactor is 2872 ms on mid 2015 retina pro
