@@ -4,13 +4,10 @@
 
 // mocha transport.test.js
 
-
-var seneca  = require('seneca')
-
 var assert = require('assert')
-
-var needle = require('needle')
-var test   = require('seneca-transport-test')
+var seneca = require('seneca')
+var test = require('seneca-transport-test')
+var wreck = require('wreck')
 
 var no_t = {transport:false}
 
@@ -25,12 +22,12 @@ function run_client( type, port, done, tag ) {
 
       this.act('c:1,d:A',function(err,out){
         if(err) return fin(err);
-              
+
         assert.equal( '{"s":"1-A"}', JSON.stringify(out) )
 
         this.act('c:1,d:AA',function(err,out){
           if(err) return fin(err);
-              
+
           assert.equal( '{"s":"1-AA"}', JSON.stringify(out) )
 
           this.close(done)
@@ -100,11 +97,15 @@ describe('transport', function() {
         run_client( 'web', 20202, check )
         run_client( 'web', 20202, check )
 
+        var requestOptions = {
+          payload: JSON.stringify({ c: 1, d: 'A' }),
+          json: true
+        }
         // special case for non-seneca clients
-        needle.post( 
+        wreck.post(
           'http://localhost:20202/act',
-          {c:1,d:'A'},{json:true},
-          function(err,res,body){
+          requestOptions,
+          function(err, res, body){
             if( err ) return fin(err)
             assert.equal( '{"s":"1-A"}', JSON.stringify(body) )
             check()
@@ -120,44 +121,42 @@ describe('transport', function() {
       .listen({type:'web',port:20302})
       .ready( function() {
 
-        ;needle.get( 
-          'http://localhost:20302/act?a=1&b=2',
-          function(err,res,body){
+        ;wreck.get(
+          'http://localhost:20302/act?a=1&b=2', { json: true },
+          function(err, res, body){
             if( err ) return fin(err)
             assert.equal(1,body.a)
             assert.equal(2,body.b)
 
-        ;needle.get( 
-          'http://localhost:20302/act?args$=a:1,b:2,c:{d:3}',
-          function(err,res,body){
+        ;wreck.get(
+          'http://localhost:20302/act?args$=a:1,b:2,c:{d:3}', { json: true },
+          function(err, res, body){
             if( err ) return fin(err)
             assert.equal(1,body.a)
             assert.equal(2,body.b)
             assert.equal(3,body.c.d)
 
-        ;fin() 
+        ;fin()
 
        }) }) })
   })
 
 
-  it('error-passing-http', function(fin){
-
-    require('seneca')({log:'silent',default_plugins:no_t})
+  it('error-passing-http', function (fin) {
+    require('seneca')({ log: 'silent', default_plugins: no_t })
       .use('../transport.js')
-      .add('a:1',function(args,done){
+      .add('a:1', function (args, done) {
         done(new Error('bad-wire'))
       })
       .listen(30303)
 
-    require('seneca')({log:'silent'})
+    require('seneca')({ log: 'silent' })
       .use('../transport.js')
       .client(30303)
-      .act('a:1',function(err,out){
-        assert.equal('seneca: Action a:1 failed: bad-wire.',err.message)
+      .act('a:1', function (err, out) {
+        assert.equal('seneca: Action a:1 failed: bad-wire.', err.message)
         fin()
       })
-
   })
 
 
@@ -182,7 +181,7 @@ describe('transport', function() {
 
   // NOTE: SENECA_LOG=all will break this test as it counts log entries
   it('own-message', function(fin){
-    
+
     // a -> b -> a
 
     do_type('tcp',function(err){
@@ -273,7 +272,7 @@ describe('transport', function() {
 
   // NOTE: SENECA_LOG=all will break this test as it counts log entries
   it('message-loop', function(fin){
-    
+
     // a -> b -> c -> a
 
     do_type('tcp',function(err){
@@ -405,9 +404,9 @@ describe('transport', function() {
 
           .use('../transport')
           .use( './memtest-transport.js' )
-        
+
           .client( {type:'memtest', pin:'foo:*'} )
-        
+
           .start(fin)
 
           .wait('foo:1,id$:aaa/AAA')
@@ -421,7 +420,7 @@ describe('transport', function() {
             assert.equal(2,out.bar)
             return true;
           })
-        
+
           .end()
       })
   })
@@ -453,10 +452,10 @@ describe('transport', function() {
 
             .use('../transport')
             .use( './memtest-transport.js' )
-          
+
             .client( {type:'memtest', dest:'D1' } )
             .client( {type:'memtest', dest:'D0', pin:'foo:*'} )
-          
+
             .start(fin)
 
             .wait('foo:1')
@@ -482,10 +481,10 @@ describe('transport', function() {
 
             .use('../transport')
             .use( './memtest-transport.js' )
-          
+
             .client( {type:'memtest', dest:'D0', pin:'foo:*'} )
             .client( {type:'memtest', dest:'D1'} )
-  
+
             .start(fin)
 
             .wait('foo:1')

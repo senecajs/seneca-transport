@@ -20,7 +20,7 @@ Tested on: [Seneca](//github.com/rjrodger/seneca) 0.6.3
 
 [![Build Status](https://travis-ci.org/rjrodger/seneca-transport.png?branch=master)](https://travis-ci.org/rjrodger/seneca-transport)
 
-Built and tested against versions: `0.10, 0.11, 0.12, iojs`
+Built and tested against versions: `0.10, 0.12, 4`
 
 [Annotated Source](http://rjrodger.github.io/seneca-transport/doc/transport.html)
 
@@ -73,7 +73,7 @@ to the server.
 
 ```js
 var seneca = require('seneca')
-      
+
 seneca()
   .use(color)
   .listen()
@@ -116,7 +116,7 @@ match the regular expression <code>/color:red/</code>. Here's what
 you'll see:
 
 ```sh
-[TIME] vy../..15/- DEBUG act -     - IN  485n.. color:red {color=red}   CLIENT 
+[TIME] vy../..15/- DEBUG act -     - IN  485n.. color:red {color=red}   CLIENT
 [TIME] ly../..80/- DEBUG act color - IN  485n.. color:red {color=red}   f2rv..
 [TIME] ly../..80/- DEBUG act color - OUT 485n.. color:red {hex=#FF0000} f2rv..
 [TIME] vy../..15/- DEBUG act -     - OUT 485n.. color:red {hex=#FF0000} CLIENT
@@ -164,7 +164,7 @@ message executions, add a log filter to see them:
 node readme-color.js --seneca.log=type:act,regex:color:red \
 --seneca.log=plugin:color,case:ADD
 [TIME] ly../..80/- DEBUG plugin color - ADD f2rv.. color:red
-[TIME] vy../..15/- DEBUG act    -     - IN  485n.. color:red {color=red}   CLIENT 
+[TIME] vy../..15/- DEBUG act    -     - IN  485n.. color:red {color=red}   CLIENT
 [TIME] ly../..80/- DEBUG act    color - IN  485n.. color:red {color=red}   f2rv..
 [TIME] ly../..80/- DEBUG act    color - OUT 485n.. color:red {hex=#FF0000} f2rv..
 [TIME] vy../..15/- DEBUG act    -     - OUT 485n.. color:red {hex=#FF0000} CLIENT
@@ -187,7 +187,7 @@ function color() {
 }
 
 var seneca = require('seneca')
-      
+
 seneca()
   .use(color)
   .listen()
@@ -203,7 +203,7 @@ And on the client side:
 
 ```js
 var seneca = require('seneca')
-      
+
 seneca()
   .client()
   .act('color:red')
@@ -239,7 +239,7 @@ $ curl -d '{"color":"red"}' -v http://localhost:10101/act
 > Accept: */*
 > Content-Length: 15
 > Content-Type: application/x-www-form-urlencoded
-> 
+>
 * upload completely sent off: 15 out of 15 bytes
 < HTTP/1.1 200 OK
 < Content-Type: application/json
@@ -254,7 +254,7 @@ $ curl -d '{"color":"red"}' -v http://localhost:10101/act
 < seneca-time-listen-sent: 1409222493910
 < Date: Thu, 28 Aug 2014 10:41:33 GMT
 < Connection: keep-alive
-< 
+<
 * Connection #0 to host localhost left intact
 {"hex":"#FF0000"}
 ```
@@ -365,7 +365,7 @@ This produces the log output:
 ```sh
 [TIME] 6g../..49/- INFO  hello  Seneca/0.5.20/6g../..49/-
 [TIME] f1../..79/- INFO  hello  Seneca/0.5.20/f1../..79/-
-[TIME] f1../..79/- DEBUG act    -         - IN  wdfw.. color:red {color=red} CLIENT 
+[TIME] f1../..79/- DEBUG act    -         - IN  wdfw.. color:red {color=red} CLIENT
 [TIME] 6g../..49/- INFO  plugin transport - ACT b01d.. listen open {type=tcp,host=0.0.0.0,port=10201,...}
 [TIME] f1../..79/- INFO  plugin transport - ACT nid1.. client {type=tcp,host=0.0.0.0,port=10201,...} any
 [TIME] 6g../..49/- INFO  plugin transport - ACT b01d.. listen connection {type=tcp,host=0.0.0.0,port=10201,...} remote 127.0.0.1 52938
@@ -635,10 +635,10 @@ some tracking fields to make debugging easier, these are:
    * _origin_: identifier of orginating Seneca instance, where action is submitted
    * _accept_: identifier of accepting Seneca instance, where action is performed
    * _time_:
-      *   _client_sent_: client timestamp when message sent 
-      *   _listen_recv_: server timestamp when message received 
-      *   _listen_sent_: server timestamp when response sent 
-      *   _client_recv_: client timestamp when response received 
+      *   _client_sent_: client timestamp when message sent
+      *   _listen_recv_: server timestamp when message received
+      *   _listen_sent_: server timestamp when response sent
+      *   _client_recv_: client timestamp when response received
    * _act_: action message data, as submitted to Seneca
    * _res_: response message data, as provided by Seneca
    * _error_: error message, if any
@@ -689,9 +689,9 @@ function hook_client_redis( args, clientdone ) {
   // see an existing transport for full example
   // make_send is called per topic
   function make_send( spec, topic, send_done ) {
-  
+
     // setup topic in transport mechanism
-     
+
     // send the args over the transport
     send_done( null, function( args, done ) {
 
@@ -731,7 +731,7 @@ function hook_listen_redis( args, done ) {
 
       // there may be no result!
       if( null == out ) return ...;
-    
+
       // otherwise, send the result back
       // don't forget to stringifyJSON(out) if necessary
     })
@@ -769,7 +769,7 @@ also supply options via arguments to the <code>client</code> or
 under the top-level _transport_ property.
 
 The primary options are:
-  
+
    * _msgprefix_: a string to prefix to topic names so that they are namespaced
    * _callmax_: the maximum number of in-flight request/response messages to cache
    * _msgidlen_: length of the message indentifier string
@@ -879,7 +879,3 @@ npm test
    * 0.7.1: fixed log levels
    * 0.7.0: all logs now debug level
    * 0.2.6: fixed error transmit bug https://github.com/rjrodger/seneca/issues/63
-
-
-
-
