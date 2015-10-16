@@ -1,39 +1,33 @@
-seneca-transport - a [Seneca](http://senecajs.org) plugin
-=========================================================
+![Seneca](http://senecajs.org/files/assets/seneca-logo.png)
+> A [Seneca.js][] transport plugin
 
-## Seneca Transport Plugin
+# seneca-transport
+[![Build Status][travis-badge]][travis-url]
+[![Gitter][gitter-badge]][gitter-url]
+
+[![js-standard-style][standard-badge]][standard-style]
 
 This plugin provides the HTTP and TCP transport channels for
 micro-service messages. It's a built-in dependency of the Seneca
 module, so you don't need to include it manually. You use this plugin
 to wire up your micro-services so that they can talk to each other.
 
-For a gentle introduction to Seneca itself, see the
-[senecajs.org](http://senecajs.org) site.
-
-
-## Support
-
-Current Version: 0.7.2
-
-Tested on: [Seneca](//github.com/rjrodger/seneca) 0.6.3
-
-[![Build Status](https://travis-ci.org/rjrodger/seneca-transport.png?branch=master)](https://travis-ci.org/rjrodger/seneca-transport)
-
-Built and tested against versions: `0.10, 0.12, 4`
-
-[Annotated Source](http://rjrodger.github.io/seneca-transport/doc/transport.html)
+- __Version:__ 0.2.3
+- __Tested on:__ Seneca 0.7
+- __Node:__ 0.10, 0.12, 4
 
 If you're using this module, and need help, you can:
 
-   * Post a [github issue](//github.com/rjrodger/seneca-transport/issues),
-   * Tweet to [@senecajs](http://twitter.com/senecajs),
-   * Ask on the [![Gitter chat](https://badges.gitter.im/rjrodger/seneca-transport.png)](https://gitter.im/rjrodger/seneca-transport).
+- Post a [github issue][],
+- Tweet to [@senecajs][],
+- Ask on the [Gitter][gitter-url].
 
+If you are new to Seneca in general, please take a look at [senecajs.org][]. We have everything from
+tutorials to sample apps to help get you up and running quickly.
 
 ### Install
 
-This plugin module is included in the main Seneca module:
+This plugin module is included in the main Seneca module,
 
 ```sh
 npm install seneca
@@ -862,20 +856,30 @@ To see the options actually in use at any time, you can call the
 $ node seneca-script.js --seneca.log=type:options
 ```
 
-## Testing
-
-This module itself does not contain any direct reference to Seneca, as
-it is a Seneca dependency. However, Seneca is needed to test it, so
-the test script will perform an _npm install seneca_ (if needed). This is not
-saved to _package.json_.
-
-```sh
-npm test
-```
-
-
 ## Releases
 
    * 0.7.1: fixed log levels
    * 0.7.0: all logs now debug level
    * 0.2.6: fixed error transmit bug https://github.com/rjrodger/seneca/issues/63
+
+## Contributing
+The [Senecajs org][] encourage open participation. If you feel you can help in any way, be it with
+documentation, examples, extra testing, or new features please get in touch.
+
+## License
+Copyright Richard Rodger and other contributors 2015, Licensed under [MIT][].
+
+[travis-badge]: https://travis-ci.org/rjrodger/seneca-transport.svg
+[travis-url]: https://travis-ci.org/rjrodger/seneca-transport
+[gitter-badge]: https://badges.gitter.im/Join%20Chat.svg
+[gitter-url]: https://gitter.im/senecajs/seneca
+[standard-badge]: https://raw.githubusercontent.com/feross/standard/master/badge.png
+[standard-style]: https://github.com/feross/standard
+
+[MIT]: ./LICENSE
+[Senecajs org]: https://github.com/senecajs/
+[Seneca.js]: https://www.npmjs.com/package/seneca
+[senecajs.org]: http://senecajs.org/
+[leveldb]: http://leveldb.org/
+[github issue]: https://github.com/rjrodger/seneca-transport/issues
+[@senecajs]: http://twitter.com/senecajs
