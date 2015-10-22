@@ -869,8 +869,8 @@ documentation, examples, extra testing, or new features please get in touch.
 ## License
 Copyright Richard Rodger and other contributors 2015, Licensed under [MIT][].
 
-[travis-badge]: https://travis-ci.org/rjrodger/seneca-transport.svg
-[travis-url]: https://travis-ci.org/rjrodger/seneca-transport
+[travis-badge]: https://travis-ci.org/senecajs/seneca-transport.svg
+[travis-url]: https://travis-ci.org/senecajs/seneca-transport
 [gitter-badge]: https://badges.gitter.im/Join%20Chat.svg
 [gitter-url]: https://gitter.im/senecajs/seneca
 [standard-badge]: https://raw.githubusercontent.com/feross/standard/master/badge.png
@@ -881,5 +881,5 @@ Copyright Richard Rodger and other contributors 2015, Licensed under [MIT][].
 [Seneca.js]: https://www.npmjs.com/package/seneca
 [senecajs.org]: http://senecajs.org/
 [leveldb]: http://leveldb.org/
-[github issue]: https://github.com/rjrodger/seneca-transport/issues
+[github issue]: https://github.com/senecajs/seneca-transport/issues
 [@senecajs]: http://twitter.com/senecajs
