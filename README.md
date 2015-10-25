@@ -1,39 +1,33 @@
-seneca-transport - a [Seneca](http://senecajs.org) plugin
-=========================================================
+![Seneca](http://senecajs.org/files/assets/seneca-logo.png)
+> A [Seneca.js][] transport plugin
 
-## Seneca Transport Plugin
+# seneca-transport
+[![Build Status][travis-badge]][travis-url]
+[![Gitter][gitter-badge]][gitter-url]
+
+[![js-standard-style][standard-badge]][standard-style]
 
 This plugin provides the HTTP and TCP transport channels for
 micro-service messages. It's a built-in dependency of the Seneca
 module, so you don't need to include it manually. You use this plugin
 to wire up your micro-services so that they can talk to each other.
 
-For a gentle introduction to Seneca itself, see the
-[senecajs.org](http://senecajs.org) site.
-
-
-## Support
-
-Current Version: 0.7.2
-
-Tested on: [Seneca](//github.com/rjrodger/seneca) 0.6.3
-
-[![Build Status](https://travis-ci.org/rjrodger/seneca-transport.png?branch=master)](https://travis-ci.org/rjrodger/seneca-transport)
-
-Built and tested against versions: `0.10, 0.11, 0.12, iojs`
-
-[Annotated Source](http://rjrodger.github.io/seneca-transport/doc/transport.html)
+- __Version:__ 0.2.3
+- __Tested on:__ Seneca 0.7
+- __Node:__ 0.10, 0.12, 4
 
 If you're using this module, and need help, you can:
 
-   * Post a [github issue](//github.com/rjrodger/seneca-transport/issues),
-   * Tweet to [@senecajs](http://twitter.com/senecajs),
-   * Ask on the [![Gitter chat](https://badges.gitter.im/rjrodger/seneca-transport.png)](https://gitter.im/rjrodger/seneca-transport).
+- Post a [github issue][],
+- Tweet to [@senecajs][],
+- Ask on the [Gitter][gitter-url].
 
+If you are new to Seneca in general, please take a look at [senecajs.org][]. We have everything from
+tutorials to sample apps to help get you up and running quickly.
 
 ### Install
 
-This plugin module is included in the main Seneca module:
+This plugin module is included in the main Seneca module,
 
 ```sh
 npm install seneca
@@ -73,7 +67,7 @@ to the server.
 
 ```js
 var seneca = require('seneca')
-      
+
 seneca()
   .use(color)
   .listen()
@@ -116,7 +110,7 @@ match the regular expression <code>/color:red/</code>. Here's what
 you'll see:
 
 ```sh
-[TIME] vy../..15/- DEBUG act -     - IN  485n.. color:red {color=red}   CLIENT 
+[TIME] vy../..15/- DEBUG act -     - IN  485n.. color:red {color=red}   CLIENT
 [TIME] ly../..80/- DEBUG act color - IN  485n.. color:red {color=red}   f2rv..
 [TIME] ly../..80/- DEBUG act color - OUT 485n.. color:red {hex=#FF0000} f2rv..
 [TIME] vy../..15/- DEBUG act -     - OUT 485n.. color:red {hex=#FF0000} CLIENT
@@ -164,7 +158,7 @@ message executions, add a log filter to see them:
 node readme-color.js --seneca.log=type:act,regex:color:red \
 --seneca.log=plugin:color,case:ADD
 [TIME] ly../..80/- DEBUG plugin color - ADD f2rv.. color:red
-[TIME] vy../..15/- DEBUG act    -     - IN  485n.. color:red {color=red}   CLIENT 
+[TIME] vy../..15/- DEBUG act    -     - IN  485n.. color:red {color=red}   CLIENT
 [TIME] ly../..80/- DEBUG act    color - IN  485n.. color:red {color=red}   f2rv..
 [TIME] ly../..80/- DEBUG act    color - OUT 485n.. color:red {hex=#FF0000} f2rv..
 [TIME] vy../..15/- DEBUG act    -     - OUT 485n.. color:red {hex=#FF0000} CLIENT
@@ -187,7 +181,7 @@ function color() {
 }
 
 var seneca = require('seneca')
-      
+
 seneca()
   .use(color)
   .listen()
@@ -203,7 +197,7 @@ And on the client side:
 
 ```js
 var seneca = require('seneca')
-      
+
 seneca()
   .client()
   .act('color:red')
@@ -239,7 +233,7 @@ $ curl -d '{"color":"red"}' -v http://localhost:10101/act
 > Accept: */*
 > Content-Length: 15
 > Content-Type: application/x-www-form-urlencoded
-> 
+>
 * upload completely sent off: 15 out of 15 bytes
 < HTTP/1.1 200 OK
 < Content-Type: application/json
@@ -254,7 +248,7 @@ $ curl -d '{"color":"red"}' -v http://localhost:10101/act
 < seneca-time-listen-sent: 1409222493910
 < Date: Thu, 28 Aug 2014 10:41:33 GMT
 < Connection: keep-alive
-< 
+<
 * Connection #0 to host localhost left intact
 {"hex":"#FF0000"}
 ```
@@ -365,7 +359,7 @@ This produces the log output:
 ```sh
 [TIME] 6g../..49/- INFO  hello  Seneca/0.5.20/6g../..49/-
 [TIME] f1../..79/- INFO  hello  Seneca/0.5.20/f1../..79/-
-[TIME] f1../..79/- DEBUG act    -         - IN  wdfw.. color:red {color=red} CLIENT 
+[TIME] f1../..79/- DEBUG act    -         - IN  wdfw.. color:red {color=red} CLIENT
 [TIME] 6g../..49/- INFO  plugin transport - ACT b01d.. listen open {type=tcp,host=0.0.0.0,port=10201,...}
 [TIME] f1../..79/- INFO  plugin transport - ACT nid1.. client {type=tcp,host=0.0.0.0,port=10201,...} any
 [TIME] 6g../..49/- INFO  plugin transport - ACT b01d.. listen connection {type=tcp,host=0.0.0.0,port=10201,...} remote 127.0.0.1 52938
@@ -635,10 +629,10 @@ some tracking fields to make debugging easier, these are:
    * _origin_: identifier of orginating Seneca instance, where action is submitted
    * _accept_: identifier of accepting Seneca instance, where action is performed
    * _time_:
-      *   _client_sent_: client timestamp when message sent 
-      *   _listen_recv_: server timestamp when message received 
-      *   _listen_sent_: server timestamp when response sent 
-      *   _client_recv_: client timestamp when response received 
+      *   _client_sent_: client timestamp when message sent
+      *   _listen_recv_: server timestamp when message received
+      *   _listen_sent_: server timestamp when response sent
+      *   _client_recv_: client timestamp when response received
    * _act_: action message data, as submitted to Seneca
    * _res_: response message data, as provided by Seneca
    * _error_: error message, if any
@@ -689,9 +683,9 @@ function hook_client_redis( args, clientdone ) {
   // see an existing transport for full example
   // make_send is called per topic
   function make_send( spec, topic, send_done ) {
-  
+
     // setup topic in transport mechanism
-     
+
     // send the args over the transport
     send_done( null, function( args, done ) {
 
@@ -731,7 +725,7 @@ function hook_listen_redis( args, done ) {
 
       // there may be no result!
       if( null == out ) return ...;
-    
+
       // otherwise, send the result back
       // don't forget to stringifyJSON(out) if necessary
     })
@@ -769,7 +763,7 @@ also supply options via arguments to the <code>client</code> or
 under the top-level _transport_ property.
 
 The primary options are:
-  
+
    * _msgprefix_: a string to prefix to topic names so that they are namespaced
    * _callmax_: the maximum number of in-flight request/response messages to cache
    * _msgidlen_: length of the message indentifier string
@@ -862,24 +856,30 @@ To see the options actually in use at any time, you can call the
 $ node seneca-script.js --seneca.log=type:options
 ```
 
-## Testing
-
-This module itself does not contain any direct reference to Seneca, as
-it is a Seneca dependency. However, Seneca is needed to test it, so
-the test script will perform an _npm install seneca_ (if needed). This is not
-saved to _package.json_.
-
-```sh
-npm test
-```
-
-
 ## Releases
 
    * 0.7.1: fixed log levels
    * 0.7.0: all logs now debug level
    * 0.2.6: fixed error transmit bug https://github.com/rjrodger/seneca/issues/63
 
+## Contributing
+The [Senecajs org][] encourage open participation. If you feel you can help in any way, be it with
+documentation, examples, extra testing, or new features please get in touch.
 
+## License
+Copyright Richard Rodger and other contributors 2015, Licensed under [MIT][].
 
+[travis-badge]: https://travis-ci.org/senecajs/seneca-transport.svg
+[travis-url]: https://travis-ci.org/senecajs/seneca-transport
+[gitter-badge]: https://badges.gitter.im/Join%20Chat.svg
+[gitter-url]: https://gitter.im/senecajs/seneca
+[standard-badge]: https://raw.githubusercontent.com/feross/standard/master/badge.png
+[standard-style]: https://github.com/feross/standard
 
+[MIT]: ./LICENSE
+[Senecajs org]: https://github.com/senecajs/
+[Seneca.js]: https://www.npmjs.com/package/seneca
+[senecajs.org]: http://senecajs.org/
+[leveldb]: http://leveldb.org/
+[github issue]: https://github.com/senecajs/seneca-transport/issues
+[@senecajs]: http://twitter.com/senecajs
