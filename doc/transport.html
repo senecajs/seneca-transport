@@ -32,77 +32,7 @@
             
             <div class="content"><div class='highlight'><pre><span class="hljs-comment">/* Copyright (c) 2013-2015 Richard Rodger, MIT License */</span>
 <span class="hljs-comment">/* jshint node:true, asi:true, eqnull:true */</span>
-<span class="hljs-pi">"use strict"</span>;
-
-
-<span class="hljs-keyword">var</span> buffer = <span class="hljs-built_in">require</span>(<span class="hljs-string">'buffer'</span>)
-<span class="hljs-keyword">var</span> util   = <span class="hljs-built_in">require</span>(<span class="hljs-string">'util'</span>)
-<span class="hljs-keyword">var</span> net    = <span class="hljs-built_in">require</span>(<span class="hljs-string">'net'</span>)
-<span class="hljs-keyword">var</span> stream = <span class="hljs-built_in">require</span>(<span class="hljs-string">'stream'</span>)
-
-
-<span class="hljs-keyword">var</span> _         = <span class="hljs-built_in">require</span>(<span class="hljs-string">'lodash'</span>)
-<span class="hljs-keyword">var</span> connect   = <span class="hljs-built_in">require</span>(<span class="hljs-string">'connect'</span>)
-<span class="hljs-keyword">var</span> needle    = <span class="hljs-built_in">require</span>(<span class="hljs-string">'needle'</span>)
-<span class="hljs-keyword">var</span> lrucache  = <span class="hljs-built_in">require</span>(<span class="hljs-string">'lru-cache'</span>)
-<span class="hljs-keyword">var</span> reconnect = <span class="hljs-built_in">require</span>(<span class="hljs-string">'reconnect-net'</span>)
-<span class="hljs-keyword">var</span> timeout   = <span class="hljs-built_in">require</span>(<span class="hljs-string">'connect-timeout'</span>)
-<span class="hljs-keyword">var</span> query     = <span class="hljs-built_in">require</span>(<span class="hljs-string">'connect-query'</span>)
-<span class="hljs-keyword">var</span> jsonic    = <span class="hljs-built_in">require</span>(<span class="hljs-string">'jsonic'</span>)
-
-<span class="hljs-keyword">var</span> error = <span class="hljs-built_in">require</span>(<span class="hljs-string">'eraro'</span>)({
-  package:  <span class="hljs-string">'seneca'</span>,
-  msgmap:   ERRMSGMAP(),
-  override: <span class="hljs-literal">true</span>
-})
-
-
-<span class="hljs-keyword">var</span> make_tu = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./lib/transport-utils.js'</span>)
-
-
-<span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">transport</span>(<span class="hljs-params"> options </span>) </span>{
-  <span class="hljs-comment">/* jshint validthis:true */</span>
-
-  <span class="hljs-keyword">var</span> seneca = <span class="hljs-keyword">this</span>
-  <span class="hljs-keyword">var</span> plugin = <span class="hljs-string">'transport'</span>
-
-  <span class="hljs-keyword">var</span> so = seneca.options()
-
-  options = seneca.util.deepextend({
-    msgprefix: <span class="hljs-string">'seneca_'</span>,
-    callmax:   <span class="hljs-number">111111</span>,
-    msgidlen:  <span class="hljs-number">12</span>,
-
-    warn: {
-      unknown_message_id: <span class="hljs-literal">true</span>,
-      invalid_kind:       <span class="hljs-literal">true</span>,
-      no_message_id:      <span class="hljs-literal">true</span>,      
-      message_loop:       <span class="hljs-literal">true</span>,      
-      own_message:        <span class="hljs-literal">true</span>,
-    },
-
-    check: {
-      message_loop: <span class="hljs-literal">true</span>,
-      own_message: <span class="hljs-literal">true</span>
-    },
-
-    web: {
-      type:     <span class="hljs-string">'web'</span>,
-      port:     <span class="hljs-number">10101</span>,
-      host:     <span class="hljs-string">'0.0.0.0'</span>,
-      path:     <span class="hljs-string">'/act'</span>,
-      protocol: <span class="hljs-string">'http'</span>,
-      timeout:  <span class="hljs-built_in">Math</span>.max( so.timeout ? so.timeout-<span class="hljs-number">555</span> : <span class="hljs-number">5555</span>, <span class="hljs-number">555</span> )
-    },
-
-    tcp: {
-      type:     <span class="hljs-string">'tcp'</span>,
-      host:     <span class="hljs-string">'0.0.0.0'</span>,
-      port:     <span class="hljs-number">10201</span>,
-      timeout:  <span class="hljs-built_in">Math</span>.max( so.timeout ? so.timeout-<span class="hljs-number">555</span> : <span class="hljs-number">5555</span>, <span class="hljs-number">555</span> )
-    },
-
-  },options)</pre></div></div>
+<span class="hljs-pi">'use strict'</span></pre></div></div>
             
         </li>
         
@@ -113,11 +43,15 @@
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-2">&#182;</a>
               </div>
-              <p>Pending callbacks for all transports.</p>
+              <p>Load modules</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> callmap = lrucache( options.callmax )</pre></div></div>
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> _ = <span class="hljs-built_in">require</span>(<span class="hljs-string">'lodash'</span>)
+<span class="hljs-keyword">var</span> LruCache = <span class="hljs-built_in">require</span>(<span class="hljs-string">'lru-cache'</span>)
+<span class="hljs-keyword">var</span> Tcp = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./lib/tcp'</span>)
+<span class="hljs-keyword">var</span> TransportUtil = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./lib/transport-utils.js'</span>)
+<span class="hljs-keyword">var</span> Http = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./lib/http'</span>)</pre></div></div>
             
         </li>
         
@@ -128,24 +62,64 @@
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-3">&#182;</a>
               </div>
-              <p>Utility functions, bound to this transport context</p>
+              <p>Declare internals</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> tu = make_tu( { callmap:callmap, seneca:seneca, options:options } )
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> internals = {
+  defaults: {
+    msgprefix: <span class="hljs-string">'seneca_'</span>,
+    callmax: <span class="hljs-number">111111</span>,
+    msgidlen: <span class="hljs-number">12</span>,
+    warn: {
+      unknown_message_id: <span class="hljs-literal">true</span>,
+      invalid_kind: <span class="hljs-literal">true</span>,
+      invalid_origin: <span class="hljs-literal">true</span>,
+      no_message_id: <span class="hljs-literal">true</span>,
+      message_loop: <span class="hljs-literal">true</span>,
+      own_message: <span class="hljs-literal">true</span>
+    },
+    check: {
+      message_loop: <span class="hljs-literal">true</span>,
+      own_message: <span class="hljs-literal">true</span>
+    },
+    web: {
+      type: <span class="hljs-string">'web'</span>,
+      port: <span class="hljs-number">10101</span>,
+      host: <span class="hljs-string">'0.0.0.0'</span>,
+      path: <span class="hljs-string">'/act'</span>,
+      protocol: <span class="hljs-string">'http'</span>,
+      timeout: <span class="hljs-number">5555</span>
+    },
+    tcp: {
+      type: <span class="hljs-string">'tcp'</span>,
+      host: <span class="hljs-string">'0.0.0.0'</span>,
+      port: <span class="hljs-number">10201</span>,
+      timeout: <span class="hljs-number">5555</span>
+    }
+  },
+  plugin: <span class="hljs-string">'transport'</span>
+}
 
+<span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">options</span>) </span>{
+  <span class="hljs-keyword">var</span> seneca = <span class="hljs-keyword">this</span>
+  <span class="hljs-keyword">var</span> settings = seneca.util.deepextend(internals.defaults, options)
+  <span class="hljs-keyword">var</span> callmap = LruCache(settings.callmax)
+  <span class="hljs-keyword">var</span> transportUtil = <span class="hljs-keyword">new</span> TransportUtil({
+    callmap: callmap,
+    seneca: seneca,
+    options: settings
+  })
 
-  seneca.add({role:plugin,cmd:<span class="hljs-string">'inflight'</span>}, cmd_inflight)
+  seneca.add({ role: internals.plugin, cmd: <span class="hljs-string">'inflight'</span> }, internals.inflight(callmap))
+  seneca.add({ role: internals.plugin, cmd: <span class="hljs-string">'listen'</span> }, internals.listen)
+  seneca.add({ role: internals.plugin, cmd: <span class="hljs-string">'client'</span> }, internals.client)
 
-  seneca.add({role:plugin,cmd:<span class="hljs-string">'listen'</span>}, cmd_listen)
-  seneca.add({role:plugin,cmd:<span class="hljs-string">'client'</span>}, cmd_client)
+  seneca.add({ role: internals.plugin, hook: <span class="hljs-string">'listen'</span>, type: <span class="hljs-string">'tcp'</span> }, Tcp.listen(settings, transportUtil))
+  seneca.add({ role: internals.plugin, hook: <span class="hljs-string">'client'</span>, type: <span class="hljs-string">'tcp'</span> }, Tcp.client(settings, transportUtil))
 
-
-  seneca.add({role:plugin,hook:<span class="hljs-string">'listen'</span>,type:<span class="hljs-string">'tcp'</span>}, hook_listen_tcp)
-  seneca.add({role:plugin,hook:<span class="hljs-string">'client'</span>,type:<span class="hljs-string">'tcp'</span>}, hook_client_tcp)
-
-  seneca.add({role:plugin,hook:<span class="hljs-string">'listen'</span>,type:<span class="hljs-string">'web'</span>}, hook_listen_web)
-  seneca.add({role:plugin,hook:<span class="hljs-string">'client'</span>,type:<span class="hljs-string">'web'</span>}, hook_client_web)</pre></div></div>
+  seneca.add({ role: internals.plugin, hook: <span class="hljs-string">'listen'</span>, type: <span class="hljs-string">'web'</span> }, Http.listen(settings, transportUtil))
+  seneca.add({ role: internals.plugin, hook: <span class="hljs-string">'client'</span>, type: <span class="hljs-string">'web'</span> }, Http.client(settings, transportUtil))</pre></div></div>
             
         </li>
         
@@ -160,8 +134,8 @@
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  seneca.add({role:plugin,hook:<span class="hljs-string">'listen'</span>,type:<span class="hljs-string">'http'</span>}, hook_listen_web)
-  seneca.add({role:plugin,hook:<span class="hljs-string">'client'</span>,type:<span class="hljs-string">'http'</span>}, hook_client_web)</pre></div></div>
+            <div class="content"><div class='highlight'><pre>  seneca.add({ role: internals.plugin, hook: <span class="hljs-string">'listen'</span>, type: <span class="hljs-string">'http'</span> }, Http.listen(settings, transportUtil))
+  seneca.add({ role: internals.plugin, hook: <span class="hljs-string">'client'</span>, type: <span class="hljs-string">'http'</span> }, Http.client(settings, transportUtil))</pre></div></div>
             
         </li>
         
@@ -176,532 +150,56 @@
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  seneca.add({role:plugin,hook:<span class="hljs-string">'listen'</span>,type:<span class="hljs-string">'direct'</span>}, hook_listen_web)
-  seneca.add({role:plugin,hook:<span class="hljs-string">'client'</span>,type:<span class="hljs-string">'direct'</span>}, hook_client_web)
+            <div class="content"><div class='highlight'><pre>  seneca.add({ role: internals.plugin, hook: <span class="hljs-string">'listen'</span>, type: <span class="hljs-string">'direct'</span> }, Http.listen(settings, transportUtil))
+  seneca.add({ role: internals.plugin, hook: <span class="hljs-string">'client'</span>, type: <span class="hljs-string">'direct'</span> }, Http.client(settings, transportUtil))
 
+  <span class="hljs-keyword">return</span> {
+    name: internals.plugin,
+    exportmap: { utils: transportUtil },
+    options: settings
+  }
+}
 
-
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">cmd_inflight</span>(<span class="hljs-params"> args, done </span>) </span>{
+internals.inflight = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">callmap</span>) </span>{
+  <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">args, callback</span>) </span>{
     <span class="hljs-keyword">var</span> inflight = {}
-    callmap.forEach( <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">v,k</span>) </span>{
-      inflight[k] = v
+    callmap.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">val, key</span>) </span>{
+      inflight[key] = val
     })
-    done( <span class="hljs-literal">null</span>, inflight )
+    callback(<span class="hljs-literal">null</span>, inflight)
   }
+}
 
+internals.listen = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">args, callback</span>) </span>{
+  <span class="hljs-keyword">var</span> seneca = <span class="hljs-keyword">this</span>
 
-  
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">cmd_listen</span>(<span class="hljs-params"> args, done </span>) </span>{
-    <span class="hljs-keyword">var</span> seneca = <span class="hljs-keyword">this</span>
-
-    <span class="hljs-keyword">var</span> listen_config = args.config
-    <span class="hljs-keyword">var</span> listen_args  = 
-          seneca.util.clean(
-            _.omit(
-              _.extend({},listen_config,{role:plugin,hook:<span class="hljs-string">'listen'</span>}),<span class="hljs-string">'cmd'</span>))
-
-    <span class="hljs-keyword">if</span>( handle_legacy_types(listen_args.type,done) ) {
-      seneca.act( listen_args, done )
-    }
+  <span class="hljs-keyword">var</span> config = _.extend({}, args.config, { role: internals.plugin, hook: <span class="hljs-string">'listen'</span> })
+  <span class="hljs-keyword">var</span> listen_args = seneca.util.clean(_.omit(config, <span class="hljs-string">'cmd'</span>))
+  <span class="hljs-keyword">var</span> legacyError = internals.legacyError(seneca, listen_args.type)
+  <span class="hljs-keyword">if</span> (legacyError) {
+    <span class="hljs-keyword">return</span> callback(legacyError)
   }
+  seneca.act(listen_args, callback)
+}
 
+internals.client = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">args, callback</span>) </span>{
+  <span class="hljs-keyword">var</span> seneca = <span class="hljs-keyword">this</span>
 
-
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">cmd_client</span>(<span class="hljs-params"> args, done </span>) </span>{
-    <span class="hljs-keyword">var</span> seneca = <span class="hljs-keyword">this</span>
-
-    <span class="hljs-keyword">var</span> client_config = args.config
-    <span class="hljs-keyword">var</span> client_args   = 
-          seneca.util.clean(
-            _.omit(
-              _.extend({},client_config,{role:plugin,hook:<span class="hljs-string">'client'</span>}),<span class="hljs-string">'cmd'</span>))
-
-
-    <span class="hljs-keyword">if</span>( handle_legacy_types(client_args.type,done) ) {
-      seneca.act( client_args, done )
-    }
+  <span class="hljs-keyword">var</span> config = _.extend({}, args.config, { role: internals.plugin, hook: <span class="hljs-string">'client'</span> })
+  <span class="hljs-keyword">var</span> client_args = seneca.util.clean(_.omit(config, <span class="hljs-string">'cmd'</span>))
+  <span class="hljs-keyword">var</span> legacyError = internals.legacyError(seneca, client_args.type)
+  <span class="hljs-keyword">if</span> (legacyError) {
+    <span class="hljs-keyword">return</span> callback(legacyError)
   }
+  seneca.act(client_args, callback)
+}
 
-
-
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">handle_legacy_types</span>(<span class="hljs-params">type,done</span>) </span>{
-    <span class="hljs-keyword">var</span> ok = <span class="hljs-literal">false</span>
-
-    <span class="hljs-keyword">if</span>( <span class="hljs-string">'pubsub'</span> == type ) {
-      done(seneca.fail(<span class="hljs-string">'plugin-needed'</span>,{name:<span class="hljs-string">'seneca-redis-transport'</span>}))
-    }
-    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( <span class="hljs-string">'queue'</span> == type ) {
-      done(seneca.fail(<span class="hljs-string">'plugin-needed'</span>,{name:<span class="hljs-string">'seneca-beanstalkd-transport'</span>}))
-    }
-    <span class="hljs-keyword">else</span> ok = <span class="hljs-literal">true</span>;
-
-    <span class="hljs-keyword">return</span> ok;
+internals.legacyError = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">seneca, type</span>) </span>{
+  <span class="hljs-keyword">if</span> (type === <span class="hljs-string">'pubsub'</span>) {
+    <span class="hljs-keyword">return</span> seneca.fail(<span class="hljs-string">'plugin-needed'</span>, { name: <span class="hljs-string">'seneca-redis-transport'</span> })
   }
-
-
-
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">hook_listen_tcp</span>(<span class="hljs-params"> args, done </span>) </span>{
-    <span class="hljs-keyword">var</span> seneca         = <span class="hljs-keyword">this</span>
-    <span class="hljs-keyword">var</span> type           = args.type
-    <span class="hljs-keyword">var</span> listen_options = seneca.util.clean(_.extend({},options[type],args))
-    
-    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_msger</span>(<span class="hljs-params"></span>) </span>{
-      <span class="hljs-keyword">var</span> msger = <span class="hljs-keyword">new</span> stream.Duplex({objectMode:<span class="hljs-literal">true</span>})
-      msger._read = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{}
-      msger._write = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> data, enc , done </span>) </span>{
-        <span class="hljs-keyword">var</span> stream_instance = <span class="hljs-keyword">this</span>
-
-        <span class="hljs-keyword">if</span>( util.isError(data) ) {
-          <span class="hljs-keyword">var</span> out = tu.prepare_response(seneca,{})
-          out.input = data.input
-          out.error = error(<span class="hljs-string">'invalid_json'</span>,{input:data.input})
-
-          stream_instance.push(out)
-          <span class="hljs-keyword">return</span> done()
-        }
-
-        tu.handle_request( seneca, data, listen_options, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">out</span>) </span>{
-          <span class="hljs-keyword">if</span>( <span class="hljs-literal">null</span> == out ) <span class="hljs-keyword">return</span> done();
-          stream_instance.push(out)
-          <span class="hljs-keyword">return</span> done();
-        })
-      }
-      <span class="hljs-keyword">return</span> msger
-    }
-
-    <span class="hljs-keyword">var</span> connections = []
-
-    <span class="hljs-keyword">var</span> listen = net.createServer(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">connection</span>) </span>{
-      seneca.log.debug(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'connection'</span>, listen_options,
-                       <span class="hljs-string">'remote'</span>, connection.remoteAddress, connection.remotePort)
-      connection
-        .pipe(json_parser_stream())
-        .pipe(make_msger())
-        .pipe(json_stringify_stream())
-        .pipe(connection)
-
-      connection.on(<span class="hljs-string">'error'</span>,<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">err</span>)</span>{
-        seneca.log.error(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'pipe-error'</span>, listen_options, err.stack||err)
-      })
-
-      connections.push(connection)
-    })
-
-    listen.on(<span class="hljs-string">'listening'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
-      seneca.log.debug(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'open'</span>, 
-                       listen_options)
-      done()
-    })
-
-    listen.on(<span class="hljs-string">'error'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">err</span>) </span>{
-      seneca.log.error(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'net-error'</span>, listen_options, err.stack||err)
-    })
-
-    listen.on(<span class="hljs-string">'close'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
-      seneca.log.debug(<span class="hljs-string">'listen'</span>, <span class="hljs-string">'close'</span>, listen_options)
-    })
-
-    listen.listen( listen_options.port, listen_options.host )
-
-    tu.close( seneca, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">done</span>)</span>{
-      listen.close()
-
-      connections.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">con</span>)</span>{
-        <span class="hljs-keyword">try</span> { con.destroy() } <span class="hljs-keyword">catch</span>(e) { seneca.log.error(e) }
-      })
-
-      done()
-    })
-  }
-
-
-
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">hook_client_tcp</span>(<span class="hljs-params"> args, clientdone </span>) </span>{
-    <span class="hljs-keyword">var</span> seneca         = <span class="hljs-keyword">this</span>
-    <span class="hljs-keyword">var</span> type           = args.type
-    <span class="hljs-keyword">var</span> client_options = seneca.util.clean(_.extend({},options[type],args))
-
-    tu.make_client( seneca, make_send, client_options, clientdone )
-
-
-    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_send</span>(<span class="hljs-params"> spec, topic, send_done </span>) </span>{
-      seneca.log.debug(<span class="hljs-string">'client'</span>, type, <span class="hljs-string">'send-init'</span>, 
-                       spec, topic, client_options)
-
-      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_msger</span>(<span class="hljs-params"></span>) </span>{
-        <span class="hljs-keyword">var</span> msger = <span class="hljs-keyword">new</span> stream.Duplex({objectMode:<span class="hljs-literal">true</span>})
-        msger._read = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{}
-        msger._write = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> data, enc, done </span>) </span>{
-          tu.handle_response( seneca, data, client_options )
-          <span class="hljs-keyword">return</span> done();
-        }
-        <span class="hljs-keyword">return</span> msger;
-      }
-
-      <span class="hljs-keyword">var</span> msger = make_msger()
-      <span class="hljs-keyword">var</span> connections = []
-
-      <span class="hljs-keyword">var</span> clientconnect = reconnect( <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">client</span>) </span>{
-        connections.push(client)
-
-        client
-          .pipe( json_parser_stream() )
-          .pipe( msger )
-          .pipe( json_stringify_stream() )
-          .pipe( client )
-
-      }).on(<span class="hljs-string">'connect'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
-          seneca.log.debug(<span class="hljs-string">'client'</span>, type, <span class="hljs-string">'connect'</span>, 
-                           spec, topic, client_options)
-
-      }).on(<span class="hljs-string">'reconnect'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
-          seneca.log.debug(<span class="hljs-string">'client'</span>, type, <span class="hljs-string">'reconnect'</span>, 
-                           spec, topic, client_options)
-
-      }).on(<span class="hljs-string">'disconnect'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">err</span>) </span>{
-          seneca.log.debug(<span class="hljs-string">'client'</span>, type, <span class="hljs-string">'disconnect'</span>, 
-                           spec, topic, client_options,
-                           (err&amp;&amp;err.stack)||err)
-
-      }).connect({
-        port: client_options.port, 
-        host: client_options.host
-      })
-
-      send_done( <span class="hljs-literal">null</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> args, done </span>) </span>{
-        <span class="hljs-keyword">var</span> outmsg = tu.prepare_request( <span class="hljs-keyword">this</span>, args, done )
-        msger.push( outmsg )
-      })
-
-      tu.close( seneca, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> done </span>) </span>{
-        clientconnect.disconnect()
-
-        connections.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">con</span>)</span>{
-          <span class="hljs-keyword">try</span> { con.destroy() } <span class="hljs-keyword">catch</span>(e) { seneca.log.error(e) }
-        })
-
-        done()
-      })
-    }
-  }
-
-
-
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">json_parser_stream</span>(<span class="hljs-params"></span>) </span>{
-    <span class="hljs-keyword">var</span> json_parser = <span class="hljs-keyword">new</span> stream.Duplex({objectMode:<span class="hljs-literal">true</span>})
-    json_parser.linebuf = []
-    json_parser._read   = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{}
-    json_parser._write  = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">data,enc,done</span>) </span>{
-      <span class="hljs-keyword">var</span> str     = <span class="hljs-string">''</span>+data
-      <span class="hljs-keyword">var</span> endline = -<span class="hljs-number">1</span>
-      <span class="hljs-keyword">var</span> remain  = <span class="hljs-number">0</span>
-
-      <span class="hljs-keyword">while</span>( -<span class="hljs-number">1</span> != (endline = str.indexOf(<span class="hljs-string">'\n'</span>,remain)) ) {
-        <span class="hljs-keyword">this</span>.linebuf.push( str.substring(remain,endline) )
-        <span class="hljs-keyword">var</span> jsonstr = <span class="hljs-keyword">this</span>.linebuf.join(<span class="hljs-string">''</span>)
-
-        <span class="hljs-keyword">this</span>.linebuf.length = <span class="hljs-number">0</span>
-        remain = endline+<span class="hljs-number">1</span>
-
-        <span class="hljs-keyword">if</span>( <span class="hljs-string">''</span> === jsonstr ) {
-          <span class="hljs-keyword">return</span> done();
-        }
-
-        <span class="hljs-keyword">var</span> outdata = tu.parseJSON( seneca, <span class="hljs-string">'stream'</span>, jsonstr )
-
-        <span class="hljs-keyword">if</span>( outdata ) {
-          <span class="hljs-keyword">this</span>.push(outdata)        
-        }
-      }
-
-      <span class="hljs-keyword">if</span>( -<span class="hljs-number">1</span> == endline ) {
-        <span class="hljs-keyword">this</span>.linebuf.push(str.substring(remain))
-      }
-
-      <span class="hljs-keyword">return</span> done();
-    }
-
-    <span class="hljs-keyword">return</span> json_parser;
-  }
-
-
-
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">json_stringify_stream</span>(<span class="hljs-params"></span>) </span>{
-    <span class="hljs-keyword">var</span> json_stringify = <span class="hljs-keyword">new</span> stream.Duplex({objectMode:<span class="hljs-literal">true</span>})
-    json_stringify._read = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{}
-    json_stringify._write = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> data, enc, done </span>) </span>{
-      <span class="hljs-keyword">var</span> out = tu.stringifyJSON( seneca, <span class="hljs-string">'stream'</span>, data )
-    
-      <span class="hljs-keyword">if</span>( out ) {
-        <span class="hljs-keyword">this</span>.push(out+<span class="hljs-string">'\n'</span>)        
-      }
-
-      done()
-    }
-
-    <span class="hljs-keyword">return</span> json_stringify;
-  }
-  
-
-
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">hook_listen_web</span>(<span class="hljs-params"> args, done </span>) </span>{
-    <span class="hljs-keyword">var</span> seneca         = <span class="hljs-keyword">this</span>
-    <span class="hljs-keyword">var</span> type           = args.type
-    <span class="hljs-keyword">var</span> listen_options = seneca.util.clean(_.extend({},options[type],args))
-
-    <span class="hljs-keyword">var</span> app = connect()
-    app.use( timeout( listen_options.timeout ) )</pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-6">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-6">&#182;</a>
-              </div>
-              <p>query params get injected into args
-let’s you use a GET for debug
-GETs can have side-effects, this is not a web server, or a REST API</p>
-
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>    app.use( query() )
-
-    app.use( <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> req, res, next </span>) </span>{
-      <span class="hljs-keyword">var</span> buf = []
-      req.setEncoding(<span class="hljs-string">'utf8'</span>)
-      req.on(<span class="hljs-string">'data'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">chunk</span>) </span>{ buf.push(chunk) })
-      req.on(<span class="hljs-string">'end'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
-        <span class="hljs-keyword">try</span> {
-          <span class="hljs-keyword">var</span> bufstr = buf.join(<span class="hljs-string">''</span>)
-
-          <span class="hljs-keyword">var</span> bodydata = 
-                <span class="hljs-number">0</span> &lt; bufstr.length ? tu.parseJSON(seneca,<span class="hljs-string">'req-body'</span>,bufstr) : {}
-
-          <span class="hljs-keyword">if</span>( util.isError(bodydata) ) {
-            <span class="hljs-keyword">var</span> out = tu.prepare_response(seneca,{})
-            out.input = bufstr
-            out.error = error(<span class="hljs-string">'invalid_json'</span>,{input:bufstr})
-            send_response(res,out,{})
-            <span class="hljs-keyword">return</span>;
-          }
-
-          req.body = _.extend(
-            {},
-            bodydata,
-            (req.query &amp;&amp; req.query.args$) ? jsonic(req.query.args$) : {},
-            req.query||{} )
-
-          next();
-        } 
-        <span class="hljs-keyword">catch</span>(err) {
-          err.body   = err.message+<span class="hljs-string">': '</span>+bufstr
-          err.status = <span class="hljs-number">400</span>
-          next(err)
-        }
-      })
-    })
-
-    app.use( <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> req, res, next </span>) </span>{
-      <span class="hljs-keyword">if</span>( <span class="hljs-number">0</span> !== req.url.indexOf(listen_options.path) ) <span class="hljs-keyword">return</span> next();
-
-      <span class="hljs-keyword">var</span> data
-      <span class="hljs-keyword">var</span> standard = !!req.headers[<span class="hljs-string">'seneca-id'</span>]
-
-      <span class="hljs-keyword">if</span>( standard ) {
-        data = {
-          id:     req.headers[<span class="hljs-string">'seneca-id'</span>],
-          kind:   <span class="hljs-string">'act'</span>,
-          origin: req.headers[<span class="hljs-string">'seneca-origin'</span>],
-          track:  tu.parseJSON(
-            seneca,<span class="hljs-string">'track-receive'</span>,req.headers[<span class="hljs-string">'seneca-track'</span>]) || [],
-          time: {
-            client_sent: req.headers[<span class="hljs-string">'seneca-time-client-sent'</span>],
-          },
-          act:    req.body,
-        }
-      }</pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-7">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-7">&#182;</a>
-              </div>
-              <p>convenience for non-seneca clients</p>
-
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">else</span> {
-        data = {
-          id:     seneca.idgen(),
-          kind:   <span class="hljs-string">'act'</span>,
-          origin: req.headers[<span class="hljs-string">'user-agent'</span>] || <span class="hljs-string">'UNKNOWN'</span>,
-          track:  [],
-          time: {
-            client_sent: <span class="hljs-built_in">Date</span>.now()
-          },
-          act:    req.body,
-        }
-      }
-
-      tu.handle_request( seneca, data, listen_options, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">out</span>)</span>{
-        send_response(res,out,data)
-      })
-    })
-    
-
-    seneca.log.debug(<span class="hljs-string">'listen'</span>, listen_options )
-    <span class="hljs-keyword">var</span> listen = app.listen( listen_options.port, listen_options.host )
-
-    tu.close( seneca, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> done </span>) </span>{
-      listen.close()
-      done()
-    })
-
-    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">send_response</span>(<span class="hljs-params">res,out,data</span>) </span>{
-      <span class="hljs-keyword">var</span> outjson  = <span class="hljs-string">"null"</span>
-      <span class="hljs-keyword">var</span> iserror  = <span class="hljs-literal">false</span>
-      <span class="hljs-keyword">var</span> httpcode = <span class="hljs-number">200</span>
-
-      <span class="hljs-keyword">if</span>( <span class="hljs-literal">null</span> != out ) {
-        <span class="hljs-keyword">if</span>( out.res ) {
-          outjson = tu.stringifyJSON(seneca,<span class="hljs-string">'listen-web'</span>,out.res)
-        }
-        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( out.error ) {
-          iserror = <span class="hljs-literal">true</span>
-          outjson = tu.stringifyJSON(seneca,<span class="hljs-string">'listen-web'</span>,out.error)
-        }
-      }
-
-      <span class="hljs-keyword">var</span> headers = {
-        <span class="hljs-string">'Content-Type'</span>:   <span class="hljs-string">'application/json'</span>,
-        <span class="hljs-string">'Cache-Control'</span>:  <span class="hljs-string">'private, max-age=0, no-cache, no-store'</span>,
-        <span class="hljs-string">'Content-Length'</span>: buffer.Buffer.byteLength(outjson),
-      }
-      
-      headers[<span class="hljs-string">'seneca-id'</span>]     = out ? out.id : seneca.id
-      headers[<span class="hljs-string">'seneca-kind'</span>]   = <span class="hljs-string">'res'</span>
-      headers[<span class="hljs-string">'seneca-origin'</span>] = out ? out.origin : <span class="hljs-string">'UNKNOWN'</span>
-      headers[<span class="hljs-string">'seneca-accept'</span>] = seneca.id
-      headers[<span class="hljs-string">'seneca-track'</span>]  = <span class="hljs-string">''</span>+(data.track ? data.track : [])
-      headers[<span class="hljs-string">'seneca-time-client-sent'</span>] = 
-        out &amp;&amp; out.item ? out.time.client_sent : <span class="hljs-string">'0'</span>
-      headers[<span class="hljs-string">'seneca-time-listen-recv'</span>] = 
-        out &amp;&amp; out.item ? out.time.listen_recv : <span class="hljs-string">'0'</span>
-      headers[<span class="hljs-string">'seneca-time-listen-sent'</span>] = 
-        out &amp;&amp; out.item ? out.time.listen_sent : <span class="hljs-string">'0'</span>
-      
-      <span class="hljs-keyword">if</span>( iserror ) {
-        httpcode = <span class="hljs-number">500</span>
-      }
-
-      res.writeHead( httpcode, headers )
-      res.end( outjson )
-    }
-
-    done()
-  }
-
-
-
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">hook_client_web</span>(<span class="hljs-params"> args, clientdone </span>) </span>{
-    <span class="hljs-keyword">var</span> seneca         = <span class="hljs-keyword">this</span>
-    <span class="hljs-keyword">var</span> type           = args.type
-    <span class="hljs-keyword">var</span> client_options = seneca.util.clean(_.extend({},options[type],args))
-
-    tu.make_client( seneca, make_send, client_options, clientdone )
-
-    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">make_send</span>(<span class="hljs-params"> spec, topic, send_done </span>) </span>{
-      <span class="hljs-keyword">var</span> fullurl = 
-            <span class="hljs-string">'http://'</span>+client_options.host+<span class="hljs-string">':'</span>+
-            client_options.port+client_options.path
-
-      seneca.log.debug(<span class="hljs-string">'client'</span>, <span class="hljs-string">'web'</span>, <span class="hljs-string">'send'</span>, spec, topic, client_options, 
-                       fullurl )
-      
-      send_done( <span class="hljs-literal">null</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> args, done </span>) </span>{
-        <span class="hljs-keyword">var</span> data = tu.prepare_request( <span class="hljs-keyword">this</span>, args, done )
-
-        <span class="hljs-keyword">var</span> headers = {
-          <span class="hljs-string">'seneca-id'</span>:               data.id, 
-          <span class="hljs-string">'seneca-kind'</span>:             <span class="hljs-string">'req'</span>, 
-          <span class="hljs-string">'seneca-origin'</span>:           seneca.id, 
-          <span class="hljs-string">'seneca-track'</span>:            tu.stringifyJSON(
-            seneca,<span class="hljs-string">'send-track'</span>,data.track||[]),
-          <span class="hljs-string">'seneca-time-client-sent'</span>: data.time.client_sent
-        }
-
-        needle.post( 
-          fullurl, 
-          data.act, 
-          {
-            json:    <span class="hljs-literal">true</span>,
-            headers: headers,
-            timeout: client_options.timeout,
-          },
-          <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">err,res</span>) </span>{
-            <span class="hljs-keyword">var</span> data = {
-              kind:  <span class="hljs-string">'res'</span>,
-              res:   res &amp;&amp; _.isObject(res.body) ? res.body : <span class="hljs-literal">null</span>,
-              error: err
-            }
-
-            <span class="hljs-keyword">if</span>( res ) {
-              data.id     = res.headers[<span class="hljs-string">'seneca-id'</span>]
-              data.origin = res.headers[<span class="hljs-string">'seneca-origin'</span>]
-              data.accept = res.headers[<span class="hljs-string">'seneca-accept'</span>]
-              data.time = {
-                client_sent: res.headers[<span class="hljs-string">'seneca-time-client-sent'</span>],
-                listen_recv: res.headers[<span class="hljs-string">'seneca-time-listen-recv'</span>],
-                listen_sent: res.headers[<span class="hljs-string">'seneca-time-listen-sent'</span>],
-              }
-
-              <span class="hljs-keyword">if</span>( <span class="hljs-number">200</span> !== res.statusCode ) {
-                data.error = res.body
-              }
-            }
-
-            tu.handle_response( seneca, data, client_options )
-          }
-        )
-      })
-
-      tu.close( seneca, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"> done </span>) </span>{
-        done()
-      })
-    }
-  }  
-
-
-  <span class="hljs-keyword">return</span> {
-    name:      plugin,
-    exportmap: { utils: tu },
-    options:   options
-  }
-}</pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-8">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-8">&#182;</a>
-              </div>
-              <p>Error code messages.</p>
-
-            </div>
-            
-            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">ERRMSGMAP</span>(<span class="hljs-params"></span>) </span>{
-  <span class="hljs-keyword">return</span> {
-    <span class="hljs-string">'invalid_json'</span>:<span class="hljs-string">'Invalid JSON: &lt;%=input%&gt;.'</span>,
+  <span class="hljs-keyword">if</span> (type === <span class="hljs-string">'queue'</span>) {
+    <span class="hljs-keyword">return</span> seneca.fail(<span class="hljs-string">'plugin-needed'</span>, { name: <span class="hljs-string">'seneca-beanstalkd-transport'</span> })
   }
 }</pre></div></div>
             

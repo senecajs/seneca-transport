@@ -6,7 +6,8 @@
   "scripts": {
     "test": "./test.sh",
     "build": "./build.sh",
-    "bench": "node bench"
+    "bench": "node bench",
+    "annotate": "docco transport.js -o doc"
   },
   "repository": {
     "type": "git",
