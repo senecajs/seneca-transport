@@ -6,8 +6,12 @@
 
 var assert = require('assert')
 var seneca = require('seneca')
-var test = require('seneca-transport-test')
+var shared   = require('seneca-transport-test')
 var wreck = require('wreck')
+var Lab = require('lab')
+var lab = exports.lab = Lab.script()
+var describe = lab.describe
+var it = lab.it
 
 var no_t = {transport:false}
 
@@ -36,25 +40,35 @@ function run_client( type, port, done, tag ) {
     })
 }
 
+function get_seneca(tag) {
+  return require('seneca')({tag:tag, log:'silent', default_plugins: no_t, debug: {short_logs:true}}).use('../transport')
+}
 
 describe('transport', function() {
 
-  it('happy-tcp', function( fin ) {
-    test.foo_test( 'transport', require, fin, 'tcp' )
+  shared.basictest({
+    seneca: get_seneca(),
+    script: lab,
+    type: 'tcp'
   })
 
-  it('happy-pin-tcp', function( fin ) {
-    test.foo_pintest( 'transport', require, fin, 'tcp' )
+  shared.basicpintest({
+    seneca: get_seneca(),
+    script: lab,
+    type: 'tcp'
   })
 
-  it('happy-web', function( fin ) {
-    test.foo_test( 'transport', require, fin, 'web' )
+  shared.basictest({
+    seneca: get_seneca(),
+    script: lab,
+    type: 'web'
   })
 
-  it('happy-pin-web', function( fin ) {
-    test.foo_pintest( 'transport', require, fin, 'web' )
+  shared.basicpintest({
+    seneca: get_seneca(),
+    script: lab,
+    type: 'web'
   })
-
 
   it('tcp-basic', function( fin ) {
 
