@@ -43,9 +43,8 @@
     "async": "1.4.2",
     "bench": "^0.3.5",
     "docco": "0.7.0",
-    "jshint": "2.8.0",
-    "lab": "^6.2.0",
+    "lab": "6.x.x",
     "seneca": "plugin",
-    "seneca-transport-test": "*"
+    "seneca-transport-test": "git@github.com:rjrodger/seneca-transport-test.git"
   }
 }
