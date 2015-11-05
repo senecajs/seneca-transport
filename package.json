@@ -45,6 +45,6 @@
     "docco": "0.7.0",
     "lab": "6.x.x",
     "seneca": "plugin",
-    "seneca-transport-test": "git@github.com:rjrodger/seneca-transport-test.git"
+    "seneca-transport-test": "https://github.com/rjrodger/seneca-transport-test.git"
   }
 }
