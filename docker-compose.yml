@@ -1,0 +1,14 @@
+base:
+  build: ./
+server:
+  extends:
+    service: base
+  expose:
+    - "8000"
+  entrypoint: node /seneca-transport/server
+client:
+  extends:
+    service: base
+  links:
+   - server
+  entrypoint: node /seneca-transport/client

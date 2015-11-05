@@ -4,7 +4,7 @@
   "description": "Seneca transport",
   "main": "transport.js",
   "scripts": {
-    "test": "./test.sh",
+    "test": "./node_modules/.bin/lab test/*.test.js -v -m 3000",
     "build": "./build.sh",
     "bench": "node bench",
     "annotate": "docco transport.js -o doc"
@@ -43,9 +43,8 @@
     "async": "1.4.2",
     "bench": "^0.3.5",
     "docco": "0.7.0",
-    "jshint": "2.8.0",
-    "lab": "^6.2.0",
+    "lab": "6.x.x",
     "seneca": "plugin",
-    "seneca-transport-test": "*"
+    "seneca-transport-test": "https://github.com/rjrodger/seneca-transport-test.git"
   }
 }
