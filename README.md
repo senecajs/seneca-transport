@@ -864,6 +864,18 @@ $ node seneca-script.js --seneca.log=type:options
    * 0.7.0: all logs now debug level
    * 0.2.6: fixed error transmit bug https://github.com/rjrodger/seneca/issues/63
 
+## Testing with Docker Compose
+
+With docker-machine and docker-compose installed run the following commands:
+
+```
+docker-compose build
+docker-compose up
+```
+
+The output will be the stdout from the server and client logs.  You should also
+see the client instance outputting the result from the server: `{ hex: '#FF0000' }`
+
 ## Contributing
 The [Senecajs org][] encourage open participation. If you feel you can help in any way, be it with
 documentation, examples, extra testing, or new features please get in touch.
