@@ -4,7 +4,7 @@
   "description": "Seneca transport",
   "main": "transport.js",
   "scripts": {
-    "test": "./node_modules/.bin/lab test/*.test.js -v -m 3000",
+    "test": "./node_modules/.bin/lab test/*.test.js -v -m 3000 -t 80 -L",
     "build": "./build.sh",
     "bench": "node bench",
     "annotate": "docco transport.js -o doc"
@@ -43,6 +43,9 @@
     "async": "1.4.2",
     "bench": "^0.3.5",
     "docco": "0.7.0",
+    "eslint-config-seneca": "1.x.x",
+    "eslint-plugin-hapi": "2.x.x",
+    "eslint-plugin-standard": "1.x.x",
     "lab": "6.x.x",
     "seneca": "plugin",
     "seneca-transport-test": "0.2.x"
