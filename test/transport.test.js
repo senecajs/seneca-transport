@@ -1,5 +1,5 @@
 /* Copyright (c) 2013-2015 Richard Rodger */
-"use strict";
+'use strict'
 
 
 // mocha transport.test.js
