@@ -42,6 +42,7 @@
   "devDependencies": {
     "async": "1.4.2",
     "bench": "^0.3.5",
+    "code": "1.x.x",
     "docco": "0.7.0",
     "eslint-config-seneca": "1.x.x",
     "eslint-plugin-hapi": "2.x.x",

@@ -2,8 +2,6 @@
 'use strict'
 
 
-// mocha transport.test.js
-
 var assert = require('assert')
 var seneca = require('seneca')
 var shared   = require('seneca-transport-test')
