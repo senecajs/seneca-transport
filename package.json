@@ -21,17 +21,17 @@
   "author": "Richard Rodger (http://richardrodger.com)",
   "license": "MIT",
   "dependencies": {
-    "eraro": "0.4.1",
-    "gex": "0.2.0",
-    "jsonic": "0.2.0",
-    "lodash": "2.4.2",
-    "lru-cache": "2.6.4",
-    "ndjson": "1.4.2",
+    "eraro": "0.4.x",
+    "gex": "0.2.x",
+    "jsonic": "0.2.x",
+    "lodash": "3.10.x",
+    "lru-cache": "2.7.x",
+    "ndjson": "1.4.x",
     "nid": "0.3.2",
-    "patrun": "0.4.3",
+    "patrun": "0.5.x",
     "qs": "5.2.0",
-    "reconnect-core": "1.0.1",
-    "wreck": "6.3.0"
+    "reconnect-core": "1.1.x",
+    "wreck": "6.3.x"
   },
   "files": [
     "README.md",
@@ -40,10 +40,10 @@
     "lib/transport-utils.js"
   ],
   "devDependencies": {
-    "async": "1.4.2",
-    "bench": "^0.3.5",
+    "async": "1.5.x",
+    "bench": "0.3.x",
     "code": "1.x.x",
-    "docco": "0.7.0",
+    "docco": "0.7.x",
     "eslint-config-seneca": "1.x.x",
     "eslint-plugin-hapi": "2.x.x",
     "eslint-plugin-standard": "1.x.x",
