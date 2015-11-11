@@ -44,9 +44,9 @@ Let's do everything in one script to begin with. You'll define a
 simple Seneca plugin that returns the hex value of color words. In
 fact, all it can handle is the color red!
 
-You define the action pattern _color:red_, which aways returns the
+You define the action pattern _color:red_, which always returns the
 result <code>{hex:'#FF0000'}</code>. You're also using the name of the
-function _color_ to define the name of the plugin (see [How to write a
+function _color_  to define the name of the plugin (see [How to write a
 Seneca plugin](http://senecajs.org)).
 
 ```js
@@ -58,7 +58,7 @@ function color() {
 ```
 
 Now, let's create a server and client. The server Seneca instance will
-load the _color_ plugin and start a web server to listen for inbound
+load the _color_  plugin and start a web server to listen for inbound
 messages. The client Seneca instance will submit a _color:red_ message
 to the server.
 

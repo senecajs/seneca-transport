@@ -9,7 +9,7 @@ var color = function () {
 
 Seneca({
     default_plugins: {
-      transort: false
+      transport: false
     }
   })
   .use(Transport)

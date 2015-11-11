@@ -3,7 +3,7 @@ var Seneca = require('seneca')
 
 Seneca({
     default_plugins: {
-      transort: false
+      transport: false
     }
   })
   .use(Transport)
