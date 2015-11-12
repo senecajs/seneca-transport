@@ -37,7 +37,9 @@
     "README.md",
     "LICENSE.txt",
     "transport.js",
-    "lib/transport-utils.js"
+    "lib/transport-utils.js",
+    "lib/http.js",
+    "lib/tcp.js"
   ],
   "devDependencies": {
     "async": "1.5.x",
