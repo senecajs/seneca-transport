@@ -33,7 +33,9 @@ var internals = {
       host: '0.0.0.0',
       path: '/act',
       protocol: 'http',
-      timeout: 5555
+      timeout: 5555,
+      max_listen_attempts: 11,
+      attempt_delay: 222
     },
     tcp: {
       type: 'tcp',
