@@ -7,7 +7,7 @@ var Lab = require('lab')
 var Seneca = require('seneca')
 var Shared   = require('seneca-transport-test')
 var Wreck = require('wreck')
-
+var Transport = require('../')
 
 
 var lab = exports.lab = Lab.script()
@@ -21,7 +21,7 @@ process.setMaxListeners(999)
 
 function run_client( type, port, done, tag ) {
   Seneca({tag:tag,log:'silent',default_plugins:no_t,debug:{short_logs:true}})
-    .use('../transport')
+    .use(Transport)
     .client({type:type,port:port})
     .ready( function() {
 
@@ -42,7 +42,7 @@ function run_client( type, port, done, tag ) {
 }
 
 function get_seneca(tag) {
-  return Seneca({tag:tag, log:'silent', default_plugins: no_t, debug: {short_logs:true}}).use('../transport')
+  return Seneca({tag:tag, log:'silent', default_plugins: no_t, debug: {short_logs:true}}).use(Transport)
 }
 
 describe('transport', function() {
@@ -418,7 +418,7 @@ describe('transport', function() {
 
   it('testmem-topic-star', function(fin){
     Seneca({tag:'srv',timeout:5555,log:'silent',debug:{short_logs:true}})
-      .use('../transport')
+      .use(Transport)
       .use( './memtest-transport.js' )
       .add('foo:1',function(args,done){
         assert.equal('aaa/AAA',args.meta$.id)
@@ -434,7 +434,7 @@ describe('transport', function() {
         Seneca({tag:'cln',timeout:5555,log:'silent',
                 debug:{short_logs:true}})
 
-          .use('../transport')
+          .use(Transport)
           .use( './memtest-transport.js' )
 
           .client( {type:'memtest', pin:'foo:*'} )
@@ -460,7 +460,7 @@ describe('transport', function() {
 
   it('catchall-ordering', function(fin){
     Seneca({tag:'srv',timeout:5555,log:'silent',debug:{short_logs:true}})
-      .use('../transport')
+      .use(Transport)
       .use( './memtest-transport.js' )
 
       .add('foo:1',function(args,done){
@@ -482,7 +482,7 @@ describe('transport', function() {
           Seneca({tag:'cln0',timeout:5555,log:'silent',
                   debug:{short_logs:true}})
 
-            .use('../transport')
+            .use(Transport)
             .use( './memtest-transport.js' )
 
             .client( {type:'memtest', dest:'D1' } )
@@ -511,7 +511,7 @@ describe('transport', function() {
           Seneca({tag:'cln1',timeout:5555,log:'silent',
                   debug:{short_logs:true}})
 
-            .use('../transport')
+            .use(Transport)
             .use( './memtest-transport.js' )
 
             .client( {type:'memtest', dest:'D0', pin:'foo:*'} )
