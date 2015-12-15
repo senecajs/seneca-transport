@@ -856,6 +856,7 @@ $ node seneca-script.js --seneca.log=type:options
 
 ## Releases
 
+   * 0.9.0: Fixes from @technicallyjosh; proper glob matching with patrun 5.x
    * 0.7.1: fixed log levels
    * 0.7.0: all logs now debug level
    * 0.2.6: fixed error transmit bug https://github.com/senecajs/seneca/issues/63
