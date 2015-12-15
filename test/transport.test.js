@@ -22,7 +22,7 @@ process.setMaxListeners(999)
 function run_client( type, port, done, tag ) {
   Seneca({tag:tag,log:'silent',default_plugins:no_t,debug:{short_logs:true}})
     .use(Transport)
-    .client({type:type,port:port})
+    .client({ type: type, port: port })
     .ready( function() {
 
       this.act('c:1,d:A',function(err,out){
@@ -95,13 +95,27 @@ describe('transport', function() {
 
   it('sets correct tx$ properties', function (done) {
     Seneca({ log:'silent', default_plugins: no_t })
-      .use('../transport.js')
-      .add( 'c:1', function (args, done) {
-        done(null, { s: '1-' + args.d })
+      .use(Transport)
+      .add({ cmd: 'test' }, function (args, cb) {
+        var test = this.make$('test')
+        test.name = 'bar'
+        test.save$(function (err, result) {
+          cb(null, { result: result.toString(), tx: args.tx$ })
+        })
       })
       .listen({ type:'tcp', port: 20103 })
       .ready(function () {
-        done()
+        Seneca({ log:'silent', default_plugins: no_t })
+        .use(Transport)
+        .client({ type: 'tcp', port: 20103 })
+        .ready(function() {
+          this.act({ cmd: 'test' }, function (err, res) {
+            assert(!err)
+            assert(res.tx)
+            assert(res.result.indexOf('name:bar') !== -1)
+            done()
+          })
+        })
       })
   })
 
