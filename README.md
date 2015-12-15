@@ -416,7 +416,7 @@ plugins. Here's the list.
 
    * [redis-transport](https://github.com/senecajs/seneca-redis-transport): uses redis for a pub-sub message distribution model
    * [beanstalk-transport](https://github.com/senecajs/seneca-beanstalk-transport): uses beanstalkd for a message queue
-   * [loadbalance-transport](https://github.com/mmalecki/seneca-loadbalance-transport): a load-balancing transport over multiple Seneca servers
+   * [balance-client](https://github.com/rjrodger/seneca-balance-client): a load-balancing client transport over multiple Seneca listeners
 
 If you're written your own transport plugin (see below for
 instructions), and want to have it listed here, please submit a pull

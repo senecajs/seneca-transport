@@ -1,5 +1,4 @@
-/* Copyright (c) 2013-2015 Richard Rodger, MIT License */
-/* jshint node:true, asi:true, eqnull:true */
+/* Copyright (c) 2013-2015 Richard Rodger & other contributors, MIT License */
 'use strict'
 
 // Load modules
@@ -49,6 +48,7 @@ var internals = {
 
 module.exports = function (options) {
   var seneca = this
+
   var settings = seneca.util.deepextend(internals.defaults, options)
   var callmap = LruCache(settings.callmax)
   var transportUtil = new TransportUtil({
