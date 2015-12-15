@@ -25,7 +25,7 @@
     "gex": "0.2.x",
     "jsonic": "0.2.x",
     "lodash": "3.10.x",
-    "lru-cache": "2.7.x",
+    "lru-cache": "3.2.x",
     "ndjson": "1.4.x",
     "nid": "0.3.2",
     "patrun": "0.5.x",
