@@ -93,29 +93,34 @@ describe('transport', function() {
       })
   })
 
-  it('sets correct tx$ properties', function (done) {
-    Seneca({ log:'silent', default_plugins: no_t })
+  it('uses correct tx$ properties on entity actions for "transported" entities', function (done) {
+    Seneca({log: 'silent', default_plugins: no_t})
       .use(Transport)
-      .add({ cmd: 'test' }, function (args, cb) {
-        var test = this.make$('test')
-        test.name = 'bar'
-        test.save$(function (err, result) {
-          cb(null, { result: result.toString(), tx: args.tx$ })
-        })
-      })
-      .listen({ type:'tcp', port: 20103 })
-      .ready(function () {
-        Seneca({ log:'silent', default_plugins: no_t })
-        .use(Transport)
-        .client({ type: 'tcp', port: 20103 })
-        .ready(function() {
-          this.act({ cmd: 'test' }, function (err, res) {
-            assert(!err)
-            assert(res.tx)
-            assert(res.result.indexOf('name:bar') !== -1)
-            done()
+      .add({cmd: 'test'}, function (args, cb) {
+        args.entity.save$(function (err, entity) {
+          if (err) return cb(err)
+          this.act({cmd: 'test2'}, function (err, test2Result) {
+            if (err) return cb(err)
+            cb(null, {entity: entity, txBeforeEntityAction: args.tx$, txAfterEntityAction: test2Result.tx})
           })
         })
+      })
+      .add({cmd: 'test2'}, function (args, cb) {
+        cb(null, {tx: args.tx$})
+      })
+      .listen({type: 'tcp', port: 20103})
+      .ready(function () {
+        Seneca({log: 'silent', default_plugins: no_t})
+          .use(Transport)
+          .client({type: 'tcp', port: 20103})
+          .ready(function () {
+            this.act({cmd: 'test', entity: this.make$('test').data$({name: 'bar'})}, function (err, res) {
+              assert(!err)
+              assert(res.entity.name === 'bar')
+              assert(res.txBeforeEntityAction === res.txAfterEntityAction)
+              done()
+            })
+          })
       })
   })
 
