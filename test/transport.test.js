@@ -94,29 +94,70 @@ describe('transport', function() {
   })
 
   it('uses correct tx$ properties on entity actions for "transported" entities', function (done) {
-    Seneca({log: 'silent', default_plugins: no_t})
+    Seneca({ log: 'silent', default_plugins: no_t })
       .use(Transport)
-      .add({cmd: 'test'}, function (args, cb) {
+      .add({ cmd: 'test' }, function (args, cb) {
+        var self = this
+
         args.entity.save$(function (err, entity) {
-          if (err) return cb(err)
-          this.act({cmd: 'test2'}, function (err, test2Result) {
-            if (err) return cb(err)
-            cb(null, {entity: entity, txBeforeEntityAction: args.tx$, txAfterEntityAction: test2Result.tx})
+          if (err) {
+            return cb(err)
+          }
+
+          self.act({ cmd: 'test2' }, function (err, test2Result) {
+            if (err) {
+              return cb(err)
+            }
+
+            cb(null, { entity: entity, txBeforeEntityAction: args.tx$, txAfterEntityAction: test2Result.tx })
           })
         })
       })
-      .add({cmd: 'test2'}, function (args, cb) {
-        cb(null, {tx: args.tx$})
+      .add({ cmd: 'test2' }, function (args, cb) {
+        cb(null, { tx: args.tx$ })
       })
-      .listen({type: 'tcp', port: 20103})
+      .listen({ type: 'tcp', port: 20103 })
       .ready(function () {
-        Seneca({log: 'silent', default_plugins: no_t})
+        Seneca({ log: 'silent', default_plugins: no_t })
           .use(Transport)
-          .client({type: 'tcp', port: 20103})
+          .client({ type: 'tcp', port: 20103 })
           .ready(function () {
-            this.act({cmd: 'test', entity: this.make$('test').data$({name: 'bar'})}, function (err, res) {
+            var entity = this.make$('test').data$({ name: 'bar' })
+
+            this.act({ cmd: 'test', entity: entity }, function (err, res) {
               assert(!err)
               assert(res.entity.name === 'bar')
+              assert(res.txBeforeEntityAction === res.txAfterEntityAction)
+              done()
+            })
+          })
+      })
+  })
+
+
+  it('uses correct tx$ properties on entity actions for "non-transported" requests', function (done) {
+    Seneca({ log: 'silent', default_plugins: no_t })
+      .use(Transport)
+      .add({ cmd: 'test' }, function (args, cb) {
+        this.act({ cmd: 'test2' }, function (err, test2Result) {
+          if (err) {
+            return cb(err)
+          }
+
+          cb(null, { txBeforeEntityAction: args.tx$, txAfterEntityAction: test2Result.tx })
+        })
+      })
+      .add({ cmd: 'test2' }, function (args, cb) {
+        cb(null, { tx: args.tx$ })
+      })
+      .listen({ type: 'tcp', port: 20104 })
+      .ready(function () {
+        Seneca({ log: 'silent', default_plugins: no_t })
+          .use(Transport)
+          .client({ type: 'tcp', port: 20104 })
+          .ready(function () {
+            this.act({ cmd: 'test' }, function (err, res) {
+              assert(!err)
               assert(res.txBeforeEntityAction === res.txAfterEntityAction)
               done()
             })
