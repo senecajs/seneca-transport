@@ -97,14 +97,12 @@ describe('transport', function() {
     Seneca({log: 'silent', default_plugins: no_t})
     .use(Transport)
     .add({cmd: 'test'}, function (args, cb) {
-      var self = this
-
       args.entity.save$(function (err, entitySaveResponse) {
         if (err) {
           return cb(err)
         }
 
-        self.act({cmd: 'test2'}, function (err, test2Result) {
+        this.act({cmd: 'test2'}, function (err, test2Result) {
           if (err) {
             return cb(err)
           }
@@ -132,6 +130,7 @@ describe('transport', function() {
       .ready(function () {
         this.act({cmd: 'test', entity: this.make$('test').data$({name: 'bar'})}, function (err, res) {
           assert(!err)
+
           assert(res.entity.name === 'bar')
           assert(res.txBeforeEntityAction === res.txInsideEntityAction)
           assert(res.txBeforeEntityAction === res.txAfterEntityAction)
