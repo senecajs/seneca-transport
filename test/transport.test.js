@@ -94,44 +94,51 @@ describe('transport', function() {
   })
 
   it('uses correct tx$ properties on entity actions for "transported" entities', function (done) {
-    Seneca({ log: 'silent', default_plugins: no_t })
-      .use(Transport)
-      .add({ cmd: 'test' }, function (args, cb) {
-        var self = this
+    Seneca({log: 'silent', default_plugins: no_t})
+    .use(Transport)
+    .add({cmd: 'test'}, function (args, cb) {
+      var self = this
 
-        args.entity.save$(function (err, entity) {
+      args.entity.save$(function (err, entitySaveResponse) {
+        if (err) {
+          return cb(err)
+        }
+
+        self.act({cmd: 'test2'}, function (err, test2Result) {
           if (err) {
             return cb(err)
           }
 
-          self.act({ cmd: 'test2' }, function (err, test2Result) {
-            if (err) {
-              return cb(err)
-            }
-
-            cb(null, { entity: entity, txBeforeEntityAction: args.tx$, txAfterEntityAction: test2Result.tx })
+          cb(null, {
+            entity: entitySaveResponse.entity,
+            txBeforeEntityAction: args.tx$,
+            txInsideEntityAction: entitySaveResponse.tx,
+            txAfterEntityAction: test2Result.tx
           })
         })
       })
-      .add({ cmd: 'test2' }, function (args, cb) {
-        cb(null, { tx: args.tx$ })
-      })
-      .listen({ type: 'tcp', port: 20103 })
+    })
+    .add({role:'entity', cmd:'save'}, function (args, cb) {
+      cb(null, { entity: args.ent, tx: args.tx$ })
+    })
+    .add({cmd: 'test2'}, function (args, cb) {
+      cb(null, { tx: args.tx$ })
+    })
+    .listen({type: 'tcp', port: 20103})
+    .ready(function () {
+      Seneca({log: 'silent', default_plugins: no_t})
+      .use(Transport)
+      .client({type: 'tcp', port: 20103})
       .ready(function () {
-        Seneca({ log: 'silent', default_plugins: no_t })
-          .use(Transport)
-          .client({ type: 'tcp', port: 20103 })
-          .ready(function () {
-            var entity = this.make$('test').data$({ name: 'bar' })
-
-            this.act({ cmd: 'test', entity: entity }, function (err, res) {
-              assert(!err)
-              assert(res.entity.name === 'bar')
-              assert(res.txBeforeEntityAction === res.txAfterEntityAction)
-              done()
-            })
-          })
+        this.act({cmd: 'test', entity: this.make$('test').data$({name: 'bar'})}, function (err, res) {
+          assert(!err)
+          assert(res.entity.name === 'bar')
+          assert(res.txBeforeEntityAction === res.txInsideEntityAction)
+          assert(res.txBeforeEntityAction === res.txAfterEntityAction)
+          done()
+        })
       })
+    })
   })
 
 
