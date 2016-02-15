@@ -24,7 +24,7 @@
     "eraro": "0.4.x",
     "gex": "0.2.x",
     "jsonic": "0.2.x",
-    "lodash": "3.10.x",
+    "lodash": "4.0.1",
     "lru-cache": "3.2.x",
     "ndjson": "1.4.x",
     "nid": "0.3.2",
