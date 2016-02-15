@@ -82,6 +82,24 @@ module.exports = function (options) {
   }
 }
 
+module.exports.preload = function () {
+  var seneca = this
+
+  var meta = {
+    name: internals.plugin,
+    exportmap: {
+      utils: function () {
+        var transportUtil = seneca.export(internals.plugin).utils
+        if (transportUtil !== meta.exportmap.utils) {
+          transportUtil.apply(this, arguments)
+        }
+      }
+    }
+  }
+
+  return meta
+}
+
 internals.inflight = function (callmap) {
   return function (args, callback) {
     var inflight = {}

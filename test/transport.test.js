@@ -94,7 +94,7 @@ describe('transport', function() {
   })
 
   it('uses correct tx$ properties on entity actions for "transported" entities', function (done) {
-    Seneca({log: 'silent', default_plugins: no_t})
+    var seneca1 = Seneca({log: 'silent', default_plugins: no_t})
     .use(Transport)
     .add({cmd: 'test'}, function (args, cb) {
       args.entity.save$(function (err, entitySaveResponse) {
@@ -122,12 +122,13 @@ describe('transport', function() {
     .add({cmd: 'test2'}, function (args, cb) {
       cb(null, { tx: args.tx$ })
     })
-    .listen({type: 'tcp', port: 20103})
     .ready(function () {
-      Seneca({log: 'silent', default_plugins: no_t})
+      seneca1.listen({type: 'tcp', port: 20103})
+
+      var seneca2 = Seneca({log: 'silent', default_plugins: no_t})
       .use(Transport)
-      .client({type: 'tcp', port: 20103})
       .ready(function () {
+        seneca2.client({type: 'tcp', port: 20103})
         this.act({cmd: 'test', entity: this.make$('test').data$({name: 'bar'})}, function (err, res) {
           assert(!err)
 

@@ -47,7 +47,6 @@
     "code": "1.x.x",
     "docco": "0.7.x",
     "eslint-config-seneca": "1.x.x",
-    "eslint-plugin-hapi": "2.x.x",
     "eslint-plugin-standard": "1.x.x",
     "lab": "6.x.x",
     "seneca": "plugin",
