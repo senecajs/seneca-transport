@@ -96,34 +96,34 @@ describe('transport', function() {
   it('uses correct tx$ properties on entity actions for "transported" entities', function (done) {
     var seneca1 = Seneca({log: 'silent', default_plugins: no_t})
     .use(Transport)
-    .add({cmd: 'test'}, function (args, cb) {
-      args.entity.save$(function (err, entitySaveResponse) {
-        if (err) {
-          return cb(err)
-        }
-
-        this.act({cmd: 'test2'}, function (err, test2Result) {
+    .ready(function () {
+      seneca1.add({cmd: 'test'}, function (args, cb) {
+        args.entity.save$(function (err, entitySaveResponse) {
           if (err) {
             return cb(err)
           }
 
-          cb(null, {
-            entity: entitySaveResponse.entity,
-            txBeforeEntityAction: args.tx$,
-            txInsideEntityAction: entitySaveResponse.tx,
-            txAfterEntityAction: test2Result.tx
+          this.act({cmd: 'test2'}, function (err, test2Result) {
+            if (err) {
+              return cb(err)
+            }
+
+            cb(null, {
+              entity: entitySaveResponse.entity,
+              txBeforeEntityAction: args.tx$,
+              txInsideEntityAction: entitySaveResponse.tx,
+              txAfterEntityAction: test2Result.tx
+            })
           })
         })
       })
-    })
-    .add({role:'entity', cmd:'save'}, function (args, cb) {
-      cb(null, { entity: args.ent, tx: args.tx$ })
-    })
-    .add({cmd: 'test2'}, function (args, cb) {
-      cb(null, { tx: args.tx$ })
-    })
-    .ready(function () {
-      seneca1.listen({type: 'tcp', port: 20103})
+      .add({role:'entity', cmd:'save'}, function (args, cb) {
+        cb(null, { entity: args.ent, tx: args.tx$ })
+      })
+      .add({cmd: 'test2'}, function (args, cb) {
+        cb(null, { tx: args.tx$ })
+      })
+      .listen({type: 'tcp', port: 20103})
 
       var seneca2 = Seneca({log: 'silent', default_plugins: no_t})
       .use(Transport)
