@@ -2,19 +2,19 @@
 'use strict'
 
 
-var assert = require('assert')
+var Assert = require('assert')
 var Lab = require('lab')
 var Seneca = require('seneca')
-var Shared   = require('seneca-transport-test')
+var Shared = require('seneca-transport-test')
 var Wreck = require('wreck')
 var Transport = require('../')
 
-
+var assert = Assert
 var lab = exports.lab = Lab.script()
 var describe = lab.describe
 var it = lab.it
 
-var no_t = {transport:false}
+var no_t = {transport: false}
 
 process.setMaxListeners(999)
 
