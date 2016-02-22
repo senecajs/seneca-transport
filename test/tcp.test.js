@@ -87,6 +87,67 @@ describe('tcp', function () {
         done()
       })
     })
+
+    it('will retry listening a specified number of times', function (done) {
+      var seneca1 = Seneca({
+        log: 'silent',
+        default_plugins: {
+          transport: false
+        }
+      })
+
+      var seneca2 = Seneca({
+        log: 'silent',
+        default_plugins: {
+          transport: false
+        }
+      })
+
+      var settings1 = {
+        tcp: {
+          port: 0
+        }
+      }
+
+      var callmap = {}
+
+      var transportUtil1 = new TransportUtil({
+        callmap: callmap,
+        seneca: seneca1,
+        options: settings1
+      })
+
+      var tcp1 = Tcp.listen(settings1, transportUtil1)
+      expect(typeof tcp1).to.equal('function')
+
+      tcp1.call(seneca1, { type: 'tcp' }, function (err, address) {
+        expect(err).to.not.exist()
+
+        var settings2 = {
+          tcp: {
+            port: address.port,
+            max_listen_attempts: 10,
+            attempt_delay: 10
+          }
+        }
+        var transportUtil2 = new TransportUtil({
+          callmap: callmap,
+          seneca: seneca2,
+          options: settings2
+        })
+        var tcp2 = Tcp.listen(settings2, transportUtil2)
+        expect(typeof tcp2).to.equal('function')
+
+        setTimeout(function () {
+          seneca1.close()
+        }, 20)
+
+        tcp2.call(seneca2, { type: 'tcp' }, function (err, address) {
+          expect(err).to.not.exist()
+          done()
+        })
+      })
+    })
   })
 
   describe('client()', function () {
