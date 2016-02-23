@@ -240,6 +240,35 @@ describe('transport', function() {
     )
   })
 
+  it('web-add-headers', function( fin ) {
+    Seneca({log:'silent',errhandler:fin,default_plugins:no_t})
+      .use('../transport.js')
+      .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )
+      .listen({type:'web',port:20205})
+      .ready( function() {
+        var tag
+
+        Seneca({tag:tag, log:'silent',default_plugins:no_t,debug:{short_logs:true}})
+          .use(Transport, { web: {headers: {'client-id': 'test-client' }}})
+          .client({ type: 'web', port: 20205 })
+          .ready( function() {
+
+            this.act('c:1,d:A',function(err,out){
+              if(err) return fin(err);
+
+              assert.equal( '{"s":"1-A"}', JSON.stringify(out) )
+
+              this.act('c:1,d:AA',function(err,out){
+                if(err) return fin(err);
+
+                assert.equal( '{"s":"1-AA"}', JSON.stringify(out) )
+
+                this.close(fin)
+              })
+            })
+          })
+      })
+  })
 
   it('error-passing-http', function (fin) {
     Seneca({ log: 'silent', default_plugins: no_t })

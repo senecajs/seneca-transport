@@ -696,7 +696,7 @@ function hook_client_redis( args, clientdone ) {
       // this will be done for you
     })
   }
-}  
+}
 ```
 
 To implement the server, use the template:
@@ -820,6 +820,7 @@ The transport-level options vary by transport. Here are the default ones for HTT
    * _path_: URL path to submit messages; default: '/act'
    * _protocol_: HTTP protocol; default 'http'
    * _timeout_: timeout in milliseconds; default: 5555
+   * _headers_: extra headers to include in requests the transport makes; default {}
 
 And for TCP:
 
