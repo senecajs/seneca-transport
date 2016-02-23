@@ -1,3 +1,5 @@
+'use strict'
+
 require('seneca')()
 
   .add('foo:1,bar:A', function (args, done) {
@@ -17,21 +19,66 @@ require('seneca')()
   })
 
   .ready(function () {
-    this.act('foo:1,bar:A', function (err, out) {console.log(out)})
-    this.act('foo:2,bar:B', function (err, out) {console.log(out)})
-    this.act('foo:3,bar:C', function (err, out) {console.log(out)})
-    this.act('foo:4,bar:D', function (err, out) {console.log(out)})
-    this.act('foo:5,bar:E', function (err, out) {console.log(out)})
+    this.act('foo:1,bar:A', function (err, out) {
+      console.assert(!err)
+      console.log(out)
+    })
+    this.act('foo:2,bar:B', function (err, out) {
+      console.assert(!err)
+      console.log(out)
+    })
+    this.act('foo:3,bar:C', function (err, out) {
+      console.assert(!err)
+      console.log(out)
+    })
+    this.act('foo:4,bar:D', function (err, out) {
+      console.assert(!err)
+      console.log(out)
+    })
+    this.act('foo:5,bar:E', function (err, out) {
+      console.assert(!err)
+      console.log(out)
+    })
 
-    this.act('foo:1,bar:A', function (err, out) {console.log(out)})
-    this.act('foo:2,bar:B', function (err, out) {console.log(out)})
-    this.act('foo:3,bar:C', function (err, out) {console.log(out)})
-    this.act('foo:4,bar:D', function (err, out) {console.log(out)})
-    this.act('foo:5,bar:E', function (err, out) {console.log(out)})
+    this.act('foo:1,bar:A', function (err, out) {
+      console.assert(!err)
+      console.log(out)
+    })
+    this.act('foo:2,bar:B', function (err, out) {
+      console.assert(!err)
+      console.log(out)
+    })
+    this.act('foo:3,bar:C', function (err, out) {
+      console.assert(!err)
+      console.log(out)
+    })
+    this.act('foo:4,bar:D', function (err, out) {
+      console.assert(!err)
+      console.log(out)
+    })
+    this.act('foo:5,bar:E', function (err, out) {
+      console.assert(!err)
+      console.log(out)
+    })
 
-    this.act('foo:1,bar:A', function (err, out) {console.log(out)})
-    this.act('foo:2,bar:B', function (err, out) {console.log(out)})
-    this.act('foo:3,bar:C', function (err, out) {console.log(out)})
-    this.act('foo:4,bar:D', function (err, out) {console.log(out)})
-    this.act('foo:5,bar:E', function (err, out) {console.log(out)})
+    this.act('foo:1,bar:A', function (err, out) {
+      console.assert(!err)
+      console.log(out)
+    })
+    this.act('foo:2,bar:B', function (err, out) {
+      console.assert(!err)
+      console.log(out)
+    })
+    this.act('foo:3,bar:C', function (err, out) {
+      console.assert(!err)
+      console.log(out)
+    })
+    this.act('foo:4,bar:D', function (err, out) {
+      console.assert(!err)
+      console.log(out)
+    })
+    this.act('foo:5,bar:E', function (err, out) {
+      console.assert(!err)
+      console.log(out)
+    })
   })
