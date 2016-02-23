@@ -1,14 +1,15 @@
+'use strict'
 
-function color() {
-  this.add( 'color:red', function(args,done){
-    done(null, {hex:'#FF0000'});
+function color () {
+  this.add('color:red', function (args, done) {
+    done(null, {hex: '#FF0000'})
   })
 }
 
 
-var seneca = require('seneca')
-      
-seneca()
+var Seneca = require('seneca')
+
+Seneca()
   .use(color)
   .listen()
 

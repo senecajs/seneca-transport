@@ -1,10 +1,9 @@
 /* Copyright (c) 2014 Richard Rodger */
-"use strict";
+'use strict'
 
 
 // node fault.js
 
-var test = require('seneca-transport-test')
+var Test = require('seneca-transport-test')
 
-test.foo_fault( require, process.argv[2]||'tcp' )
-
+Test.foo_fault(require, process.argv[2] || 'tcp')

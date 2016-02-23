@@ -4,7 +4,8 @@
   "description": "Seneca transport",
   "main": "transport.js",
   "scripts": {
-    "test": "./node_modules/.bin/lab test/*.test.js -v -m 3000 -t 80 -L",
+    "lint": "lab -P test -L -d",
+    "test": "lab -P test -v -m 3000 -t 80 -L",
     "build": "./build.sh",
     "bench": "node bench",
     "annotate": "docco transport.js -o doc"
@@ -24,7 +25,7 @@
     "eraro": "0.4.x",
     "gex": "0.2.x",
     "jsonic": "0.2.x",
-    "lodash": "4.0.1",
+    "lodash": "4.5.1",
     "lru-cache": "3.2.x",
     "ndjson": "1.4.x",
     "nid": "0.3.2",
