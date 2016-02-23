@@ -4,7 +4,8 @@
   "description": "Seneca transport",
   "main": "transport.js",
   "scripts": {
-    "test": "./node_modules/.bin/lab test/*.test.js -v -m 3000 -t 80 -L",
+    "lint": "lab -P test -L -d",
+    "test": "lab -P test -v -m 3000 -t 80 -L",
     "build": "./build.sh",
     "bench": "node bench",
     "annotate": "docco transport.js -o doc"

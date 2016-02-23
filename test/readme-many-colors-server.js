@@ -4,9 +4,9 @@ var color = process.argv[2]
 var hexval = process.argv[3]
 var port = process.argv[4]
 
-var seneca = require('seneca')
+var Seneca = require('seneca')
 
-seneca()
+Seneca()
 
   .add('color:' + color, function (args, done) {
     done(null, {hex: '#' + hexval})

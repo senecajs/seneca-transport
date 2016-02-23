@@ -1,9 +1,9 @@
 'use strict'
 
-var seneca = require('seneca')
+var Seneca = require('seneca')
 
 
-seneca()
+Seneca()
 
   // send matching actions out over the network
   .client({ port: 8081, pin: 'color:red' })
@@ -16,7 +16,7 @@ seneca()
     var colors = {}
 
     args.names.forEach(function (name) {
-      seneca.act({color: name}, function (err, result){
+      seneca.act({color: name}, function (err, result) {
         if (err) {
           return done(err)
         }
@@ -27,12 +27,11 @@ seneca()
         }
       })
     })
-
   })
 
   .listen()
 
   // this is a sanity check
-  .act({list:'colors', names: ['blue','green','red']}, console.log)
+  .act({list: 'colors', names: ['blue', 'green', 'red']}, console.log)
 
 // node readme-many-colors-client.js --seneca.log=type:act,regex:CLIENT
