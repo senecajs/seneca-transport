@@ -1,8 +1,3 @@
 {
-  "extends": "seneca",
-  "rules": {
-      "arrow-body-style": 0,
-      "no-arrow-condition": 0,
-      "no-empty-pattern": 0
-    }
+  "extends": "seneca"
 }

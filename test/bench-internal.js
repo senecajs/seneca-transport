@@ -3,15 +3,15 @@
 
 
 var makeseneca = require('seneca')
-var aa = function(args,done){done(null,{aa:args.a})}
+var aa = function (args,done){done(null,{aa:args.a})}
 
 
 var fr = Math.floor
 function start_printer( ctxt ) {
   console.log( 'rate', 'allrate', 'total', 'realrate', 'memusedpc', 'memtotal' )
-  setInterval(function(){
+  setInterval(function (){
     ctxt.count++
-    ctxt.seneca.act('role:seneca,stats:true', function(err,out){
+    ctxt.seneca.act('role:seneca,stats:true', function (err,out){
       var stats = out.actmap['{a=1}']
       var mem   = process.memoryUsage()
       console.log( stats.time.rate, fr(stats.time.allrate), ctxt.total, fr(ctxt.total/ctxt.count), (fr(100 * mem.heapUsed / mem.heapTotal))/100, fr(mem.heapTotal/(1024*1024)) )
@@ -22,10 +22,10 @@ function start_printer( ctxt ) {
 
 var typemap = {}
 
-typemap.internal = function() {
+typemap.internal = function () {
   makeseneca({log:'silent',stats:{duration:1000,size:99998}})
     .add( 'a:1', aa )
-    .ready( function(){
+    .ready( function (){
       var ctxt = {
         count: 0,
         total: 0,
@@ -46,15 +46,15 @@ typemap.internal = function() {
 }
 
 
-typemap.tcp = function() {
+typemap.tcp = function () {
   makeseneca({log:'silent',stats:{duration:1000,size:99998}})
     .add( 'a:1', aa )
     .listen({type:'tcp'})
-    .ready( function(){
+    .ready( function (){
 
       makeseneca({log:'silent',stats:{duration:1000,size:99998}})
         .client({type:'tcp'})
-        .ready( function(){
+        .ready( function (){
           var ctxt = {
             count: 0,
             total: 0,
@@ -77,15 +77,15 @@ typemap.tcp = function() {
 
 
 
-typemap.web = function() {
+typemap.web = function () {
   makeseneca({log:'silent',stats:{duration:1000,size:99998}})
     .add( 'a:1', aa )
     .listen({type:'web'})
-    .ready( function(){
+    .ready( function (){
 
       makeseneca({log:'silent',stats:{duration:1000,size:99998}})
         .client({type:'web'})
-        .ready( function(){
+        .ready( function (){
           var ctxt = {
             count: 0,
             total: 0,
@@ -111,6 +111,3 @@ typemap.web = function() {
 
 
 typemap[process.argv[2]]()
-
-
-

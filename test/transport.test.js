@@ -19,21 +19,24 @@ var no_t = {transport: false}
 process.setMaxListeners(999)
 
 
-function run_client( type, port, done, tag ) {
-  Seneca({tag:tag,log:'silent',default_plugins:no_t,debug:{short_logs:true}})
+function run_client(type, port, done, tag) {
+  Seneca({ tag: tag, log: 'silent', default_plugins: no_t, debug: { short_logs: true } })
     .use(Transport)
     .client({ type: type, port: port })
-    .ready( function() {
+    .ready(function () {
+      this.act('c:1,d:A', function (err, out) {
+        if (err) {
+          return done(err)
+        }
 
-      this.act('c:1,d:A',function(err,out){
-        if(err) return fin(err);
+        assert.equal('{"s":"1-A"}', JSON.stringify(out))
 
-        assert.equal( '{"s":"1-A"}', JSON.stringify(out) )
+        this.act('c:1,d:AA', function (err, out) {
+          if (err) {
+            return done(err)
+          }
 
-        this.act('c:1,d:AA',function(err,out){
-          if(err) return fin(err);
-
-          assert.equal( '{"s":"1-AA"}', JSON.stringify(out) )
+          assert.equal('{"s":"1-AA"}', JSON.stringify(out))
 
           this.close(done)
         })
@@ -41,12 +44,11 @@ function run_client( type, port, done, tag ) {
     })
 }
 
-function get_seneca(tag) {
-  return Seneca({tag:tag, log:'silent', default_plugins: no_t, debug: {short_logs:true}}).use(Transport)
+function get_seneca (tag) {
+  return Seneca({ tag: tag, log: 'silent', default_plugins: no_t, debug: { short_logs: true } }).use(Transport)
 }
 
-describe('transport', function() {
-
+describe('transport', function () {
   Shared.basictest({
     seneca: get_seneca(),
     script: lab,
@@ -71,25 +73,27 @@ describe('transport', function() {
     type: 'web'
   })
 
-  it('tcp-basic', function( fin ) {
-    Seneca({tag:'srv',log:'silent',default_plugins:no_t,debug:{short_logs:true}})
+  it('tcp-basic', function (fin) {
+    Seneca({ tag: 'srv', log: 'silent', default_plugins: no_t, debug: { short_logs: true } })
       .use('../transport.js')
-      .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )
-      .listen({type:'tcp',port:20102})
-      .ready( function() {
+      .add('c:1', function (args, done) {
+        done(null, { s: '1-' + args.d })
+      })
+      .listen({ type: 'tcp', port: 20102 })
+      .ready(function () {
         var seneca = this
 
         var count = 0
-        function check() {
+        function check () {
           count++
-          if( 3 == count ) {
+          if (count === 3) {
             seneca.close(fin)
           }
         }
 
-        run_client( 'tcp', 20102, check, 'cln0' )
-        run_client( 'tcp', 20102, check, 'cln1' )
-        run_client( 'tcp', 20102, check, 'cln2' )
+        run_client('tcp', 20102, check, 'cln0')
+        run_client('tcp', 20102, check, 'cln1')
+        run_client('tcp', 20102, check, 'cln2')
       })
   })
 
@@ -173,12 +177,12 @@ describe('transport', function() {
   })
 
 
-  it('web-basic', function( fin ) {
+  it('web-basic', function ( fin ) {
     Seneca({log:'silent',errhandler:fin,default_plugins:no_t})
       .use('../transport.js')
-      .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )
+      .add( 'c:1', function (args,done){done(null,{s:'1-'+args.d})} )
       .listen({type:'web',port:20202})
-      .ready( function() {
+      .ready( function () {
 
         var count = 0
         function check() {
@@ -198,7 +202,7 @@ describe('transport', function() {
         Wreck.post(
           'http://localhost:20202/act',
           requestOptions,
-          function(err, res, body){
+          function (err, res, body){
             if( err ) return fin(err)
             assert.equal( '{"s":"1-A"}', JSON.stringify(body) )
             check()
@@ -207,15 +211,15 @@ describe('transport', function() {
   })
 
 
-  it('web-query', function( fin ) {
+  it('web-query', function ( fin ) {
     Seneca({log:'silent',errhandler:fin,default_plugins:no_t})
       .use('../transport.js')
-      .add( 'a:1', function(args,done){done(null,this.util.clean(args))} )
+      .add( 'a:1', function (args,done){done(null,this.util.clean(args))} )
       .listen({type:'web',port:20302})
       .ready(function () {
         Wreck.get(
           'http://localhost:20302/act?a=1&b=2', { json: true },
-          function(err, res, body) {
+          function (err, res, body) {
             if (err) {
               return fin(err)
             }
@@ -224,7 +228,7 @@ describe('transport', function() {
 
             Wreck.get(
               'http://localhost:20302/act?args$=a:1,b:2,c:{d:3}', { json: true },
-              function(err, res, body){
+              function (err, res, body){
                 if( err ) return fin(err)
                 assert.equal(1,body.a)
                 assert.equal(2,body.b)
@@ -240,25 +244,25 @@ describe('transport', function() {
     )
   })
 
-  it('web-add-headers', function( fin ) {
+  it('web-add-headers', function ( fin ) {
     Seneca({log:'silent',errhandler:fin,default_plugins:no_t})
       .use('../transport.js')
-      .add( 'c:1', function(args,done){done(null,{s:'1-'+args.d})} )
+      .add( 'c:1', function (args,done){done(null,{s:'1-'+args.d})} )
       .listen({type:'web',port:20205})
-      .ready( function() {
+      .ready( function () {
         var tag
 
         Seneca({tag:tag, log:'silent',default_plugins:no_t,debug:{short_logs:true}})
           .use(Transport, { web: {headers: {'client-id': 'test-client' }}})
           .client({ type: 'web', port: 20205 })
-          .ready( function() {
+          .ready( function () {
 
-            this.act('c:1,d:A',function(err,out){
+            this.act('c:1,d:A',function (err,out){
               if(err) return fin(err);
 
               assert.equal( '{"s":"1-A"}', JSON.stringify(out) )
 
-              this.act('c:1,d:AA',function(err,out){
+              this.act('c:1,d:AA',function (err,out){
                 if(err) return fin(err);
 
                 assert.equal( '{"s":"1-AA"}', JSON.stringify(out) )
@@ -288,11 +292,11 @@ describe('transport', function() {
   })
 
 
-  it('error-passing-tcp', function(fin){
+  it('error-passing-tcp', function (fin){
 
     Seneca({log:'silent',default_plugins:no_t})
       .use('../transport.js')
-      .add('a:1',function(args,done){
+      .add('a:1',function (args,done){
         done(new Error('bad-wire'))
       })
       .listen({type:'tcp',port:40404})
@@ -300,7 +304,7 @@ describe('transport', function() {
     Seneca({log:'silent',default_plugins:no_t})
       .use('../transport.js')
       .client({type:'tcp',port:40404})
-      .act('a:1',function(err,out){
+      .act('a:1',function (err,out){
         assert.equal('seneca: Action a:1 failed: bad-wire.',err.message)
         fin()
       })
@@ -308,11 +312,11 @@ describe('transport', function() {
 
 
   // NOTE: SENECA_LOG=all will break this test as it counts log entries
-  it('own-message', function(fin){
+  it('own-message', function (fin){
 
     // a -> b -> a
 
-    do_type('tcp',function(err){
+    do_type('tcp',function (err){
       if(err) return fin(err);
       do_type('http',fin)
     })
@@ -324,9 +328,9 @@ describe('transport', function() {
 
       var counters = {log_a:0,log_b:0,own:0,a:0,b:0,c:0}
 
-      var log_a = function(){counters.log_a++;}
-      var log_b = function(){counters.log_b++;}
-      var own_a = function(){counters.own++;}
+      var log_a = function (){counters.log_a++;}
+      var log_b = function (){counters.log_b++;}
+      var own_a = function (){counters.own++;}
 
 
       var a = Seneca({
@@ -358,26 +362,26 @@ describe('transport', function() {
             .client({type:type,port:40405})
 
 
-      a.ready(function(){
-        b.ready(function(){
-          a.act('a:1',function(err,out){
+      a.ready(function (){
+        b.ready(function (){
+          a.act('a:1',function (err,out){
             if(err) return fin(err);assert.equal(1,out.aa)})
 
-          a.act('b:1',function(err,out){
+          a.act('b:1',function (err,out){
             if(err) return fin(err);assert.equal(1,out.bb)})
 
-          a.act('c:1',function(err,out){
+          a.act('c:1',function (err,out){
             if(!err) assert.fail()
             assert.ok(err.timeout)
           })
         })})
 
 
-      setTimeout(function(){
-        a.close(function(err){
+      setTimeout(function (){
+        a.close(function (err){
           if(err) return fin(err);
 
-        ;b.close(function(err){
+        ;b.close(function (err){
           if(err) return fin(err);
 
         ;try {
@@ -399,11 +403,11 @@ describe('transport', function() {
 
 
   // NOTE: SENECA_LOG=all will break this test as it counts log entries
-  it('message-loop', function(fin){
+  it('message-loop', function (fin){
 
     // a -> b -> c -> a
 
-    do_type('tcp',function(err){
+    do_type('tcp',function (err){
       if(err) return fin(err);
       do_type('http',fin)
     })
@@ -416,10 +420,10 @@ describe('transport', function() {
 
       var counters = {log_a:0,log_b:0,log_c:0,loop:0,a:0,b:0,c:0,d:0}
 
-      var log_a = function(){counters.log_a++;}
-      var log_b = function(){counters.log_b++;}
-      var log_c = function(){counters.log_c++;}
-      var loop_a = function(){counters.loop++;}
+      var log_a = function (){counters.log_a++;}
+      var log_b = function (){counters.log_b++;}
+      var log_c = function (){counters.log_c++;}
+      var loop_a = function (){counters.loop++;}
 
 
       var a = Seneca({
@@ -463,33 +467,33 @@ describe('transport', function() {
             .client({type:type,port:40405})
 
 
-      a.ready(function(){
-        b.ready(function(){
-          c.ready(function(){
-            a.act('a:1',function(err,out){
+      a.ready(function (){
+        b.ready(function (){
+          c.ready(function (){
+            a.act('a:1',function (err,out){
               if(err) return fin(err);assert.equal(1,out.aa)})
 
-            a.act('b:1',function(err,out){
+            a.act('b:1',function (err,out){
               if(err) return fin(err);assert.equal(1,out.bb)})
 
-            a.act('c:1',function(err,out){
+            a.act('c:1',function (err,out){
               if(err) return fin(err);assert.equal(1,out.cc)})
 
-            a.act('d:1',function(err){
+            a.act('d:1',function (err){
               if(!err) assert.fail()
               assert.ok(err.timeout)
             })
           })})})
 
 
-      setTimeout(function(){
-        a.close(function(err){
+      setTimeout(function (){
+        a.close(function (err){
           if(err) return fin(err);
 
-        ;b.close(function(err){
+        ;b.close(function (err){
           if(err) return fin(err);
 
-        ;c.close(function(err){
+        ;c.close(function (err){
           if(err) return fin(err);
 
         ;try {
@@ -512,20 +516,20 @@ describe('transport', function() {
   })
 
 
-  it('testmem-topic-star', function(fin){
+  it('testmem-topic-star', function (fin){
     Seneca({tag:'srv',timeout:5555,log:'silent',debug:{short_logs:true}})
       .use(Transport)
       .use( './memtest-transport.js' )
-      .add('foo:1',function(args,done){
+      .add('foo:1',function (args,done){
         assert.equal('aaa/AAA',args.meta$.id)
         done(null,{bar:1})
       })
-      .add('foo:2',function(args,done){
+      .add('foo:2',function (args,done){
         assert.equal('bbb/BBB',args.meta$.id)
         done(null,{bar:2})
       })
       .listen( {type:'memtest',pin:'foo:*'} )
-      .ready(function(){
+      .ready(function (){
 
         Seneca({tag:'cln',timeout:5555,log:'silent',
                 debug:{short_logs:true}})
@@ -538,13 +542,13 @@ describe('transport', function() {
           .start(fin)
 
           .wait('foo:1,id$:aaa/AAA')
-          .step(function(out){
+          .step(function (out){
             assert.equal(1,out.bar)
             return true;
           })
 
           .wait('foo:2,id$:bbb/BBB')
-          .step(function(out){
+          .step(function (out){
             assert.equal(2,out.bar)
             return true;
           })
@@ -554,23 +558,23 @@ describe('transport', function() {
   })
 
 
-  it('catchall-ordering', function(fin){
+  it('catchall-ordering', function (fin){
     Seneca({tag:'srv',timeout:5555,log:'silent',debug:{short_logs:true}})
       .use(Transport)
       .use( './memtest-transport.js' )
 
-      .add('foo:1',function(args,done){
+      .add('foo:1',function (args,done){
         done(null,{FOO:1})
       })
 
-      .add('bar:1',function(args,done){
+      .add('bar:1',function (args,done){
         done(null,{BAR:1})
       })
 
       .listen( {type:'memtest', dest:'D0', pin:'foo:*'} )
       .listen( {type:'memtest', dest:'D1'} )
 
-      .ready(function(){
+      .ready(function (){
 
         do_catchall_first()
 
@@ -587,13 +591,13 @@ describe('transport', function() {
             .start(fin)
 
             .wait('foo:1')
-            .step(function(out){
+            .step(function (out){
               assert.equal(1,out.FOO)
               return true;
             })
 
             .wait('bar:1')
-            .step(function(out){
+            .step(function (out){
               assert.equal(1,out.BAR)
               return true;
             })
@@ -616,13 +620,13 @@ describe('transport', function() {
             .start(fin)
 
             .wait('foo:1')
-            .step(function(out){
+            .step(function (out){
               assert.equal(1,out.FOO)
               return true;
             })
 
             .wait('bar:1')
-            .step(function(out){
+            .step(function (out){
               assert.equal(1,out.BAR)
               return true;
             })

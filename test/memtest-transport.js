@@ -9,7 +9,7 @@ var async = require('async')
 var queuemap = {}
 
 
-module.exports = function( options ) {
+module.exports = function ( options ) {
   var seneca = this
   var plugin = 'memtest-transport'
 
@@ -40,14 +40,14 @@ module.exports = function( options ) {
     queuemap[dest] = queuemap[dest] || {}
 
     var topics = tu.listen_topics( seneca, args, listen_options )
-    
-    topics.forEach( function(topic) {
-      seneca.log.debug('listen', 'subscribe', topic+'_act', 
+
+    topics.forEach( function (topic) {
+      seneca.log.debug('listen', 'subscribe', topic+'_act',
                        listen_options, seneca)
 
-      queuemap[dest][topic+'_act'] = async.queue(function(data,done){
+      queuemap[dest][topic+'_act'] = async.queue(function (data,done){
 
-        tu.handle_request( seneca, data, listen_options, function(out) {
+        tu.handle_request( seneca, data, listen_options, function (out) {
           if( null == out ) return done();
 
           queuemap[dest][topic+'_res'].push(out)
@@ -56,7 +56,7 @@ module.exports = function( options ) {
       })
     })
 
-    tu.close( seneca, function( done ) {
+    tu.close( seneca, function ( done ) {
       done()
     })
 
@@ -79,22 +79,20 @@ module.exports = function( options ) {
     function make_send( spec, topic, send_done ) {
       seneca.log.debug('client', 'subscribe', topic+'_res', client_options, seneca)
 
-      queuemap[dest][topic+'_res'] = async.queue(function(data,done){
+      queuemap[dest][topic+'_res'] = async.queue(function (data,done){
         tu.handle_response( seneca, data, client_options )
         return done();
       })
 
-      send_done( null, function( args, done ) {
+      send_done( null, function ( args, done ) {
         var outmsg = tu.prepare_request( seneca, args, done )
 
         queuemap[dest][topic+'_act'].push(outmsg)
       })
     }
 
-    tu.close( seneca, function( done ) {
+    tu.close( seneca, function ( done ) {
       done()
     })
   }
 }
-
-
