@@ -46,7 +46,7 @@ var internals = {
   plugin: 'transport'
 }
 
-module.exports = function (options) {
+module.exports = function transport (options) {
   var seneca = this
 
   var settings = seneca.util.deepextend(internals.defaults, options)
