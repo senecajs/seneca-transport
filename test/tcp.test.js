@@ -51,7 +51,7 @@ describe('tcp', function () {
       })
     })
 
-    it('can listen on unix path', function (done) {
+    it('can listen on unix path', {skip: /win/.test(process.platform)}, function (done) {
       var sock = '/tmp/seneca.sock'
       // Remove existing sock file
       if (Fs.existsSync(sock)) {
