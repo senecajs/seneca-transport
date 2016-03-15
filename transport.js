@@ -34,7 +34,8 @@ var internals = {
       protocol: 'http',
       timeout: 5555,
       max_listen_attempts: 11,
-      attempt_delay: 222
+      attempt_delay: 222,
+      serverOptions : {}
     },
     tcp: {
       type: 'tcp',
