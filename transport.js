@@ -1,4 +1,5 @@
 /* Copyright (c) 2013-2015 Richard Rodger & other contributors, MIT License */
+/* jshint node:true, asi:true, eqnull:true */
 'use strict'
 
 // Load modules

@@ -1,5 +1,7 @@
+/* jshint node:true, asi:true, eqnull:true */
 'use strict'
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+var Seneca = require('seneca')
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
 function color () {
   this.add('color:red', function (args, done) {
@@ -7,9 +9,6 @@ function color () {
     done(null, {hex: '#FF0000'})
   })
 }
-
-
-var Seneca = require('seneca')
 
 Seneca()
   .use('../transport')
@@ -19,13 +18,12 @@ Seneca()
     port: 8000,
     host: '127.0.0.1',
     protocol: 'https',
-    serverOptions : {
-      keyPemPath : './ssl/key.pem',
-      certPemPath : './ssl/cert.pem'
+    serverOptions: {
+      keyPemPath: './ssl/key.pem',
+      certPemPath: './ssl/cert.pem'
     }
   })
-  .ready(function(){
-
+  .ready(function () {
     Seneca()
       .use('../transport')
       .client({
@@ -34,12 +32,11 @@ Seneca()
         host: '127.0.0.1',
         protocol: 'https'
       })
-      .act('color:red', function(error, res){
-        console.log('Result from service: ', res);
+      .act('color:red', function (error, res) {
+        if (error) {
+          console.log(error)
+        }
+        console.log('Result from service: ', res)
       })
-
   })
-
-
-
 // node readme-color.js --seneca.log=type:act,regex:color:red

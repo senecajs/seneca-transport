@@ -1,4 +1,5 @@
 /* Copyright (c) 2013-2015 Richard Rodger */
+/* jshint node:true, asi:true, eqnull:true */
 'use strict'
 
 var Code = require('code')
@@ -92,7 +93,7 @@ describe('http', function () {
 
   describe('http (running on https protocol)', function () {
     it('Creates a seneca server running on port 8000 https and expects hex to be equal to #FF0000', function (done) {
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
       function color () {
         this.add('color:red', function (args, done) {
           done(null, {hex: '#FF0000'})
@@ -100,7 +101,7 @@ describe('http', function () {
       }
 
       Seneca({
-        log: 'silent',
+        log: 'silent'
       })
         .use('../transport')
         .use(color)
@@ -109,15 +110,14 @@ describe('http', function () {
           port: 8000,
           host: '127.0.0.1',
           protocol: 'https',
-          serverOptions : {
-            keyPemPath : './ssl/key.pem',
-            certPemPath : './ssl/cert.pem'
+          serverOptions: {
+            keyPemPath: './ssl/key.pem',
+            certPemPath: './ssl/cert.pem'
           }
         })
-        .ready(function(){
-
+        .ready(function () {
           Seneca({
-            log: 'silent',
+            log: 'silent'
           })
             .use('../transport')
             .client({
@@ -126,8 +126,11 @@ describe('http', function () {
               host: '127.0.0.1',
               protocol: 'https'
             })
-            .act('color:red', function(error, res){
-              expect(res.hex).to.be.equal('#FF0000');
+            .act('color:red', function (error, res) {
+              if (error) {
+                console.log(error)
+              }
+              expect(res.hex).to.be.equal('#FF0000')
               done()
             })
         })
@@ -136,28 +139,17 @@ describe('http', function () {
 
   describe('http (running on https protocol)', function () {
     it('Creates a seneca server running on port 8000 https and expects hex to be equal to #FF0000 (wreck client)', function (done) {
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
-      var StringDecoder = require('string_decoder').StringDecoder;
-      var decoder = new StringDecoder('utf8');
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+      var StringDecoder = require('string_decoder').StringDecoder
+      var Decoder = new StringDecoder('utf8')
       Wreck.request('get', 'https://127.0.0.1:8000/act?color=red', { rejectUnauthorized: false }, (err, res) => {
-
-         res.on('data', function(d) {
-           var data = decoder.write(d);
-           // console.log('data', data);
-           expect(data).to.be.equal('{"hex":"#FF0000"}');
-
-           done();
-         });
-
-          expect(err).to.not.exist();
-
-      });
-
-
+        res.on('data', function (d) {
+          var data = Decoder.write(d)
+          expect(data).to.be.equal('{"hex":"#FF0000"}')
+          done()
+        })
+        expect(err).to.not.exist()
+      })
     })
   })
-
-
-
 })
