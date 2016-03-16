@@ -6,7 +6,7 @@ var Lab = require('lab')
 var Seneca = require('seneca')
 var Http = require('../lib/http')
 var TransportUtil = require('../lib/transport-utils')
-
+var Wreck = require('wreck')
 
 // Test shortcuts
 
@@ -89,4 +89,75 @@ describe('http', function () {
       })
     })
   })
+
+  describe('http (running on https protocol)', function () {
+    it('Creates a seneca server running on port 8000 https and expects hex to be equal to #FF0000', function (done) {
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+      function color () {
+        this.add('color:red', function (args, done) {
+          done(null, {hex: '#FF0000'})
+        })
+      }
+
+      Seneca({
+        log: 'silent',
+      })
+        .use('../transport')
+        .use(color)
+        .listen({
+          type: 'web',
+          port: 8000,
+          host: '127.0.0.1',
+          protocol: 'https',
+          serverOptions : {
+            keyPemPath : './ssl/key.pem',
+            certPemPath : './ssl/cert.pem'
+          }
+        })
+        .ready(function(){
+
+          Seneca({
+            log: 'silent',
+          })
+            .use('../transport')
+            .client({
+              type: 'http',
+              port: 8000,
+              host: '127.0.0.1',
+              protocol: 'https'
+            })
+            .act('color:red', function(error, res){
+              expect(res.hex).to.be.equal('#FF0000');
+              done()
+            })
+        })
+    })
+  })
+
+  describe('http (running on https protocol)', function () {
+    it('Creates a seneca server running on port 8000 https and expects hex to be equal to #FF0000 (wreck client)', function (done) {
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+      var StringDecoder = require('string_decoder').StringDecoder;
+      var decoder = new StringDecoder('utf8');
+      Wreck.request('get', 'https://127.0.0.1:8000/act?color=red', { rejectUnauthorized: false }, (err, res) => {
+
+         res.on('data', function(d) {
+           var data = decoder.write(d);
+           // console.log('data', data);
+           expect(data).to.be.equal('{"hex":"#FF0000"}');
+
+           done();
+         });
+
+          expect(err).to.not.exist();
+
+      });
+
+
+    })
+  })
+
+
+
 })
