@@ -35,7 +35,7 @@ var internals = {
       timeout: 5555,
       max_listen_attempts: 11,
       attempt_delay: 222,
-      serverOptions : {}
+      serverOptions: {}
     },
     tcp: {
       type: 'tcp',
