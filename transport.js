@@ -1,4 +1,5 @@
 /* Copyright (c) 2013-2015 Richard Rodger & other contributors, MIT License */
+/* jshint node:true, asi:true, eqnull:true */
 'use strict'
 
 // Load modules
@@ -34,7 +35,8 @@ var internals = {
       protocol: 'http',
       timeout: 5555,
       max_listen_attempts: 11,
-      attempt_delay: 222
+      attempt_delay: 222,
+      serverOptions: {}
     },
     tcp: {
       type: 'tcp',

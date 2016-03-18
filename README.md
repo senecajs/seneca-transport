@@ -5,7 +5,7 @@
 [![Build Status][travis-badge]][travis-url]
 [![Gitter][gitter-badge]][gitter-url]
 
-This plugin provides the HTTP and TCP transport channels for
+This plugin provides the HTTP/HTTPS and TCP transport channels for
 micro-service messages. It's a built-in dependency of the Seneca
 module, so you don't need to include it manually. You use this plugin
 to wire up your micro-services so that they can talk to each other.
@@ -72,6 +72,38 @@ seneca()
 
 seneca()
   .client()
+  .act('color:red')
+```
+
+Example with HTTPS
+
+To enable HTTPS make sure to set the protocol option to 'https' and in the listen function set the serverOptions object with the keyPemPath and the certPemPath keys with string paths leading to the SSL's pem key & certificate files
+
+```js
+var seneca = require('seneca')
+var Fs = require('fs')
+
+
+seneca()
+  .use(color)
+  .listen(
+    type: 'http',
+    port: '8000',
+    host: 'localhost',
+    protocol: 'https',
+    serverOptions : {
+      key : Fs.readFileSync('path/to/key.pem', 'utf8'),
+      cert : Fs.readFileSync('path/to/cert.pem', 'utf8')
+    }
+  )
+
+seneca()
+  .client({
+    type: 'http',
+    port: '8000',
+    host: 'localhost',
+    protocol: 'https'
+  })
   .act('color:red')
 ```
 
