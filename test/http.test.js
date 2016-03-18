@@ -142,7 +142,7 @@ describe('http', function () {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
       var StringDecoder = require('string_decoder').StringDecoder
       var Decoder = new StringDecoder('utf8')
-      Wreck.request('get', 'https://127.0.0.1:8000/act?color=red', { rejectUnauthorized: false }, (err, res) => {
+      Wreck.request('get', 'https://127.0.0.1:8000/act?color=red', { rejectUnauthorized: false }, function (err, res) {
         res.on('data', function (d) {
           var data = Decoder.write(d)
           expect(data).to.be.equal('{"hex":"#FF0000"}')
