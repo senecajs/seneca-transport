@@ -11,8 +11,6 @@ pids
 logs
 results
 
-test/ssl
-
 npm-debug.log
 
 node_modules

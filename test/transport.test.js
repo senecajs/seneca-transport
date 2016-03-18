@@ -177,11 +177,11 @@ describe('transport', function () {
   })
 
 
-  it('web-basic', function (fin) {
-    Seneca({log: 'silent', errhandler: fin, default_plugins: no_t})
+  it('web-basic', function (done) {
+    Seneca({log: 'silent', errhandler: done, default_plugins: no_t})
       .use('../transport.js')
-      .add('c:1', function (args, done) {
-        done(null, {s: '1-' + args.d})
+      .add('c:1', function (args, cb) {
+        cb(null, {s: '1-' + args.d})
       })
       .listen({type: 'web', port: 20202})
       .ready(function () {
@@ -189,7 +189,7 @@ describe('transport', function () {
         function check () {
           count++
           if (count === 4) {
-            fin()
+            done()
           }
         }
 
@@ -207,7 +207,7 @@ describe('transport', function () {
           requestOptions,
           function (err, res, body) {
             if (err) {
-              return fin(err)
+              return done(err)
             }
             assert.equal('{"s":"1-A"}', JSON.stringify(body))
             check()

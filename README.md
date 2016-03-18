@@ -77,7 +77,8 @@ seneca()
 
 Example with HTTPS
 
-To enable HTTPS make sure to set the protocol option to 'https' and in the listen function set the serverOptions object with the keyPemPath and the certPemPath keys with string paths leading to the SSL's pem key & certificate files
+To enable HTTPS make sure to set the protocol option to 'https' and in the
+listen function set the serverOptions object with the `key` and `cert` keys.
 
 ```js
 var seneca = require('seneca')
