@@ -1,6 +1,7 @@
 /* jshint node:true, asi:true, eqnull:true */
 'use strict'
 var Seneca = require('seneca')
+var Fs = require('fs')
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
 function color () {
@@ -19,8 +20,8 @@ Seneca()
     host: '127.0.0.1',
     protocol: 'https',
     serverOptions: {
-      keyPemPath: './ssl/key.pem',
-      certPemPath: './ssl/cert.pem'
+      key: Fs.readFileSync('ssl/key.pem', 'utf8'),
+      cert: Fs.readFileSync('ssl/cert.pem', 'utf8')
     }
   })
   .ready(function () {

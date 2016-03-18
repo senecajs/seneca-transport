@@ -81,6 +81,8 @@ To enable HTTPS make sure to set the protocol option to 'https' and in the liste
 
 ```js
 var seneca = require('seneca')
+var Fs = require('fs')
+
 
 seneca()
   .use(color)
@@ -90,8 +92,8 @@ seneca()
     host: 'localhost',
     protocol: 'https',
     serverOptions : {
-      keyPemPath : './key.pem',
-      certPemPath : './certificate.pem'
+      key : Fs.readFileSync('path/to/key.pem', 'utf8'),
+      cert : Fs.readFileSync('path/to/cert.pem', 'utf8')
     }
   )
 
