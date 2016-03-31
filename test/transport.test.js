@@ -3,6 +3,8 @@
 
 
 var Assert = require('assert')
+var Code = require('code')
+var Entity = require('seneca-entity')
 var Lab = require('lab')
 var Seneca = require('seneca')
 var Shared = require('seneca-transport-test')
@@ -13,6 +15,7 @@ var assert = Assert
 var lab = exports.lab = Lab.script()
 var describe = lab.describe
 var it = lab.it
+var expect = Code.expect
 
 var no_t = {transport: false}
 
@@ -45,7 +48,7 @@ function run_client (type, port, done, tag) {
 }
 
 function get_seneca (tag) {
-  return Seneca({ tag: tag, log: 'silent', default_plugins: no_t, debug: { short_logs: true } }).use(Transport)
+  return Seneca({ tag: tag, log: 'silent', default_plugins: no_t, debug: { short_logs: true } }).use(Transport).use(Entity)
 }
 
 describe('transport', function () {
@@ -100,6 +103,7 @@ describe('transport', function () {
   it('uses correct tx$ properties on entity actions for "transported" entities', function (done) {
     var seneca1 = Seneca({log: 'silent', default_plugins: no_t})
     .use(Transport)
+    .use(Entity)
     .ready(function () {
       seneca1.add({cmd: 'test'}, function (args, cb) {
         args.entity.save$(function (err, entitySaveResponse) {
@@ -131,6 +135,7 @@ describe('transport', function () {
 
       var seneca2 = Seneca({log: 'silent', default_plugins: no_t})
       .use(Transport)
+      .use(Entity)
       .ready(function () {
         seneca2.client({type: 'tcp', port: 20103})
         this.act({cmd: 'test', entity: this.make$('test').data$({name: 'bar'})}, function (err, res) {
@@ -144,7 +149,6 @@ describe('transport', function () {
       })
     })
   })
-
 
   it('uses correct tx$ properties on entity actions for "non-transported" requests', function (done) {
     Seneca({ log: 'silent', default_plugins: no_t })
@@ -324,7 +328,7 @@ describe('transport', function () {
 
 
   // NOTE: SENECA_LOG=all will break this test as it counts log entries
-  it('own-message', function (fin) {
+  it('own-message', { timeout: 3000 }, function (fin) {
     // a -> b -> a
 
     do_type('tcp', function (err) {
