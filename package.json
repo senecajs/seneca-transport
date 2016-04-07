@@ -27,7 +27,6 @@
     "jsonic": "0.2.x",
     "lodash": "4.5.1",
     "lru-cache": "3.2.x",
-    "ndjson": "1.4.x",
     "nid": "0.3.2",
     "patrun": "0.5.x",
     "qs": "5.2.0",
@@ -50,7 +49,8 @@
     "eslint-config-seneca": "1.x.x",
     "eslint-plugin-standard": "1.x.x",
     "lab": "6.x.x",
-    "seneca": "plugin",
-    "seneca-transport-test": "0.2.x"
+    "seneca": "git@github.com:senecajs/seneca.git",
+    "seneca-transport-test": "0.2.x",
+    "seneca-entity": "0.x.x"
   }
 }

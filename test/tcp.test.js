@@ -6,6 +6,7 @@ var Code = require('code')
 var Lab = require('lab')
 var Seneca = require('seneca')
 var Tcp = require('../lib/tcp')
+var Transport = require('../transport')
 var TransportUtil = require('../lib/transport-utils')
 
 
@@ -188,5 +189,241 @@ describe('tcp', function () {
         })
       })
     })
+  })
+
+  it('own-message tcp', { timeout: 3000, parallel: false }, function (done) {
+    var type = 'tcp'
+
+    var counters = { log_a: 0, log_b: 0, own: 0, a: 0, b: 0, c: 0 }
+
+    // a -> b -> a
+    function a (args, cb) {
+      counters.a++
+      cb(null, {aa: args.a})
+    }
+    function b (args, cb) {
+      counters.b++
+      cb(null, {bb: args.b})
+    }
+
+    var log_a = function () {
+      counters.log_a++
+    }
+    var log_b = function () {
+      counters.log_b++
+    }
+    var own_a = function () {
+      counters.own++
+    }
+
+    var instanceA = Seneca({
+      log: {map: [
+        {level: 'debug', regex: /\{a:1\}/, handler: log_a},
+        {level: 'warn', regex: /own_message/, handler: own_a}
+      ]},
+      timeout: 111,
+      default_plugins: { transport: false }
+    })
+
+    var instanceB = Seneca({
+      log: {map: [
+        {level: 'debug', regex: /\{b:1\}/, handler: log_b}
+      ]},
+      timeout: 111,
+      default_plugins: { transport: false }
+    })
+
+    instanceA.use(Transport, {
+      check: {message_loop: false},
+      warn: {own_message: true}
+    })
+    .add('a:1', a)
+
+    instanceB.use(Transport)
+    .add('b:1', b)
+
+    instanceA.ready(function () {
+      instanceB.ready(function () {
+        instanceB.listen({type: type, host: '127.0.0.1', port: 0}, function (err, addressB) {
+          expect(err).to.not.exist()
+
+          instanceA.client({type: type, host: '127.0.0.1', port: addressB.port})
+
+          instanceA.act('a:1', function (err, out) {
+            expect(err).to.not.exist()
+            expect(out.aa).to.equal(1)
+            actB()
+          })
+
+          function actB () {
+            instanceA.act('b:1', function (err, out) {
+              expect(err).to.not.exist()
+              expect(out.bb).to.equal(1)
+              actC()
+            })
+          }
+
+          function actC () {
+            instanceA.act('c:1', function (err, out) {
+              expect(err).to.exist()
+              expect(err.code).to.equal('act_not_found')
+              finish()
+            })
+          }
+
+          function finish () {
+            expect(err).to.not.exist()
+            expect(counters.a).to.equal(1)
+            expect(counters.b).to.equal(1)
+            expect(counters.log_a).to.equal(1)
+            expect(counters.log_b).to.equal(1)
+
+            done()
+          }
+        })
+      })
+    })
+  })
+
+  it('message-loop tcp', { timeout: 3000, parallel: false }, function (done) {
+    // a -> b -> c -> a
+    var type = 'tcp'
+
+    function a (args, cb) {
+      counters.a++
+      cb(null, {aa: args.a})
+    }
+    function b (args, cb) {
+      counters.b++
+      cb(null, {bb: args.b})
+    }
+    function c (args, cb) {
+      counters.c++
+      cb(null, {cc: args.c})
+    }
+
+    var counters = {log_a: 0, log_b: 0, log_c: 0, loop: 0, a: 0, b: 0, c: 0, d: 0}
+
+    var log_a = function () {
+      counters.log_a++
+    }
+    var log_b = function () {
+      counters.log_b++
+    }
+    var log_c = function () {
+      counters.log_c++
+    }
+    var loop_a = function () {
+      counters.loop++
+    }
+
+    var instanceA = Seneca({
+      log: {map: [
+        {level: 'debug', regex: /\{a:1\}/, handler: log_a},
+        {level: 'warn', regex: /message_loop/, handler: loop_a}
+      ]},
+      timeout: 111,
+      default_plugins: { transport: false }
+    })
+    .use(Transport, {
+      check: {own_message: false},
+      warn: {message_loop: true}
+    })
+    .add('a:1', a)
+
+    var instanceB = Seneca({
+      log: {map: [
+        {level: 'debug', regex: /\{b:1\}/, handler: log_b}
+      ]},
+      timeout: 111,
+      default_plugins: { transport: false }
+    })
+    .use(Transport)
+    .add('b:1', b)
+
+    var instanceC = Seneca({
+      log: {map: [
+        {level: 'debug', regex: /\{c:1\}/, handler: log_c}
+      ]},
+      timeout: 111,
+      default_plugins: { transport: false }
+    })
+    .use(Transport)
+    .add('c:1', c)
+
+    instanceA.listen({type: type, port: 0}, function (err, addressA) {
+      expect(err).to.not.exist()
+      instanceC.client({type: type, port: addressA.port})
+
+      instanceB.listen({type: type, port: 0}, function (err, addressB) {
+        expect(err).to.not.exist()
+        instanceA.client({type: type, port: addressB.port})
+
+        instanceC.listen({type: type, port: 0}, function (err, addressC) {
+          expect(err).to.not.exist()
+          instanceB.client({type: type, port: addressC.port})
+          ready()
+        })
+      })
+    })
+
+    function ready () {
+      instanceA.ready(function () {
+        instanceB.ready(function () {
+          instanceC.ready(function () {
+            instanceA.act('a:1', function (err, out) {
+              expect(err).to.not.exist()
+              expect(out.aa).to.equal(1)
+              actB()
+            })
+
+            function actB () {
+              instanceA.act('b:1', function (err, out) {
+                expect(err).to.not.exist()
+                expect(out.bb).to.equal(1)
+                actC()
+              })
+            }
+
+            function actC () {
+              instanceA.act('c:1', function (err, out) {
+                expect(err).to.not.exist()
+                expect(out.cc).to.equal(1)
+                actD()
+              })
+            }
+
+            function actD () {
+              instanceA.act('d:1', function (err) {
+                expect(err).to.exist()
+                finish()
+              })
+            }
+          })
+        })
+      })
+    }
+
+    function finish () {
+      instanceA.close(function (err) {
+        expect(err).to.not.exist()
+
+        instanceB.close(function (err) {
+          expect(err).to.not.exist()
+
+          instanceC.close(function (err) {
+            expect(err).to.not.exist()
+            expect(counters.a).to.equal(1)
+            expect(counters.b).to.equal(1)
+            expect(counters.c).to.equal(1)
+            expect(counters.log_a).to.equal(1)
+            expect(counters.log_b).to.equal(1)
+            expect(counters.log_c).to.equal(1)
+            expect(counters.loop).to.equal(1)
+            done()
+          })
+        })
+      })
+    }
   })
 })
