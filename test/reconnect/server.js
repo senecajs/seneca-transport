@@ -10,6 +10,9 @@ server.add({ foo: 'bar' }, function (message, cb) {
 })
 server.ready(function () {
   server.listen({ type: 'tcp', port: +process.argv[2] || 0, host: '127.0.0.1' }, function (err, address) {
+    if (err) {
+      throw err
+    }
     process.send({ port: address.port })
   })
 })
