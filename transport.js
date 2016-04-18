@@ -40,7 +40,7 @@ var internals = {
     },
     tcp: {
       type: 'tcp',
-      host: 'localhost',
+      host: '0.0.0.0',
       port: 10201,
       timeout: 5555
     }
