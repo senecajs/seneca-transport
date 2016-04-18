@@ -44,12 +44,13 @@
   "devDependencies": {
     "async": "1.5.x",
     "bench": "0.3.x",
-    "code": "1.x.x",
+    "code": "2.x.x",
     "docco": "0.7.x",
     "eslint-config-seneca": "1.x.x",
+    "eslint-plugin-hapi": "4.x.x",
     "eslint-plugin-standard": "1.x.x",
-    "lab": "6.x.x",
-    "seneca": "git@github.com:senecajs/seneca.git",
+    "lab": "10.x.x",
+    "seneca": "2.x.x",
     "seneca-transport-test": "0.2.x",
     "seneca-entity": "0.x.x"
   }
