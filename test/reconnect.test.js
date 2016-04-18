@@ -35,7 +35,7 @@ describe('Reconnects', function () {
       })
       client.send({ port: address.port })
 
-      let finish = function () {
+      var finish = function () {
         expect(actedCount).to.equal(1)
         server.kill('SIGKILL')
         client.kill('SIGKILL')
