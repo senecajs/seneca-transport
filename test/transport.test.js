@@ -3,6 +3,7 @@
 
 
 var Assert = require('assert')
+var Entity = require('seneca-entity')
 var Lab = require('lab')
 var Seneca = require('seneca')
 var Shared = require('seneca-transport-test')
@@ -45,7 +46,7 @@ function run_client (type, port, done, tag) {
 }
 
 function get_seneca (tag) {
-  return Seneca({ tag: tag, log: 'silent', default_plugins: no_t, debug: { short_logs: true } }).use(Transport)
+  return Seneca({ tag: tag, log: 'silent', default_plugins: no_t, debug: { short_logs: true } }).use(Transport).use(Entity)
 }
 
 describe('transport', function () {
@@ -100,6 +101,7 @@ describe('transport', function () {
   it('uses correct tx$ properties on entity actions for "transported" entities', function (done) {
     var seneca1 = Seneca({log: 'silent', default_plugins: no_t})
     .use(Transport)
+    .use(Entity)
     .ready(function () {
       seneca1.add({cmd: 'test'}, function (args, cb) {
         args.entity.save$(function (err, entitySaveResponse) {
@@ -131,6 +133,7 @@ describe('transport', function () {
 
       var seneca2 = Seneca({log: 'silent', default_plugins: no_t})
       .use(Transport)
+      .use(Entity)
       .ready(function () {
         seneca2.client({type: 'tcp', port: 20103})
         this.act({cmd: 'test', entity: this.make$('test').data$({name: 'bar'})}, function (err, res) {
@@ -144,7 +147,6 @@ describe('transport', function () {
       })
     })
   })
-
 
   it('uses correct tx$ properties on entity actions for "non-transported" requests', function (done) {
     Seneca({ log: 'silent', default_plugins: no_t })
@@ -322,72 +324,191 @@ describe('transport', function () {
       })
   })
 
+  it('own-message http', { timeout: 3000 }, function (fin) {
+    var type = 'http'
 
-  // NOTE: SENECA_LOG=all will break this test as it counts log entries
-  it('own-message', function (fin) {
     // a -> b -> a
+    function a (args, done) {
+      counters.a++
+      done(null, {aa: args.a})
+    }
+    function b (args, done) {
+      counters.b++
+      done(null, {bb: args.b})
+    }
 
-    do_type('tcp', function (err) {
-      if (err) {
-        return fin(err)
-      }
-      do_type('http', fin)
+    var counters = {log_a: 0, log_b: 0, own: 0, a: 0, b: 0, c: 0}
+
+    var log_a = function () {
+      counters.log_a++
+    }
+    var log_b = function () {
+      counters.log_b++
+    }
+    var own_a = function () {
+      counters.own++
+    }
+
+
+    var a = Seneca({
+      log: {map: [
+        {level: 'debug', regex: /\{a:1\}/, handler: log_a},
+        {level: 'warn', regex: /own_message/, handler: own_a}
+      ]},
+      timeout: 111,
+      default_plugins: no_t
+    })
+          .use('../transport.js', {
+            check: {message_loop: false},
+            warn: {own_message: true}
+          })
+          .add('a:1', a)
+          .listen({type: type, port: 40405})
+          .client({type: type, port: 40406})
+
+    var b = Seneca({
+      log: {map: [
+        {level: 'debug', regex: /\{b:1\}/, handler: log_b}
+      ]},
+      timeout: 111,
+      default_plugins: no_t
+    })
+          .use('../transport.js')
+          .add('b:1', b)
+          .listen({type: type, port: 40406})
+          .client({type: type, port: 40405})
+
+
+    a.ready(function () {
+      b.ready(function () {
+        a.act('a:1', function (err, out) {
+          if (err) {
+            return fin(err)
+          }
+          assert.equal(1, out.aa)
+        })
+
+        a.act('b:1', function (err, out) {
+          if (err) {
+            return fin(err)
+          }
+          assert.equal(1, out.bb)
+        })
+
+        a.act('c:1', function (err, out) {
+          if (!err) {
+            assert.fail()
+          }
+          assert.ok(err.timeout)
+        })
+      })
     })
 
-    function do_type (type, fin) {
-      function a (args, done) {
-        counters.a++
-        done(null, {aa: args.a})
-      }
-      function b (args, done) {
-        counters.b++
-        done(null, {bb: args.b})
-      }
+    setTimeout(function () {
+      a.close(function (err) {
+        if (err) {
+          return fin(err)
+        }
 
-      var counters = {log_a: 0, log_b: 0, own: 0, a: 0, b: 0, c: 0}
+        b.close(function (err) {
+          if (err) {
+            return fin(err)
+          }
 
-      var log_a = function () {
-        counters.log_a++
-      }
-      var log_b = function () {
-        counters.log_b++
-      }
-      var own_a = function () {
-        counters.own++
-      }
+          try {
+            assert.equal(1, counters.a)
+            assert.equal(1, counters.b)
+            assert.equal(1, counters.log_a)
+            assert.equal(1, counters.log_b)
+            assert.equal(1, counters.own)
+          }
+          catch (e) {
+            return fin(e)
+          }
 
-
-      var a = Seneca({
-        log: {map: [
-          {level: 'debug', regex: /\{a:1\}/, handler: log_a},
-          {level: 'warn', regex: /own_message/, handler: own_a}
-        ]},
-        timeout: 111,
-        default_plugins: no_t
+          fin()
+        })
       })
-            .use('../transport.js', {
-              check: {message_loop: false},
-              warn: {own_message: true}
-            })
-            .add('a:1', a)
-            .listen({type: type, port: 40405})
-            .client({type: type, port: 40406})
+    }, 222)
+  })
 
-      var b = Seneca({
-        log: {map: [
-          {level: 'debug', regex: /\{b:1\}/, handler: log_b}
-        ]},
-        timeout: 111,
-        default_plugins: no_t
-      })
-            .use('../transport.js')
-            .add('b:1', b)
-            .listen({type: type, port: 40406})
-            .client({type: type, port: 40405})
+  // NOTE: SENECA_LOG=all will break this test as it counts log entries
+  it('message-loop http', function (fin) {
+    // a -> b -> c -> a
+    var type = 'http'
+
+    function a (args, done) {
+      counters.a++
+      done(null, {aa: args.a})
+    }
+    function b (args, done) {
+      counters.b++
+      done(null, {bb: args.b})
+    }
+    function c (args, done) {
+      counters.c++
+      done(null, {cc: args.c})
+    }
+
+    var counters = {log_a: 0, log_b: 0, log_c: 0, loop: 0, a: 0, b: 0, c: 0, d: 0}
+
+    var log_a = function () {
+      counters.log_a++
+    }
+    var log_b = function () {
+      counters.log_b++
+    }
+    var log_c = function () {
+      counters.log_c++
+    }
+    var loop_a = function () {
+      counters.loop++
+    }
+
+    var a = Seneca({
+      log: {map: [
+        {level: 'debug', regex: /\{a:1\}/, handler: log_a},
+        {level: 'warn', regex: /message_loop/, handler: loop_a}
+      ]},
+      timeout: 111,
+      default_plugins: no_t
+    })
+          .use('../transport.js', {
+            check: {own_message: false},
+            warn: {message_loop: true}
+          })
+          .add('a:1', a)
+          .listen({type: type, port: 40405})
+          .client({type: type, port: 40406})
+
+    var b = Seneca({
+      log: {map: [
+        {level: 'debug', regex: /\{b:1\}/, handler: log_b}
+      ]},
+      timeout: 111,
+      default_plugins: no_t
+    })
+          .use('../transport.js')
+          .add('b:1', b)
+          .listen({type: type, port: 40406})
+          .client({type: type, port: 40407})
+
+    var c = Seneca({
+      log: {map: [
+        {level: 'debug', regex: /\{c:1\}/, handler: log_c}
+      ]},
+      timeout: 111,
+      default_plugins: no_t
+    })
+          .use('../transport.js')
+          .add('c:1', c)
+          .listen({type: type, port: 40407})
+          .client({type: type, port: 40405})
 
 
-      a.ready(function () {
-        b.ready(function () {
+    a.ready(function () {
+      b.ready(function () {
+        c.ready(function () {
           a.act('a:1', function (err, out) {
             if (err) {
               return fin(err)
@@ -403,6 +524,13 @@ describe('transport', function () {
           })
 
           a.act('c:1', function (err, out) {
+            if (err) {
+              return fin(err)
+            }
+            assert.equal(1, out.cc)
+          })
+
+          a.act('d:1', function (err) {
             if (!err) {
               assert.fail()
             }
@@ -410,14 +538,20 @@ describe('transport', function () {
           })
         })
       })
+    })
 
-      setTimeout(function () {
-        a.close(function (err) {
+    setTimeout(function () {
+      a.close(function (err) {
+        if (err) {
+          return fin(err)
+        }
+
+        b.close(function (err) {
           if (err) {
             return fin(err)
           }
 
-          b.close(function (err) {
+          c.close(function (err) {
             if (err) {
               return fin(err)
             }
@@ -425,171 +559,20 @@ describe('transport', function () {
             try {
               assert.equal(1, counters.a)
               assert.equal(1, counters.b)
+              assert.equal(1, counters.c)
               assert.equal(1, counters.log_a)
               assert.equal(1, counters.log_b)
-              assert.equal(1, counters.own)
+              assert.equal(1, counters.log_c)
+              assert.equal(1, counters.loop)
             }
             catch (e) {
               return fin(e)
             }
-
             fin()
           })
         })
-      }, 222)
-    }
-  })
-
-
-  // NOTE: SENECA_LOG=all will break this test as it counts log entries
-  it('message-loop', function (fin) {
-    // a -> b -> c -> a
-
-    do_type('tcp', function (err) {
-      if (err) {
-        return fin(err)
-      }
-      do_type('http', fin)
-    })
-
-    function do_type (type, fin) {
-      function a (args, done) {
-        counters.a++
-        done(null, {aa: args.a})
-      }
-      function b (args, done) {
-        counters.b++
-        done(null, {bb: args.b})
-      }
-      function c (args, done) {
-        counters.c++
-        done(null, {cc: args.c})
-      }
-
-      var counters = {log_a: 0, log_b: 0, log_c: 0, loop: 0, a: 0, b: 0, c: 0, d: 0}
-
-      var log_a = function () {
-        counters.log_a++
-      }
-      var log_b = function () {
-        counters.log_b++
-      }
-      var log_c = function () {
-        counters.log_c++
-      }
-      var loop_a = function () {
-        counters.loop++
-      }
-
-      var a = Seneca({
-        log: {map: [
-          {level: 'debug', regex: /\{a:1\}/, handler: log_a},
-          {level: 'warn', regex: /message_loop/, handler: loop_a}
-        ]},
-        timeout: 111,
-        default_plugins: no_t
       })
-            .use('../transport.js', {
-              check: {own_message: false},
-              warn: {message_loop: true}
-            })
-            .add('a:1', a)
-            .listen({type: type, port: 40405})
-            .client({type: type, port: 40406})
-
-      var b = Seneca({
-        log: {map: [
-          {level: 'debug', regex: /\{b:1\}/, handler: log_b}
-        ]},
-        timeout: 111,
-        default_plugins: no_t
-      })
-            .use('../transport.js')
-            .add('b:1', b)
-            .listen({type: type, port: 40406})
-            .client({type: type, port: 40407})
-
-      var c = Seneca({
-        log: {map: [
-          {level: 'debug', regex: /\{c:1\}/, handler: log_c}
-        ]},
-        timeout: 111,
-        default_plugins: no_t
-      })
-            .use('../transport.js')
-            .add('c:1', c)
-            .listen({type: type, port: 40407})
-            .client({type: type, port: 40405})
-
-
-      a.ready(function () {
-        b.ready(function () {
-          c.ready(function () {
-            a.act('a:1', function (err, out) {
-              if (err) {
-                return fin(err)
-              }
-              assert.equal(1, out.aa)
-            })
-
-            a.act('b:1', function (err, out) {
-              if (err) {
-                return fin(err)
-              }
-              assert.equal(1, out.bb)
-            })
-
-            a.act('c:1', function (err, out) {
-              if (err) {
-                return fin(err)
-              }
-              assert.equal(1, out.cc)
-            })
-
-            a.act('d:1', function (err) {
-              if (!err) {
-                assert.fail()
-              }
-              assert.ok(err.timeout)
-            })
-          })
-        })
-      })
-
-      setTimeout(function () {
-        a.close(function (err) {
-          if (err) {
-            return fin(err)
-          }
-
-          b.close(function (err) {
-            if (err) {
-              return fin(err)
-            }
-
-            c.close(function (err) {
-              if (err) {
-                return fin(err)
-              }
-
-              try {
-                assert.equal(1, counters.a)
-                assert.equal(1, counters.b)
-                assert.equal(1, counters.c)
-                assert.equal(1, counters.log_a)
-                assert.equal(1, counters.log_b)
-                assert.equal(1, counters.log_c)
-                assert.equal(1, counters.loop)
-              }
-              catch (e) {
-                return fin(e)
-              }
-              fin()
-            })
-          })
-        })
-      }, 222)
-    }
+    }, 222)
   })
 
 
