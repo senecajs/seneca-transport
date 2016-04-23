@@ -15,8 +15,8 @@
     "plugin"
   ],
   "scripts": {
-    "test": "lab -v -L -P test -t 82",
-    "test-report": "lab -v -L -P test -t 82 -r html > test/report.html; open test/report.html",
+    "test": "lab -v -L -P test -t 82 -m 5000",
+    "test-report": "lab -v -L -P test -t 82 -m 5000 -r html > test/report.html; open test/report.html",
     "bench": "node bench",
     "coveralls": "lab -s -P test -r lcov | coveralls",
     "annotate": "docco transport.js -o doc; open doc/transport.html"
@@ -25,13 +25,13 @@
     "eraro": "0.4.x",
     "gex": "0.2.x",
     "jsonic": "0.2.x",
-    "lodash": "4.5.1",
-    "lru-cache": "3.2.x",
+    "lodash": "4.11.x",
+    "lru-cache": "4.0.x",
     "ndjson": "1.4.x",
     "nid": "0.3.2",
     "patrun": "0.5.x",
-    "qs": "5.2.0",
-    "reconnect-core": "1.1.x",
+    "qs": "6.1.x",
+    "reconnect-core": "1.2.x",
     "wreck": "6.3.x"
   },
   "devDependencies": {
