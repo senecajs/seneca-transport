@@ -41,7 +41,7 @@ describe('Reconnects', function () {
         finish = function () {}
       }
 
-      setTimeout(finish, 100)
+      setTimeout(finish, 2000)
     })
   })
 })
