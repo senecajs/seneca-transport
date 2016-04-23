@@ -15,7 +15,7 @@
     "plugin"
   ],
   "scripts": {
-    "test": "lab -v -L -P test -t 82",
+    "test": "lab -v -L -P test -t 82 -m 5000",
     "test-report": "lab -v -L -P test -t 82 -m 5000 -r html > test/report.html; open test/report.html",
     "bench": "node bench",
     "coveralls": "lab -s -P test -r lcov | coveralls",
