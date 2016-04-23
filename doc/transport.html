@@ -30,9 +30,9 @@
               
             </div>
             
-            <div class="content"><div class='highlight'><pre><span class="hljs-comment">/* Copyright (c) 2013-2015 Richard Rodger, MIT License */</span>
+            <div class="content"><div class='highlight'><pre><span class="hljs-comment">/* Copyright (c) 2013-2015 Richard Rodger &amp; other contributors, MIT License */</span>
 <span class="hljs-comment">/* jshint node:true, asi:true, eqnull:true */</span>
-<span class="hljs-pi">'use strict'</span></pre></div></div>
+<span class="hljs-meta">'use strict'</span></pre></div></div>
             
         </li>
         
@@ -89,7 +89,10 @@
       host: <span class="hljs-string">'0.0.0.0'</span>,
       path: <span class="hljs-string">'/act'</span>,
       protocol: <span class="hljs-string">'http'</span>,
-      timeout: <span class="hljs-number">5555</span>
+      timeout: <span class="hljs-number">5555</span>,
+      max_listen_attempts: <span class="hljs-number">11</span>,
+      attempt_delay: <span class="hljs-number">222</span>,
+      serverOptions: {}
     },
     tcp: {
       type: <span class="hljs-string">'tcp'</span>,
@@ -101,8 +104,9 @@
   plugin: <span class="hljs-string">'transport'</span>
 }
 
-<span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">options</span>) </span>{
+<span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">transport</span> (<span class="hljs-params">options</span>) </span>{
   <span class="hljs-keyword">var</span> seneca = <span class="hljs-keyword">this</span>
+
   <span class="hljs-keyword">var</span> settings = seneca.util.deepextend(internals.defaults, options)
   <span class="hljs-keyword">var</span> callmap = LruCache(settings.callmax)
   <span class="hljs-keyword">var</span> transportUtil = <span class="hljs-keyword">new</span> TransportUtil({
@@ -158,6 +162,24 @@
     exportmap: { utils: transportUtil },
     options: settings
   }
+}
+
+<span class="hljs-built_in">module</span>.exports.preload = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">var</span> seneca = <span class="hljs-keyword">this</span>
+
+  <span class="hljs-keyword">var</span> meta = {
+    name: internals.plugin,
+    exportmap: {
+      utils: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+        <span class="hljs-keyword">var</span> transportUtil = seneca.export(internals.plugin).utils
+        <span class="hljs-keyword">if</span> (transportUtil !== meta.exportmap.utils) {
+          transportUtil.apply(<span class="hljs-keyword">this</span>, <span class="hljs-built_in">arguments</span>)
+        }
+      }
+    }
+  }
+
+  <span class="hljs-keyword">return</span> meta
 }
 
 internals.inflight = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">callmap</span>) </span>{
