@@ -2,4 +2,5 @@
 *.log
 report.html
 
+doc
 node_modules
