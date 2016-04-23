@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "test": "lab -v -L -P test -t 82",
-    "test-report": "lab -v -L -P test -t 82 -r html > test/report.html; open test/report.html",
+    "test-report": "lab -v -L -P test -t 82 -m 5000 -r html > test/report.html; open test/report.html",
     "bench": "node bench",
     "coveralls": "lab -s -P test -r lcov | coveralls",
     "annotate": "docco transport.js -o doc; open doc/transport.html"
