@@ -3,24 +3,23 @@
   "version": "1.2.0",
   "description": "Seneca transport",
   "main": "transport.js",
-  "scripts": {
-    "lint": "lab -P test -L -d",
-    "test": "lab -P test -v -m 3000 -t 80 -L",
-    "build": "./build.sh",
-    "bench": "node bench",
-    "annotate": "docco transport.js -o doc"
-  },
+  "license": "MIT",
+  "author": "Richard Rodger (http://richardrodger.com)",
   "repository": {
     "type": "git",
-    "url": "git://github.com/rjrodger/seneca-transport.git"
+    "url": "git+https://github.com/senecajs/seneca-transport.git"
   },
   "keywords": [
     "seneca",
     "transport",
     "plugin"
   ],
-  "author": "Richard Rodger (http://richardrodger.com)",
-  "license": "MIT",
+  "scripts": {
+    "test": "lab -v -L -P test -t 82",
+    "test-report": "lab -v -L -P test -t 82 -r html > report.html; open report.html",
+    "bench": "node bench",
+    "annotate": "docco transport.js -o doc"
+  },
   "dependencies": {
     "eraro": "0.4.x",
     "gex": "0.2.x",
@@ -34,14 +33,6 @@
     "reconnect-core": "1.1.x",
     "wreck": "6.3.x"
   },
-  "files": [
-    "README.md",
-    "LICENSE.txt",
-    "transport.js",
-    "lib/transport-utils.js",
-    "lib/http.js",
-    "lib/tcp.js"
-  ],
   "devDependencies": {
     "async": "1.5.x",
     "bench": "0.3.x",
@@ -51,6 +42,7 @@
     "eslint-plugin-standard": "1.x.x",
     "lab": "6.x.x",
     "seneca": "plugin",
+    "seneca-entity": "0.0.1",
     "seneca-transport-test": "0.2.x"
   }
 }
