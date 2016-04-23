@@ -13,4 +13,4 @@ cache:
     - node_modules
 
 after_script:
-  - npm run cov
+  - npm run coveralls

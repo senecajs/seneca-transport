@@ -1,6 +1,6 @@
 *~
 *.log
-report.html
+test/report.html
 
 doc
 node_modules
