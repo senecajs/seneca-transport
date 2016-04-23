@@ -15,27 +15,21 @@ var it = lab.it
 
 var no_t = {transport: false}
 
-
 process.setMaxListeners(999)
-
 
 function run_client (type, port, done, tag) {
   createInstance()
     .use(Entity)
     .use(Transport)
-    .client({ type: type, port: port })
+    .client({type: type, port: port})
     .ready(function () {
       this.act('c:1,d:A', function (err, out) {
-        if (err) {
-          return done(err)
-        }
+        if (err) return done(err)
 
         assert.equal('{"s":"1-A"}', JSON.stringify(out))
 
         this.act('c:1,d:AA', function (err, out) {
-          if (err) {
-            return done(err)
-          }
+          if (err) return done(err)
 
           assert.equal('{"s":"1-AA"}', JSON.stringify(out))
 
@@ -111,9 +105,7 @@ describe('transport', function () {
     .ready(function () {
       seneca1.add({cmd: 'test'}, function (args, cb) {
         args.entity.save$(function (err, entitySaveResponse) {
-          if (err) {
-            return cb(err)
-          }
+          if (err) return cb(err)
 
           this.act({cmd: 'test2'}, function (err, test2Result) {
             if (err) {
@@ -349,11 +341,11 @@ describe('transport', function () {
     })
 
     function do_type (type, fin) {
-      function a (args, done) {
+      function counter_a (args, done) {
         counters.a++
         done(null, {aa: args.a})
       }
-      function b (args, done) {
+      function counter_b (args, done) {
         counters.b++
         done(null, {bb: args.b})
       }
@@ -383,7 +375,7 @@ describe('transport', function () {
               check: {message_loop: false},
               warn: {own_message: true}
             })
-            .add('a:1', a)
+            .add('a:1', counter_a)
             .listen({type: type, port: 40405})
             .client({type: type, port: 40406})
 
@@ -395,7 +387,7 @@ describe('transport', function () {
         default_plugins: no_t
       })
             .use('../transport.js')
-            .add('b:1', b)
+            .add('b:1', counter_b)
             .listen({type: type, port: 40406})
             .client({type: type, port: 40405})
 
@@ -467,15 +459,15 @@ describe('transport', function () {
     })
 
     function do_type (type, fin) {
-      function a (args, done) {
+      function counter_a (args, done) {
         counters.a++
         done(null, {aa: args.a})
       }
-      function b (args, done) {
+      function counter_b (args, done) {
         counters.b++
         done(null, {bb: args.b})
       }
-      function c (args, done) {
+      function counter_c (args, done) {
         counters.c++
         done(null, {cc: args.c})
       }
@@ -507,7 +499,7 @@ describe('transport', function () {
               check: {own_message: false},
               warn: {message_loop: true}
             })
-            .add('a:1', a)
+            .add('a:1', counter_a)
             .listen({type: type, port: 40405})
             .client({type: type, port: 40406})
 
@@ -519,7 +511,7 @@ describe('transport', function () {
         default_plugins: no_t
       })
             .use('../transport.js')
-            .add('b:1', b)
+            .add('b:1', counter_b)
             .listen({type: type, port: 40406})
             .client({type: type, port: 40407})
 
@@ -531,7 +523,7 @@ describe('transport', function () {
         default_plugins: no_t
       })
             .use('../transport.js')
-            .add('c:1', c)
+            .add('c:1', counter_c)
             .listen({type: type, port: 40407})
             .client({type: type, port: 40405})
 

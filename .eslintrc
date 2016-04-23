@@ -1,6 +1,3 @@
 {
-  "extends": "seneca",
-  "rules": {
-    "no-redeclare": 0
-  }
+  "extends": "seneca"
 }
