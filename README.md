@@ -2,8 +2,12 @@
 > A [Seneca.js][] transport plugin
 
 # seneca-transport
+[![npm version][npm-badge]][npm-url]
 [![Build Status][travis-badge]][travis-url]
+[![Dependency Status][david-badge]][david-url]
 [![Gitter][gitter-badge]][gitter-url]
+
+## Description
 
 This plugin provides the HTTP/HTTPS and TCP transport channels for
 micro-service messages. It's a built-in dependency of the Seneca
@@ -12,7 +16,7 @@ to wire up your micro-services so that they can talk to each other.
 
 seneca-transport's source can be read in an annotated fashion by,
 - running `npm run annotate`
-- viewing [./doc/transport.html]() locally
+- viewing [./doc/transport.html](./doc/transport.html) locally
 
 If you're using this module, and need help, you can:
 
@@ -23,7 +27,10 @@ If you're using this module, and need help, you can:
 If you are new to Seneca in general, please take a look at [senecajs.org][]. We have everything from
 tutorials to sample apps to help get you up and running quickly.
 
-### Install
+### Seneca compatibility
+Supports Seneca versions **1.x** and **2.x**
+
+## Install
 
 This plugin module is included in the main Seneca module,
 
@@ -47,7 +54,7 @@ fact, all it can handle is the color red!
 You define the action pattern _color:red_, which always returns the
 result <code>{hex:'#FF0000'}</code>. You're also using the name of the
 function _color_  to define the name of the plugin (see [How to write a
-Seneca plugin](http://senecajs.org)).
+Seneca plugin](http://senecajs.org/tutorials/how-to-write-a-plugin.html)).
 
 ```js
 function color() {
@@ -163,7 +170,7 @@ The next two fields indicate the plugin name and tag, in this case <code>color
 -</code>. The plugin is only known on the server side, so the client
 just indicates a blank entry with <code>-</code>. For more details on
 plugin names and tags, see [How to write a Seneca
-plugin](http://senecajs.org).
+plugin](http://senecajs.org/tutorials/how-to-write-a-plugin.html).
 
 The next field (also known as the _case_) is either <code>IN</code> or
 <code>OUT</code>, and indicates the direction of the message. If you
@@ -185,7 +192,7 @@ no action function, and this is indicated by the <code>CLIENT</code>
 marker. If you'd like to match up the action function identifier to
 message executions, add a log filter to see them:
 
-```sh
+```
 node readme-color.js --seneca.log=type:act,regex:color:red \
 --seneca.log=plugin:color,case:ADD
 [TIME] ly../..80/- DEBUG plugin color - ADD f2rv.. color:red
@@ -788,7 +795,7 @@ subject to high load and many error conditions.
 The transport plugin family uses an extension to the normal Seneca
 options facility. As well as supporting the standard method for
 defining options (see [How to Write a
-Plugin](http://senecajs.org/write-a-plugin.html#wp-options)), you can
+Plugin](http://senecajs.org/tutorials/how-to-write-a-plugin.html#wp-options)), you can
 also supply options via arguments to the <code>client</code> or
 <code>listen</code> methods, and via the type name of the transport
 under the top-level _transport_ property.
@@ -908,17 +915,31 @@ The output will be the stdout from the server and client logs.  You should also
 see the client instance outputting the result from the server: `{ hex: '#FF0000' }`
 
 ## Contributing
+
 The [Senecajs org][] encourage open participation. If you feel you can help in any way, be it with
 documentation, examples, extra testing, or new features please get in touch.
 
-## License
-Copyright Richard Rodger and other contributors 2015, Licensed under [MIT][].
+## Test
 
+To run tests, simply use npm:
+
+```sh
+npm run test
+```
+
+## License
+
+Copyright (c) 2013-2016, Richard Rodger and other contributors.
+Licensed under [MIT][].
+
+[npm-badge]: https://img.shields.io/npm/v/seneca-transport.svg
+[npm-url]: https://npmjs.com/package/seneca-transport
 [travis-badge]: https://travis-ci.org/senecajs/seneca-transport.svg
 [travis-url]: https://travis-ci.org/senecajs/seneca-transport
 [gitter-badge]: https://badges.gitter.im/Join%20Chat.svg
 [gitter-url]: https://gitter.im/senecajs/seneca
-
+[david-badge]: https://david-dm.org/senecajs/seneca-transport.svg
+[david-url]: https://david-dm.org/senecajs/seneca-transport
 [MIT]: ./LICENSE
 [Senecajs org]: https://github.com/senecajs/
 [Seneca.js]: https://www.npmjs.com/package/seneca
