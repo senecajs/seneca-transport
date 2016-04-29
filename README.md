@@ -682,8 +682,8 @@ some tracking fields to make debugging easier, these are:
 To write your own transport, the best approach is to copy one of the existing ones:
 
    * [transport.js](https://github.com/senecajs/seneca-transport/blob/master/transport.js): disconnected or point-to-point
-   * [redis-transport.js](https://github.com/senecajs/seneca-redis-transport/blob/master/redis-transport.js): publish/subscribe
-   * [beanstalk-transport.js](https://github.com/senecajs/seneca-beanstalk-transport/blob/master/beanstalk-transport.js): message queue
+   * [redis-transport.js](https://github.com/rjrodger/seneca-redis-transport/blob/master/lib/index.js): publish/subscribe
+   * [beanstalk-transport.js](https://github.com/rjrodger/seneca-beanstalk-transport/blob/master/lib/index.js): message queue
 
 Choose a _type_ for your transport, say "foo". You will need to
 implement two patterns:
