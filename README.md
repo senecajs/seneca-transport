@@ -450,6 +450,21 @@ seneca()
 You can cheat by running the HTTP examples with the additional command
 line option: <code>--seneca.options.transport.type=tcp</code>.
 
+To communicate with a Seneca instance over TCP you can send from command line a message that Seneca understands:
+
+```sh
+# call the color:red action pattern
+echo '{"id":"w91/enj","kind":"act","origin":"h5x/146/..77/-","act":{"color":"red"},"sync":true}' | nc 127.0.0.1 10201
+
+```
+
+Seneca answers with a message like:
+
+```sh
+{"id":"w91/enj","kind":"res","origin":"h5x/146/..77/-","accept":"bj../14../..47/-","time":{"client_sent":..,"listen_recv":..,"listen_sent":..},"sync":true,"res":{"hex":"#FF0000"}}
+# the produced result is in the "res" field
+```
+
 HTTP and TCP are not the only transport mechanisms available. Of
 course, in true Seneca-style, the other mechanisms are available as
 plugins. Here's the list.
