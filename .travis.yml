@@ -13,7 +13,9 @@ node_js:
   - '0.10'
 
 before_script:
+  - if [[ $TRAVIS_NODE_VERSION == "6" ]]; then export LAB_FLAGS="--leaks"; else export LAB_FLAGS=""; fi
   - npm install seneca$SENECA_VER
+  - echo FLAGS:$LAB_FLAGS
 
 cache:
   directories:
