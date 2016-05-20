@@ -19,7 +19,6 @@ process.setMaxListeners(999)
 
 function run_client (type, port, done, tag) {
   createInstance()
-    .use(Entity)
     .use(Transport)
     .client({type: type, port: port})
     .ready(function () {
@@ -39,36 +38,42 @@ function run_client (type, port, done, tag) {
     })
 }
 
-function createInstance (tag) {
+function createInstance (errHandler) {
   var opts = {
     default_plugins: {transport: false},
-    log: 'silent',
-    tag: tag
+    errhandler: errHandler,
+    log: 'silent'
   }
 
-  return Seneca(opts)
+  var seneca = Seneca(opts)
+  if (seneca.version >= '2.0.0') {
+    return seneca.use(Entity)
+  }
+  else {
+    return seneca
+  }
 }
 
 Shared.basictest({
-  seneca: createInstance().use(Entity).use(Transport),
+  seneca: createInstance().use(Transport),
   script: lab,
   type: 'tcp'
 })
 
 Shared.basicpintest({
-  seneca: createInstance().use(Entity).use(Transport),
+  seneca: createInstance().use(Transport),
   script: lab,
   type: 'tcp'
 })
 
 Shared.basictest({
-  seneca: createInstance().use(Entity).use(Transport),
+  seneca: createInstance().use(Transport),
   script: lab,
   type: 'web'
 })
 
 Shared.basicpintest({
-  seneca: createInstance().use(Entity).use(Transport),
+  seneca: createInstance().use(Transport),
   script: lab,
   type: 'web'
 })
@@ -101,7 +106,6 @@ describe('transport', function () {
   it('uses correct tx$ properties on entity actions for "transported" entities', function (done) {
     var seneca1 = createInstance()
     .use(Transport)
-    .use(Entity)
     .ready(function () {
       seneca1.add({cmd: 'test'}, function (args, cb) {
         args.entity.save$(function (err, entitySaveResponse) {
@@ -130,7 +134,6 @@ describe('transport', function () {
       .listen({type: 'tcp', port: 20103})
 
       var seneca2 = createInstance()
-      .use(Entity)
       .use(Transport)
       .ready(function () {
         seneca2.client({type: 'tcp', port: 20103})
@@ -149,7 +152,6 @@ describe('transport', function () {
 
   it('uses correct tx$ properties on entity actions for "non-transported" requests', function (done) {
     createInstance()
-      .use(Entity)
       .use(Transport)
       .add({ cmd: 'test' }, function (args, cb) {
         this.act({ cmd: 'test2' }, function (err, test2Result) {
@@ -166,7 +168,6 @@ describe('transport', function () {
       .listen({ type: 'tcp', port: 20104 })
       .ready(function () {
         createInstance()
-          .use(Entity)
           .use(Transport)
           .client({ type: 'tcp', port: 20104 })
           .ready(function () {
@@ -181,9 +182,8 @@ describe('transport', function () {
 
 
   it('web-basic', function (done) {
-    Seneca({log: 'silent', errhandler: done, default_plugins: no_t})
+    createInstance(done)
       .use('../transport.js')
-      .use(Entity)
       .add('c:1', function (args, cb) {
         cb(null, {s: '1-' + args.d})
       })
@@ -221,9 +221,8 @@ describe('transport', function () {
 
 
   it('web-query', function (fin) {
-    Seneca({log: 'silent', errhandler: fin, default_plugins: no_t})
+    createInstance(fin)
       .use('../transport.js')
-      .use(Entity)
       .add('a:1', function (args, done) {
         done(null, this.util.clean(args))
       })
@@ -258,9 +257,8 @@ describe('transport', function () {
   })
 
   it('web-add-headers', function (fin) {
-    Seneca({log: 'silent', errhandler: fin, default_plugins: no_t})
+    createInstance(fin)
       .use('../transport.js')
-      .use(Entity)
       .add('c:1', function (args, done) {
         done(null, {s: '1-' + args.d})
       })
