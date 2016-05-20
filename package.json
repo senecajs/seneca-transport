@@ -15,7 +15,8 @@
     "plugin"
   ],
   "scripts": {
-    "test": "lab -v -L -P test -t 82 -m 5000",
+    "test": "lab -v -L -P test -t 82 -m 5000 $LAB_FLAGS",
+    "test:node6": "LAB_FLAGS='--leaks' && npm test",
     "test-report": "lab -v -L -P test -t 82 -m 5000 -r html > test/report.html; open test/report.html",
     "bench": "node bench",
     "coveralls": "lab -s -P test -r lcov | coveralls",
