@@ -25,7 +25,7 @@ var assert = Assert
 
 describe('Specific http', function () {
   it('web-basic', function (done) {
-    CreateInstance(null, [Transport, Entity])
+    CreateInstance()
       .add('c:1', function (args, cb) {
         cb(null, {s: '1-' + args.d})
       })
@@ -62,14 +62,13 @@ describe('Specific http', function () {
   })
 
   it('error-passing-http', function (fin) {
-    CreateInstance(null, [Transport])
+    CreateInstance()
       .add('a:1', function (args, done) {
         done(new Error('bad-wire'))
       })
       .listen(30303)
 
     CreateInstance()
-      .use('../transport.js')
       .client(30303)
       .act('a:1', function (err, out) {
         assert.equal('seneca: Action a:1 failed: bad-wire.', err.message)

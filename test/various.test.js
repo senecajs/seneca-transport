@@ -1,25 +1,19 @@
 'use strict'
 
+process.setMaxListeners(999)
+
 var Assert = require('assert')
 var Lab = require('lab')
 var Seneca = require('seneca')
-var Transport = require('../')
-var Entity = require('seneca-entity')
+var CreateInstance = require('./utils/createInstance')
 
-var assert = Assert
 var lab = exports.lab = Lab.script()
 var describe = lab.describe
 var it = lab.it
 
-var no_t = {transport: false}
-
-var CreateInstance = require('./utils/createInstance')
-
-process.setMaxListeners(999)
-
 describe('Various misc', function () {
   it('uses correct tx$ properties on entity actions for "transported" entities', function (done) {
-    var seneca1 = CreateInstance(null, [Transport, Entity])
+    var seneca1 = CreateInstance()
     .ready(function () {
       seneca1.add({cmd: 'test'}, function (args, cb) {
         args.entity.save$(function (err, entitySaveResponse) {
@@ -47,26 +41,23 @@ describe('Various misc', function () {
       })
       .listen({type: 'tcp', port: 20103})
 
-      var seneca2 = CreateInstance(null, [Entity, Transport])
+      var seneca2 = CreateInstance()
       .ready(function () {
         seneca2.client({type: 'tcp', port: 20103})
         this.act({cmd: 'test', entity: this.make$('test').data$({name: 'bar'})}, function (err, res) {
-          assert(!err)
+          Assert(!err)
 
-          assert(res.entity.name === 'bar')
-          assert(res.txBeforeEntityAction === res.txInsideEntityAction)
-          assert(res.txBeforeEntityAction === res.txAfterEntityAction)
+          Assert(res.entity.name === 'bar')
+          Assert(res.txBeforeEntityAction === res.txInsideEntityAction)
+          Assert(res.txBeforeEntityAction === res.txAfterEntityAction)
           done()
         })
       })
     })
   })
 
-
   it('uses correct tx$ properties on entity actions for "non-transported" requests', function (done) {
     CreateInstance()
-      .use(Entity)
-      .use(Transport)
       .add({ cmd: 'test' }, function (args, cb) {
         this.act({ cmd: 'test2' }, function (err, test2Result) {
           if (err) {
@@ -82,13 +73,11 @@ describe('Various misc', function () {
       .listen({ type: 'tcp', port: 20104 })
       .ready(function () {
         CreateInstance()
-          .use(Entity)
-          .use(Transport)
           .client({ type: 'tcp', port: 20104 })
           .ready(function () {
             this.act({ cmd: 'test' }, function (err, res) {
-              assert(!err)
-              assert(res.txBeforeEntityAction === res.txAfterEntityAction)
+              Assert(!err)
+              Assert(res.txBeforeEntityAction === res.txAfterEntityAction)
               done()
             })
           })
@@ -135,7 +124,7 @@ describe('Various misc', function () {
           {level: 'warn', regex: /own_message/, handler: own_a}
         ]},
         timeout: 111,
-        default_plugins: no_t
+        default_plugins: {transport: false}
       })
             .use('../transport.js', {
               check: {message_loop: false},
@@ -150,7 +139,7 @@ describe('Various misc', function () {
           {level: 'debug', regex: /\{b:1\}/, handler: log_b}
         ]},
         timeout: 111,
-        default_plugins: no_t
+        default_plugins: {transport: false}
       })
             .use('../transport.js')
             .add('b:1', counter_b)
@@ -164,21 +153,21 @@ describe('Various misc', function () {
             if (err) {
               return fin(err)
             }
-            assert.equal(1, out.aa)
+            Assert.equal(1, out.aa)
           })
 
           a.act('b:1', function (err, out) {
             if (err) {
               return fin(err)
             }
-            assert.equal(1, out.bb)
+            Assert.equal(1, out.bb)
           })
 
           a.act('c:1', function (err, out) {
             if (!err) {
-              assert.fail()
+              Assert.fail()
             }
-            assert.ok(err.timeout)
+            Assert.ok(err.timeout)
           })
         })
       })
@@ -195,11 +184,11 @@ describe('Various misc', function () {
             }
 
             try {
-              assert.equal(1, counters.a)
-              assert.equal(1, counters.b)
-              assert.equal(1, counters.log_a)
-              assert.equal(1, counters.log_b)
-              assert.equal(1, counters.own)
+              Assert.equal(1, counters.a)
+              Assert.equal(1, counters.b)
+              Assert.equal(1, counters.log_a)
+              Assert.equal(1, counters.log_b)
+              Assert.equal(1, counters.own)
             }
             catch (e) {
               return fin(e)
@@ -211,7 +200,6 @@ describe('Various misc', function () {
       }, 222)
     }
   })
-
 
   // NOTE: SENECA_LOG=all will break this test as it counts log entries
   it('message-loop', function (fin) {
@@ -259,7 +247,7 @@ describe('Various misc', function () {
           {level: 'warn', regex: /message_loop/, handler: loop_a}
         ]},
         timeout: 111,
-        default_plugins: no_t
+        default_plugins: {transport: false}
       })
             .use('../transport.js', {
               check: {own_message: false},
@@ -274,7 +262,7 @@ describe('Various misc', function () {
           {level: 'debug', regex: /\{b:1\}/, handler: log_b}
         ]},
         timeout: 111,
-        default_plugins: no_t
+        default_plugins: {transport: false}
       })
             .use('../transport.js')
             .add('b:1', counter_b)
@@ -286,7 +274,7 @@ describe('Various misc', function () {
           {level: 'debug', regex: /\{c:1\}/, handler: log_c}
         ]},
         timeout: 111,
-        default_plugins: no_t
+        default_plugins: {transport: false}
       })
             .use('../transport.js')
             .add('c:1', counter_c)
@@ -301,28 +289,28 @@ describe('Various misc', function () {
               if (err) {
                 return fin(err)
               }
-              assert.equal(1, out.aa)
+              Assert.equal(1, out.aa)
             })
 
             a.act('b:1', function (err, out) {
               if (err) {
                 return fin(err)
               }
-              assert.equal(1, out.bb)
+              Assert.equal(1, out.bb)
             })
 
             a.act('c:1', function (err, out) {
               if (err) {
                 return fin(err)
               }
-              assert.equal(1, out.cc)
+              Assert.equal(1, out.cc)
             })
 
             a.act('d:1', function (err) {
               if (!err) {
-                assert.fail()
+                Assert.fail()
               }
-              assert.ok(err.timeout)
+              Assert.ok(err.timeout)
             })
           })
         })
@@ -345,13 +333,13 @@ describe('Various misc', function () {
               }
 
               try {
-                assert.equal(1, counters.a)
-                assert.equal(1, counters.b)
-                assert.equal(1, counters.c)
-                assert.equal(1, counters.log_a)
-                assert.equal(1, counters.log_b)
-                assert.equal(1, counters.log_c)
-                assert.equal(1, counters.loop)
+                Assert.equal(1, counters.a)
+                Assert.equal(1, counters.b)
+                Assert.equal(1, counters.c)
+                Assert.equal(1, counters.log_a)
+                Assert.equal(1, counters.log_b)
+                Assert.equal(1, counters.log_c)
+                Assert.equal(1, counters.loop)
               }
               catch (e) {
                 return fin(e)
@@ -364,24 +352,20 @@ describe('Various misc', function () {
     }
   })
 
-
   it('testmem-topic-star', function (fin) {
-    Seneca({tag: 'srv', timeout: 5555, log: 'silent', debug: {short_logs: true}})
-      .use(Transport)
+    CreateInstance()
       .use('./stubs/memtest-transport.js')
       .add('foo:1', function (args, done) {
-        assert.equal('aaa/AAA', args.meta$.id)
+        Assert.equal('aaa/AAA', args.meta$.id)
         done(null, {bar: 1})
       })
       .add('foo:2', function (args, done) {
-        assert.equal('bbb/BBB', args.meta$.id)
+        Assert.equal('bbb/BBB', args.meta$.id)
         done(null, {bar: 2})
       })
       .listen({type: 'memtest', pin: 'foo:*'})
       .ready(function () {
-        Seneca({tag: 'cln', timeout: 5555, log: 'silent', debug: {short_logs: true}})
-
-          .use(Transport)
+        CreateInstance()
           .use('./stubs/memtest-transport.js')
 
           .client({type: 'memtest', pin: 'foo:*'})
@@ -390,13 +374,13 @@ describe('Various misc', function () {
 
           .wait('foo:1,id$:aaa/AAA')
           .step(function (out) {
-            assert.equal(1, out.bar)
+            Assert.equal(1, out.bar)
             return true
           })
 
           .wait('foo:2,id$:bbb/BBB')
           .step(function (out) {
-            assert.equal(2, out.bar)
+            Assert.equal(2, out.bar)
             return true
           })
 
@@ -404,10 +388,8 @@ describe('Various misc', function () {
       })
   })
 
-
   it('catchall-ordering', function (fin) {
-    Seneca({tag: 'srv', timeout: 5555, log: 'silent', debug: {short_logs: true}})
-      .use(Transport)
+    CreateInstance()
       .use('./stubs/memtest-transport.js')
 
       .add('foo:1', function (args, done) {
@@ -425,25 +407,20 @@ describe('Various misc', function () {
         do_catchall_first()
 
         function do_catchall_first () {
-          Seneca({tag: 'cln0', timeout: 5555, log: 'silent', debug: {short_logs: true}})
-
-            .use(Transport)
+          CreateInstance()
             .use('./stubs/memtest-transport.js')
-
             .client({type: 'memtest', dest: 'D1'})
             .client({type: 'memtest', dest: 'D0', pin: 'foo:*'})
-
             .start(fin)
-
             .wait('foo:1')
             .step(function (out) {
-              assert.equal(1, out.FOO)
+              Assert.equal(1, out.FOO)
               return true
             })
 
             .wait('bar:1')
             .step(function (out) {
-              assert.equal(1, out.BAR)
+              Assert.equal(1, out.BAR)
               return true
             })
 
@@ -455,25 +432,20 @@ describe('Various misc', function () {
             return fin(err)
           }
 
-          Seneca({tag: 'cln1', timeout: 5555, log: 'silent', debug: {short_logs: true}})
-
-            .use(Transport)
+          CreateInstance()
             .use('./stubs/memtest-transport.js')
-
             .client({type: 'memtest', dest: 'D0', pin: 'foo:*'})
             .client({type: 'memtest', dest: 'D1'})
-
             .start(fin)
-
             .wait('foo:1')
             .step(function (out) {
-              assert.equal(1, out.FOO)
+              Assert.equal(1, out.FOO)
               return true
             })
 
             .wait('bar:1')
             .step(function (out) {
-              assert.equal(1, out.BAR)
+              Assert.equal(1, out.BAR)
               return true
             })
 

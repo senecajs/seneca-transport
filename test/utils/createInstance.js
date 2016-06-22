@@ -1,20 +1,20 @@
 'use strict'
 
 var Seneca = require('seneca')
-var _ = require('lodash')
+var Entity = require('seneca-entity')
+var Transport = require('../../')
 
-function createInstance (tag, plugins) {
-  plugins = plugins || []
-
+function createInstance () {
   var instance = Seneca({
     default_plugins: {transport: false},
-    log: 'silent',
-    tag: tag
+    log: 'silent'
   })
 
-  _.each(plugins, function (plugin) {
-    instance.use(plugin)
-  })
+  instance.use(Transport)
+
+  if (instance.version >= '2.0.0') {
+    instance.use(Entity)
+  }
 
   return instance
 }

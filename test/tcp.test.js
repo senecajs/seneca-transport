@@ -8,7 +8,6 @@ var Tcp = require('../lib/tcp')
 var TransportUtil = require('../lib/transport-utils')
 var ChildProcess = require('child_process')
 var Path = require('path')
-var Transport = require('../')
 
 var CreateInstance = require('./utils/createInstance')
 var CreateClient = require('./utils/createClient')
@@ -17,11 +16,10 @@ var lab = exports.lab = Lab.script()
 var describe = lab.describe
 var it = lab.it
 var expect = Code.expect
-var assert = Assert
 
 describe('Specific tcp', function () {
   it('tcp-basic', function (fin) {
-    CreateInstance(null, [Transport])
+    CreateInstance()
       .add('c:1', function (args, done) {
         done(null, { s: '1-' + args.d })
       })
@@ -44,16 +42,16 @@ describe('Specific tcp', function () {
   })
 
   it('error-passing-tcp', function (fin) {
-    CreateInstance(null, [Transport])
+    CreateInstance()
       .add('a:1', function (args, done) {
         done(new Error('bad-wire'))
       })
       .listen({type: 'tcp', port: 40404})
 
-    CreateInstance(null, [Transport])
+    CreateInstance()
       .client({type: 'tcp', port: 40404})
       .act('a:1', function (err, out) {
-        assert.equal('seneca: Action a:1 failed: bad-wire.', err.message)
+        Assert.equal('seneca: Action a:1 failed: bad-wire.', err.message)
         fin()
       })
   })
