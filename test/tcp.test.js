@@ -209,7 +209,7 @@ describe('Specific tcp', function () {
         finish = function () {}
       }
 
-      setTimeout(finish, 500)
+      setTimeout(finish, 2000)
     })
   })
 })

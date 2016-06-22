@@ -3,25 +3,17 @@
 var Assert = require('assert')
 var Code = require('code')
 var Lab = require('lab')
-var Seneca = require('seneca')
 var Http = require('../lib/http')
 var TransportUtil = require('../lib/transport-utils')
 var Wreck = require('wreck')
-var Entity = require('seneca-entity')
-
-var Transport = require('../')
 
 var CreateInstance = require('./utils/createInstance')
 var CreateClient = require('./utils/createClient')
-
-var no_t = {transport: false}
 
 var lab = exports.lab = Lab.script()
 var describe = lab.describe
 var it = lab.it
 var expect = Code.expect
-var assert = Assert
-
 
 describe('Specific http', function () {
   it('web-basic', function (done) {
@@ -55,7 +47,7 @@ describe('Specific http', function () {
             if (err) {
               return done(err)
             }
-            assert.equal('{"s":"1-A"}', JSON.stringify(body))
+            Assert.equal('{"s":"1-A"}', JSON.stringify(body))
             check()
           })
       })
@@ -71,16 +63,14 @@ describe('Specific http', function () {
     CreateInstance()
       .client(30303)
       .act('a:1', function (err, out) {
-        assert.equal('seneca: Action a:1 failed: bad-wire.', err.message)
+        Assert.equal('seneca: Action a:1 failed: bad-wire.', err.message)
         fin()
       })
   })
 
 
-  it('web-query', function (fin) {
-    Seneca({log: 'silent', errhandler: fin, default_plugins: no_t})
-      .use('../transport.js')
-      .use(Entity)
+  it('http-query', function (fin) {
+    CreateInstance({errhandler: fin})
       .add('a:1', function (args, done) {
         done(null, this.util.clean(args))
       })
@@ -92,8 +82,8 @@ describe('Specific http', function () {
             if (err) {
               return fin(err)
             }
-            assert.equal(1, body.a)
-            assert.equal(2, body.b)
+            Assert.equal(1, body.a)
+            Assert.equal(2, body.b)
 
             Wreck.get(
               'http://localhost:20302/act?args$=a:1, b:2, c:{d:3}', { json: true },
@@ -101,9 +91,9 @@ describe('Specific http', function () {
                 if (err) {
                   return fin(err)
                 }
-                assert.equal(1, body.a)
-                assert.equal(2, body.b)
-                assert.equal(3, body.c.d)
+                Assert.equal(1, body.a)
+                Assert.equal(2, body.b)
+                Assert.equal(3, body.c.d)
 
                 fin()
               }
@@ -115,18 +105,13 @@ describe('Specific http', function () {
   })
 
   it('web-add-headers', function (fin) {
-    Seneca({log: 'silent', errhandler: fin, default_plugins: no_t})
-      .use('../transport.js')
-      .use(Entity)
+    CreateInstance({errhandler: fin})
       .add('c:1', function (args, done) {
         done(null, {s: '1-' + args.d})
       })
       .listen({type: 'web', port: 20205})
       .ready(function () {
-        var tag
-
-        Seneca({tag: tag, log: 'silent', default_plugins: no_t, debug: {short_logs: true}})
-          .use(Transport, { web: {headers: {'client-id': 'test-client'}} })
+        CreateInstance({errhandler: fin}, {web: {headers: {'client-id': 'test-client'}}})
           .client({ type: 'web', port: 20205 })
           .ready(function () {
             this.act('c:1,d:A', function (err, out) {
@@ -134,14 +119,14 @@ describe('Specific http', function () {
                 return fin(err)
               }
 
-              assert.equal('{"s":"1-A"}', JSON.stringify(out))
+              Assert.equal('{"s":"1-A"}', JSON.stringify(out))
 
               this.act('c:1,d:AA', function (err, out) {
                 if (err) {
                   return fin(err)
                 }
 
-                assert.equal('{"s":"1-AA"}', JSON.stringify(out))
+                Assert.equal('{"s":"1-AA"}', JSON.stringify(out))
 
                 this.close(fin)
               })
@@ -151,13 +136,7 @@ describe('Specific http', function () {
   })
 
   it('can listen on ephemeral port', function (done) {
-    var seneca = Seneca({
-      log: 'silent',
-      default_plugins: {
-        transport: false
-      }
-    })
-
+    var seneca = CreateInstance()
     var settings = {
       web: {
         port: 0
@@ -182,12 +161,7 @@ describe('Specific http', function () {
   })
 
   it('defaults to 127.0.0.1 for connections', function (done) {
-    var seneca = Seneca({
-      log: 'silent',
-      default_plugins: {
-        transport: false
-      }
-    })
+    var seneca = CreateInstance()
 
     var settings = {
       web: {
@@ -229,10 +203,7 @@ describe('Specific https', function () {
       })
     }
 
-    Seneca({
-      log: 'silent'
-    })
-      .use('../transport')
+    CreateInstance()
       .use(color)
       .listen({
         type: 'web',
@@ -247,10 +218,7 @@ describe('Specific https', function () {
         }
       })
       .ready(function () {
-        Seneca({
-          log: 'silent'
-        })
-          .use('../transport')
+        CreateInstance()
           .client({
             type: 'http',
             port: 8000,

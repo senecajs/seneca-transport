@@ -3,14 +3,19 @@
 var Seneca = require('seneca')
 var Entity = require('seneca-entity')
 var Transport = require('../../')
+var _ = require('lodash')
 
-function createInstance () {
-  var instance = Seneca({
-    default_plugins: {transport: false},
-    log: 'silent'
-  })
+var defaults = {
+  default_plugins: {transport: false},
+  log: 'silent'
+}
 
-  instance.use(Transport)
+function createInstance (options, transportOptions) {
+  options = _.merge({}, defaults, options)
+
+  var instance = Seneca(options)
+
+  instance.use(Transport, transportOptions || {})
 
   if (instance.version >= '2.0.0') {
     instance.use(Entity)
