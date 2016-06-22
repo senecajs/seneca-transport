@@ -12,7 +12,7 @@ var Entity = require('seneca-entity')
 var Transport = require('../')
 
 var CreateInstance = require('./utils/createInstance')
-var CreateClient = require('./utils/CreateClient')
+var CreateClient = require('./utils/createClient')
 
 var no_t = {transport: false}
 
