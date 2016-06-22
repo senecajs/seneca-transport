@@ -3,8 +3,6 @@
 var Assert = require('assert')
 var Lab = require('lab')
 var Seneca = require('seneca')
-var Shared = require('seneca-transport-test')
-var Wreck = require('wreck')
 var Transport = require('../')
 var Entity = require('seneca-entity')
 
@@ -15,93 +13,13 @@ var it = lab.it
 
 var no_t = {transport: false}
 
+var CreateInstance = require('./utils/createInstance')
+
 process.setMaxListeners(999)
 
-function run_client (type, port, done, tag) {
-  createInstance()
-    .use(Entity)
-    .use(Transport)
-    .client({type: type, port: port})
-    .ready(function () {
-      this.act('c:1,d:A', function (err, out) {
-        if (err) return done(err)
-
-        assert.equal('{"s":"1-A"}', JSON.stringify(out))
-
-        this.act('c:1,d:AA', function (err, out) {
-          if (err) return done(err)
-
-          assert.equal('{"s":"1-AA"}', JSON.stringify(out))
-
-          this.close(done)
-        })
-      })
-    })
-}
-
-function createInstance (tag) {
-  var opts = {
-    default_plugins: {transport: false},
-    log: 'silent',
-    tag: tag
-  }
-
-  return Seneca(opts)
-}
-
-Shared.basictest({
-  seneca: createInstance().use(Entity).use(Transport),
-  script: lab,
-  type: 'tcp'
-})
-
-Shared.basicpintest({
-  seneca: createInstance().use(Entity).use(Transport),
-  script: lab,
-  type: 'tcp'
-})
-
-Shared.basictest({
-  seneca: createInstance().use(Entity).use(Transport),
-  script: lab,
-  type: 'web'
-})
-
-Shared.basicpintest({
-  seneca: createInstance().use(Entity).use(Transport),
-  script: lab,
-  type: 'web'
-})
-
-describe('transport', function () {
-  it('tcp-basic', function (fin) {
-    createInstance()
-      .use('../transport.js')
-      .add('c:1', function (args, done) {
-        done(null, { s: '1-' + args.d })
-      })
-      .listen({ type: 'tcp', port: 20102 })
-      .ready(function () {
-        var seneca = this
-
-        var count = 0
-        function check () {
-          count++
-          if (count === 3) {
-            seneca.close(fin)
-          }
-        }
-
-        run_client('tcp', 20102, check, 'cln0')
-        run_client('tcp', 20102, check, 'cln1')
-        run_client('tcp', 20102, check, 'cln2')
-      })
-  })
-
+describe('Various misc', function () {
   it('uses correct tx$ properties on entity actions for "transported" entities', function (done) {
-    var seneca1 = createInstance()
-    .use(Transport)
-    .use(Entity)
+    var seneca1 = CreateInstance(null, [Transport, Entity])
     .ready(function () {
       seneca1.add({cmd: 'test'}, function (args, cb) {
         args.entity.save$(function (err, entitySaveResponse) {
@@ -129,9 +47,7 @@ describe('transport', function () {
       })
       .listen({type: 'tcp', port: 20103})
 
-      var seneca2 = createInstance()
-      .use(Entity)
-      .use(Transport)
+      var seneca2 = CreateInstance(null, [Entity, Transport])
       .ready(function () {
         seneca2.client({type: 'tcp', port: 20103})
         this.act({cmd: 'test', entity: this.make$('test').data$({name: 'bar'})}, function (err, res) {
@@ -148,7 +64,7 @@ describe('transport', function () {
 
 
   it('uses correct tx$ properties on entity actions for "non-transported" requests', function (done) {
-    createInstance()
+    CreateInstance()
       .use(Entity)
       .use(Transport)
       .add({ cmd: 'test' }, function (args, cb) {
@@ -165,7 +81,7 @@ describe('transport', function () {
       })
       .listen({ type: 'tcp', port: 20104 })
       .ready(function () {
-        createInstance()
+        CreateInstance()
           .use(Entity)
           .use(Transport)
           .client({ type: 'tcp', port: 20104 })
@@ -178,156 +94,6 @@ describe('transport', function () {
           })
       })
   })
-
-
-  it('web-basic', function (done) {
-    Seneca({log: 'silent', errhandler: done, default_plugins: no_t})
-      .use('../transport.js')
-      .use(Entity)
-      .add('c:1', function (args, cb) {
-        cb(null, {s: '1-' + args.d})
-      })
-      .listen({type: 'web', port: 20202})
-      .ready(function () {
-        var count = 0
-        function check () {
-          count++
-          if (count === 4) {
-            done()
-          }
-        }
-
-        run_client('web', 20202, check)
-        run_client('web', 20202, check)
-        run_client('web', 20202, check)
-
-        var requestOptions = {
-          payload: JSON.stringify({ c: 1, d: 'A' }),
-          json: true
-        }
-        // special case for non-seneca clients
-        Wreck.post(
-          'http://localhost:20202/act',
-          requestOptions,
-          function (err, res, body) {
-            if (err) {
-              return done(err)
-            }
-            assert.equal('{"s":"1-A"}', JSON.stringify(body))
-            check()
-          })
-      })
-  })
-
-
-  it('web-query', function (fin) {
-    Seneca({log: 'silent', errhandler: fin, default_plugins: no_t})
-      .use('../transport.js')
-      .use(Entity)
-      .add('a:1', function (args, done) {
-        done(null, this.util.clean(args))
-      })
-      .listen({type: 'web', port: 20302})
-      .ready(function () {
-        Wreck.get(
-          'http://localhost:20302/act?a=1&b=2', { json: true },
-          function (err, res, body) {
-            if (err) {
-              return fin(err)
-            }
-            assert.equal(1, body.a)
-            assert.equal(2, body.b)
-
-            Wreck.get(
-              'http://localhost:20302/act?args$=a:1, b:2, c:{d:3}', { json: true },
-              function (err, res, body) {
-                if (err) {
-                  return fin(err)
-                }
-                assert.equal(1, body.a)
-                assert.equal(2, body.b)
-                assert.equal(3, body.c.d)
-
-                fin()
-              }
-           )
-          }
-       )
-      }
-   )
-  })
-
-  it('web-add-headers', function (fin) {
-    Seneca({log: 'silent', errhandler: fin, default_plugins: no_t})
-      .use('../transport.js')
-      .use(Entity)
-      .add('c:1', function (args, done) {
-        done(null, {s: '1-' + args.d})
-      })
-      .listen({type: 'web', port: 20205})
-      .ready(function () {
-        var tag
-
-        Seneca({tag: tag, log: 'silent', default_plugins: no_t, debug: {short_logs: true}})
-          .use(Transport, { web: {headers: {'client-id': 'test-client'}} })
-          .client({ type: 'web', port: 20205 })
-          .ready(function () {
-            this.act('c:1,d:A', function (err, out) {
-              if (err) {
-                return fin(err)
-              }
-
-              assert.equal('{"s":"1-A"}', JSON.stringify(out))
-
-              this.act('c:1,d:AA', function (err, out) {
-                if (err) {
-                  return fin(err)
-                }
-
-                assert.equal('{"s":"1-AA"}', JSON.stringify(out))
-
-                this.close(fin)
-              })
-            })
-          })
-      })
-  })
-
-  it('error-passing-http', function (fin) {
-    createInstance()
-      .use('../transport.js')
-      .add('a:1', function (args, done) {
-        done(new Error('bad-wire'))
-      })
-      .listen(30303)
-
-    createInstance()
-      .use('../transport.js')
-      .client(30303)
-      .act('a:1', function (err, out) {
-        assert.equal('seneca: Action a:1 failed: bad-wire.', err.message)
-        fin()
-      })
-  })
-
-
-  it('error-passing-tcp', function (fin) {
-    createInstance()
-      .use('../transport.js')
-      .add('a:1', function (args, done) {
-        done(new Error('bad-wire'))
-      })
-      .listen({type: 'tcp', port: 40404})
-
-    createInstance()
-      .use('../transport.js')
-      .client({type: 'tcp', port: 40404})
-      .act('a:1', function (err, out) {
-        assert.equal('seneca: Action a:1 failed: bad-wire.', err.message)
-        fin()
-      })
-  })
-
 
   // NOTE: SENECA_LOG=all will break this test as it counts log entries
   it('own-message', function (fin) {
@@ -602,7 +368,7 @@ describe('transport', function () {
   it('testmem-topic-star', function (fin) {
     Seneca({tag: 'srv', timeout: 5555, log: 'silent', debug: {short_logs: true}})
       .use(Transport)
-      .use('./memtest-transport.js')
+      .use('./stubs/memtest-transport.js')
       .add('foo:1', function (args, done) {
         assert.equal('aaa/AAA', args.meta$.id)
         done(null, {bar: 1})
@@ -616,7 +382,7 @@ describe('transport', function () {
         Seneca({tag: 'cln', timeout: 5555, log: 'silent', debug: {short_logs: true}})
 
           .use(Transport)
-          .use('./memtest-transport.js')
+          .use('./stubs/memtest-transport.js')
 
           .client({type: 'memtest', pin: 'foo:*'})
 
@@ -642,7 +408,7 @@ describe('transport', function () {
   it('catchall-ordering', function (fin) {
     Seneca({tag: 'srv', timeout: 5555, log: 'silent', debug: {short_logs: true}})
       .use(Transport)
-      .use('./memtest-transport.js')
+      .use('./stubs/memtest-transport.js')
 
       .add('foo:1', function (args, done) {
         done(null, {FOO: 1})
@@ -662,7 +428,7 @@ describe('transport', function () {
           Seneca({tag: 'cln0', timeout: 5555, log: 'silent', debug: {short_logs: true}})
 
             .use(Transport)
-            .use('./memtest-transport.js')
+            .use('./stubs/memtest-transport.js')
 
             .client({type: 'memtest', dest: 'D1'})
             .client({type: 'memtest', dest: 'D0', pin: 'foo:*'})
@@ -692,7 +458,7 @@ describe('transport', function () {
           Seneca({tag: 'cln1', timeout: 5555, log: 'silent', debug: {short_logs: true}})
 
             .use(Transport)
-            .use('./memtest-transport.js')
+            .use('./stubs/memtest-transport.js')
 
             .client({type: 'memtest', dest: 'D0', pin: 'foo:*'})
             .client({type: 'memtest', dest: 'D1'})
