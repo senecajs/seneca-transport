@@ -21,11 +21,11 @@ Shared.basicpintest({
 Shared.basictest({
   seneca: CreateInstance(),
   script: lab,
-  type: 'web'
+  type: 'http'
 })
 
 Shared.basicpintest({
   seneca: CreateInstance(),
   script: lab,
-  type: 'web'
+  type: 'http'
 })

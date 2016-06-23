@@ -4,14 +4,13 @@ process.setMaxListeners(999)
 
 var Assert = require('assert')
 var Lab = require('lab')
-var Seneca = require('seneca')
 var CreateInstance = require('./utils/createInstance')
 
 var lab = exports.lab = Lab.script()
 var describe = lab.describe
 var it = lab.it
 
-describe('Various misc', function () {
+describe('Miscellaneous', function () {
   // NOTE: SENECA_LOG=all will break this test as it counts log entries
   it('own-message', function (fin) {
     // a -> b -> a
@@ -46,30 +45,23 @@ describe('Various misc', function () {
       }
 
 
-      var a = Seneca({
+      var a = CreateInstance({
         log: {map: [
           {level: 'debug', regex: /\{a:1\}/, handler: log_a},
           {level: 'warn', regex: /own_message/, handler: own_a}
         ]},
-        timeout: 111,
-        default_plugins: {transport: false}
-      })
-            .use('../transport.js', {
-              check: {message_loop: false},
-              warn: {own_message: true}
-            })
+        timeout: 111
+      }, {check: {message_loop: false}, warn: {own_message: true}})
             .add('a:1', counter_a)
             .listen({type: type, port: 40405})
             .client({type: type, port: 40406})
 
-      var b = Seneca({
+      var b = CreateInstance({
         log: {map: [
           {level: 'debug', regex: /\{b:1\}/, handler: log_b}
         ]},
-        timeout: 111,
-        default_plugins: {transport: false}
+        timeout: 111
       })
-            .use('../transport.js')
             .add('b:1', counter_b)
             .listen({type: type, port: 40406})
             .client({type: type, port: 40405})
@@ -169,42 +161,34 @@ describe('Various misc', function () {
         counters.loop++
       }
 
-      var a = Seneca({
+      var a = CreateInstance({
         log: {map: [
           {level: 'debug', regex: /\{a:1\}/, handler: log_a},
           {level: 'warn', regex: /message_loop/, handler: loop_a}
         ]},
-        timeout: 111,
-        default_plugins: {transport: false}
-      })
-            .use('../transport.js', {
-              check: {own_message: false},
-              warn: {message_loop: true}
-            })
+        timeout: 111
+      }, {check: {own_message: false}, warn: {message_loop: true}})
             .add('a:1', counter_a)
             .listen({type: type, port: 40405})
             .client({type: type, port: 40406})
 
-      var b = Seneca({
+      var b = CreateInstance({
         log: {map: [
           {level: 'debug', regex: /\{b:1\}/, handler: log_b}
         ]},
-        timeout: 111,
-        default_plugins: {transport: false}
+        timeout: 111
       })
-            .use('../transport.js')
             .add('b:1', counter_b)
             .listen({type: type, port: 40406})
             .client({type: type, port: 40407})
 
-      var c = Seneca({
+      var c = CreateInstance({
         log: {map: [
           {level: 'debug', regex: /\{c:1\}/, handler: log_c}
         ]},
         timeout: 111,
         default_plugins: {transport: false}
       })
-            .use('../transport.js')
             .add('c:1', counter_c)
             .listen({type: type, port: 40407})
             .client({type: type, port: 40405})
