@@ -1,7 +1,7 @@
 'use strict'
 
 var Seneca = require('seneca')
-var Entity = require('seneca-entity')
+
 var Transport = require('../../')
 var _ = require('lodash')
 
@@ -14,12 +14,7 @@ function createInstance (options, transportOptions) {
   options = _.merge({}, defaults, options)
 
   var instance = Seneca(options)
-
   instance.use(Transport, transportOptions || {})
-
-  if (instance.version >= '2.0.0') {
-    instance.use(Entity)
-  }
 
   return instance
 }
