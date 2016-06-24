@@ -183,7 +183,7 @@ describe('Specific tcp', function () {
     })
   })
 
-  it.skip('handles reconnects', function (done) {
+  it('handles reconnects', function (done) {
     var serverPath = Path.join(__dirname, 'reconnect', 'server.js')
     var clientPath = Path.join(__dirname, 'reconnect', 'client.js')
 
