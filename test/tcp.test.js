@@ -183,7 +183,7 @@ describe('Specific tcp', function () {
     })
   })
 
-  it.skip('handles reconnects', function (done) {
+  it('handles reconnects', function (done) {
     var serverPath = Path.join(__dirname, 'reconnect', 'server.js')
     var clientPath = Path.join(__dirname, 'reconnect', 'client.js')
 
@@ -201,7 +201,7 @@ describe('Specific tcp', function () {
         server.kill('SIGKILL')
         setTimeout(function () {
           server = ChildProcess.fork(serverPath, [address.port])
-        }, 1000)
+        }, 500)
       })
       client.send({ port: address.port })
 
