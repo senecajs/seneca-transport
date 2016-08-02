@@ -14,7 +14,7 @@ process.on('message', function (address) {
   }
 
   client.ready(function () {
-    client.client({type: 'tcp', port: address.port})
+    client.client({type: 'tcp', port: Number(address.port)})
     client.act({ foo: 'bar' }, function (err, message) {
       expect(err).to.not.exist()
       expect(message.result).to.equal('bar')
