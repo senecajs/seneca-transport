@@ -192,6 +192,8 @@ describe('Specific tcp', function () {
     var actedCount = 0
 
     server.once('message', function (address) {
+      if (!address.port) return
+
       client.on('message', function (message) {
         if (!message.acted) {
           return
