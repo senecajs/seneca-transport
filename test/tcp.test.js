@@ -191,9 +191,7 @@ describe('Specific tcp', function () {
     var client = ChildProcess.fork(clientPath)
     var actedCount = 0
 
-    server.once('message', function (address) {
-      if (!address.port) return
-
+    server.on('message', function (address) {
       client.on('message', function (message) {
         if (!message.acted) {
           return
@@ -203,7 +201,7 @@ describe('Specific tcp', function () {
         server.kill('SIGKILL')
         setTimeout(function () {
           server = ChildProcess.fork(serverPath, [address.port])
-        }, 500)
+        }, 1000)
       })
       client.send({ port: address.port })
 
@@ -215,7 +213,7 @@ describe('Specific tcp', function () {
         finish = function () {}
       }
 
-      setTimeout(finish, 2000)
+      setTimeout(finish, 4000)
     })
   })
 })
