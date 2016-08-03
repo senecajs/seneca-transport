@@ -189,24 +189,40 @@ describe('Specific tcp', function () {
 
     var server = ChildProcess.fork(serverPath)
     var client = ChildProcess.fork(clientPath)
+    var actCallCount = 0
     var actedCount = 0
+    var setupClient = false
 
-    server.on('message', function (address) {
-      client.on('message', function (message) {
-        if (!message.acted) {
-          return
-        }
+    var handleServerMsg = function (msg) {
+      if (!setupClient && msg.port) {
+        client.on('message', function (message) {
+          if (!message.acted) {
+            return
+          }
 
-        actedCount++
-        server.kill('SIGKILL')
-        setTimeout(function () {
-          server = ChildProcess.fork(serverPath, [address.port])
-        }, 500)
-      })
-      client.send({ port: address.port })
-    })
+          actedCount++
+        })
+
+        client.send({ port: msg.port })
+        setupClient = true
+      }
+      else if (msg.gotActCall) {
+        actCallCount++
+      }
+    }
+
+    server.on('message', handleServerMsg)
+
+    setTimeout(function () {
+      server.kill('SIGKILL')
+      setTimeout(function () {
+        server = ChildProcess.fork(serverPath)
+        server.on('message', handleServerMsg)
+      }, 500)
+    }, 1000)
 
     var finish = function () {
+      expect(actCallCount).to.equal(1)
       expect(actedCount).to.equal(1)
       server.kill('SIGKILL')
       client.kill('SIGKILL')
