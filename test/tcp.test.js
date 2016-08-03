@@ -183,7 +183,7 @@ describe('Specific tcp', function () {
     })
   })
 
-  it('handles reconnects', function (done) {
+  it('handles reconnects', { timeout: 10000 }, function (done) {
     var serverPath = Path.join(__dirname, 'reconnect', 'server.js')
     var clientPath = Path.join(__dirname, 'reconnect', 'client.js')
 
@@ -229,7 +229,7 @@ describe('Specific tcp', function () {
         server.on('message', handleServerMsg)
         server.on('exit', handleExit)
       }, 500)
-    }, 1000)
+    }, 4000)
 
     setTimeout(function () {
       server.kill('SIGKILL')
@@ -237,6 +237,6 @@ describe('Specific tcp', function () {
       expect(actCallCount).to.equal(1)
       expect(actedCount).to.equal(1)
       done()
-    }, 3000)
+    }, 8000)
   })
 })
