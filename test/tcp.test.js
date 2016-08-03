@@ -229,7 +229,7 @@ describe('Specific tcp', function () {
         server.on('message', handleServerMsg)
         server.on('exit', handleExit)
       }, 500)
-    }, 4000)
+    }, 5000)
 
     setTimeout(function () {
       server.kill('SIGKILL')

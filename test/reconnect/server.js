@@ -11,7 +11,7 @@ server.add({foo: 'bar'}, function (message, cb) {
 })
 
 server.ready(function () {
-  server.listen({type: 'tcp', port: 5432}, function (err, address) {
+  server.listen({type: 'tcp', port: 9394}, function (err, address) {
     if (err) {
       throw err
     }
