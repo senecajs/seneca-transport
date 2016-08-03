@@ -16,7 +16,6 @@ server.ready(function () {
       throw err
     }
 
-    process.stdout.write('server is listening\n')
     process.send({port: address.port})
   })
 })

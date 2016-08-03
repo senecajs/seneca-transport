@@ -194,14 +194,11 @@ describe('Specific tcp', function () {
     var setupClient = false
 
     var handleServerMsg = function (msg) {
-      process.stdout.write('got SrvMsg ' + JSON.stringify(msg, null, 2) + '\n')
       if (!setupClient && msg.port) {
-        process.stdout.write('setting up client\n')
         client.send({ port: msg.port })
         setupClient = true
       }
       else if (msg.gotActCall) {
-        process.stdout.write('srv got actcall\n')
         actCallCount++
       }
     }
@@ -213,7 +210,6 @@ describe('Specific tcp', function () {
 
     server.on('message', handleServerMsg)
     client.on('message', function (msg) {
-      process.stdout.write('got CltMsg ' + JSON.stringify(msg, null, 2) + '\n')
       if (!msg.acted) return
       actedCount++
     })
@@ -224,7 +220,6 @@ describe('Specific tcp', function () {
     setTimeout(function () {
       server.kill('SIGKILL')
       setTimeout(function () {
-        process.stdout.write('srv restart\n')
         server = ChildProcess.fork(serverPath)
         server.on('message', handleServerMsg)
         server.on('exit', handleExit)
