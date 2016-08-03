@@ -17,6 +17,7 @@ before_script:
   - npm uninstall seneca
   - npm install seneca$SENECA_VER
   - echo FLAGS:$LAB_FLAGS
+  - env
 
 cache:
   directories:
