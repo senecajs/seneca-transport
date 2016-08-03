@@ -201,19 +201,19 @@ describe('Specific tcp', function () {
         server.kill('SIGKILL')
         setTimeout(function () {
           server = ChildProcess.fork(serverPath, [address.port])
-        }, 1000)
+        }, 500)
       })
       client.send({ port: address.port })
-
-      var finish = function () {
-        expect(actedCount).to.equal(1)
-        server.kill('SIGKILL')
-        client.kill('SIGKILL')
-        done()
-        finish = function () {}
-      }
-
-      setTimeout(finish, 4000)
     })
+
+    var finish = function () {
+      expect(actedCount).to.equal(1)
+      server.kill('SIGKILL')
+      client.kill('SIGKILL')
+      done()
+      finish = function () {}
+    }
+
+    setTimeout(finish, 3000)
   })
 })
