@@ -194,42 +194,49 @@ describe('Specific tcp', function () {
     var setupClient = false
 
     var handleServerMsg = function (msg) {
+      process.stdout.write('got SrvMsg ' + JSON.stringify(msg, null, 2) + '\n')
       if (!setupClient && msg.port) {
-        client.on('message', function (message) {
-          if (!message.acted) {
-            return
-          }
-
-          actedCount++
-        })
-
+        process.stdout.write('setting up client\n')
         client.send({ port: msg.port })
         setupClient = true
       }
       else if (msg.gotActCall) {
+        process.stdout.write('srv got actcall\n')
         actCallCount++
       }
     }
 
+    var handleExit = function (code, signal) {
+      expect(code).to.equal(null)
+      expect(signal).to.equal('SIGKILL')
+    }
+
     server.on('message', handleServerMsg)
+    client.on('message', function (msg) {
+      process.stdout.write('got CltMsg ' + JSON.stringify(msg, null, 2) + '\n')
+      if (!msg.acted) return
+      actedCount++
+    })
+
+    server.on('exit', handleExit)
+    client.on('exit', handleExit)
 
     setTimeout(function () {
       server.kill('SIGKILL')
       setTimeout(function () {
+        process.stdout.write('srv restart\n')
         server = ChildProcess.fork(serverPath)
         server.on('message', handleServerMsg)
+        server.on('exit', handleExit)
       }, 500)
     }, 1000)
 
-    var finish = function () {
-      expect(actCallCount).to.equal(1)
-      expect(actedCount).to.equal(1)
+    setTimeout(function () {
       server.kill('SIGKILL')
       client.kill('SIGKILL')
+      expect(actCallCount).to.equal(1)
+      expect(actedCount).to.equal(1)
       done()
-      finish = function () {}
-    }
-
-    setTimeout(finish, 3000)
+    }, 3000)
   })
 })
