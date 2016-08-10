@@ -12,7 +12,6 @@ process.on('message', function (address) {
   if (!address.port) {
     return
   }
-
   client.ready(function () {
     client.client({type: 'tcp', port: address.port})
     client.act({ foo: 'bar' }, function (err, message) {

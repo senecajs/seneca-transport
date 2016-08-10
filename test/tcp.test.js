@@ -183,37 +183,55 @@ describe('Specific tcp', function () {
     })
   })
 
-  it.skip('handles reconnects', function (done) {
+  it.skip('handles reconnects', { timeout: 10000 }, function (done) {
     var serverPath = Path.join(__dirname, 'reconnect', 'server.js')
     var clientPath = Path.join(__dirname, 'reconnect', 'client.js')
 
     var server = ChildProcess.fork(serverPath)
     var client = ChildProcess.fork(clientPath)
+    var actCallCount = 0
     var actedCount = 0
+    var setupClient = false
 
-    server.once('message', function (address) {
-      client.on('message', function (message) {
-        if (!message.acted) {
-          return
-        }
-
-        actedCount++
-        server.kill('SIGKILL')
-        setTimeout(function () {
-          server = ChildProcess.fork(serverPath, [address.port])
-        }, 500)
-      })
-      client.send({ port: address.port })
-
-      var finish = function () {
-        expect(actedCount).to.equal(1)
-        server.kill('SIGKILL')
-        client.kill('SIGKILL')
-        done()
-        finish = function () {}
+    var handleServerMsg = function (msg) {
+      if (!setupClient && msg.port) {
+        client.send({ port: msg.port })
+        setupClient = true
       }
+      else if (msg.gotActCall) {
+        actCallCount++
+      }
+    }
 
-      setTimeout(finish, 2000)
+    var handleExit = function (code, signal) {
+      expect(code).to.equal(null)
+      expect(signal).to.equal('SIGKILL')
+    }
+
+    server.on('message', handleServerMsg)
+    client.on('message', function (msg) {
+      if (!msg.acted) return
+      actedCount++
     })
+
+    server.on('exit', handleExit)
+    client.on('exit', handleExit)
+
+    setTimeout(function () {
+      server.kill('SIGKILL')
+      setTimeout(function () {
+        server = ChildProcess.fork(serverPath)
+        server.on('message', handleServerMsg)
+        server.on('exit', handleExit)
+      }, 500)
+    }, 5000)
+
+    setTimeout(function () {
+      server.kill('SIGKILL')
+      client.kill('SIGKILL')
+      expect(actCallCount).to.equal(1)
+      expect(actedCount).to.equal(1)
+      done()
+    }, 8000)
   })
 })
