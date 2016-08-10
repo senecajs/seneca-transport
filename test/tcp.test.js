@@ -172,7 +172,7 @@ describe('Specific tcp', function () {
 
     server.call(seneca, { type: 'tcp' }, function (err, address) {
       expect(err).to.not.exist()
-
+      expect(address.type).to.equal('tcp')
       settings.tcp.port = address.port
       var client = Tcp.client(settings, transportUtil)
       expect(typeof client).to.equal('function')

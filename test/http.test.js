@@ -183,6 +183,7 @@ describe('Specific http', function () {
     server.call(seneca, { type: 'web' }, function (err, address) {
       expect(err).to.not.exist()
 
+      expect(address.type).to.equal('web')
       settings.web.port = address.port
       var client = Http.client(settings, transportUtil)
       expect(typeof client).to.equal('function')
