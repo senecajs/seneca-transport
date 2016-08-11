@@ -94,7 +94,7 @@ var Fs = require('fs')
 
 seneca()
   .use(color)
-  .listen(
+  .listen({
     type: 'http',
     port: '8000',
     host: 'localhost',
@@ -103,7 +103,7 @@ seneca()
       key : Fs.readFileSync('path/to/key.pem', 'utf8'),
       cert : Fs.readFileSync('path/to/cert.pem', 'utf8')
     }
-  )
+  })
 
 seneca()
   .client({
