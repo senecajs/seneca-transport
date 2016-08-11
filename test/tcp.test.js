@@ -183,7 +183,7 @@ describe('Specific tcp', function () {
     })
   })
 
-  it.skip('handles reconnects', function (done) {
+  it('handles reconnects', { timeout: 5000 }, function (done) {
     var serverPath = Path.join(__dirname, 'reconnect', 'server.js')
     var clientPath = Path.join(__dirname, 'reconnect', 'client.js')
 
