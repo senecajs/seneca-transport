@@ -2,7 +2,7 @@
 
 * Fix tcp transport breaks seneca mesh
 * Dropped support for Node 0.10, 0.12
-* Deps update
+* Depependencies update
 
 ## 1.3.0
 
