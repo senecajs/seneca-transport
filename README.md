@@ -14,7 +14,7 @@ micro-service messages. It's a built-in dependency of the Seneca
 module, so you don't need to include it manually. You use this plugin
 to wire up your micro-services so that they can talk to each other.
 
-seneca-transport's source can be read in an annotated fashion by,
+seneca-transport's source can be read in an annotated fashion by:
 - running `npm run annotate`
 - viewing [./doc/transport.html](./doc/transport.html) locally
 
@@ -32,7 +32,7 @@ Supports Seneca versions **1.x** - **3.x**
 
 ## Install
 
-This plugin module is included in the main Seneca module,
+This plugin module is included in the main Seneca module:
 
 ```sh
 npm install seneca
@@ -82,10 +82,9 @@ seneca()
   .act('color:red')
 ```
 
-Example with HTTPS
+Example with HTTPS:
 
-To enable HTTPS make sure to set the protocol option to 'https' and in the
-listen function set the serverOptions object with the `key` and `cert` keys.
+To enable HTTPS, pass an options object to the `listen` function setting the `protocol` option to 'https' and provide a `serverOptions` object with `key` and `cert` properties.
 
 ```js
 var seneca = require('seneca')
@@ -134,12 +133,11 @@ node readme-color.js --seneca.log=type:act,regex:color:red
 _NOTE: when running the examples in this documentation, you'll find
 that most of the Node.js processes do not exit. This because they
 running in server mode. You'll need to kill all the Node.js processes
-between execution runs. The quickest way to do this is:
+between execution runs. The quickest way to do this is:_
 
 ```sh
 $ killall node
 ```
-_
 
 
 This log filter restricts printed log entries to those that report
@@ -158,7 +156,7 @@ The second field is the identifier of the Seneca instance. You can see
 that first the client (with an identifier of _vy../..15/-_) sends the
 message <code>{color=red}</code>. The message is sent over HTTP to the
 server (which has an identifier of _ly../..80/-_). The server performs the
-action, generating the result <code>{hex=#FF0000}</code>, and sending
+action, generating the result <code>{hex=#FF0000}</code>, and sends
 it back.
 
 The third field, <code>DEBUG</code>, indicates the log level. The next
@@ -182,7 +180,7 @@ from the client (back to your own code). The field after that,
 remains the same over multiple Seneca instances. This helps you to
 debug message flow.
 
-The next two fields show the action pattern of the message
+The next two fields show the action pattern of the message, 
 <code>color:red</code>, followed by the actual data of the request
 message (when inbound), or the response message (when outbound).
 
@@ -208,7 +206,7 @@ _case_ is ADD. These entries indicate the action patterns that a
 plugin has registered. In this case, there's only one, _color:red_.
 
 You've run this example in a single Node.js process up to now. Of
-course, the whole point is to run it a separate processes! Let's do
+course, the whole point is to run it in separate processes! Let's do
 that. First, here's the server:
 
 ```js
@@ -450,7 +448,7 @@ seneca()
 You can cheat by running the HTTP examples with the additional command
 line option: <code>--seneca.options.transport.type=tcp</code>.
 
-To communicate with a Seneca instance over TCP you can send from command line a message that Seneca understands:
+To communicate with a Seneca instance over TCP, you can send a message from the command line that Seneca understands:
 
 ```sh
 # call the color:red action pattern
@@ -487,22 +485,22 @@ action patterns over the network. When you have multiple client
 definitions, it's becuase you want to send some action patterns to one
 micro-service, and other patterns to other micro-services. To do this,
 you need to specify the patterns you are interested in. In Seneca,
-this is done with a _pin_.
+this is done with a `pin`.
 
-A Seneca _pin_ is a pattern for action patterns. You provide a list of
+A Seneca `pin` is a pattern for action patterns. You provide a list of
 property names and values that must match. Unlike ordinary action
-patterns, where the values are fixed, with a _pin_, you can use globs
+patterns, where the values are fixed, with a `pin`, you can use globs
 to match more than one value. For example, let's say you have the patterns:
 
    * _foo:1,bar:zed-aaa_
    * _foo:1,bar:zed-bbb_
    * _foo:1,bar:zed-ccc_
 
-Then you can use these _pins_ to pick out the patterns you want:
+Then you can use these `pins` to pick out the patterns you want:
 
-   * _foo:1_ matches _foo:1,bar:zed-aaa_; _foo:1,bar:zed-bbb_; _foo:1,bar:zed-ccc_
-   * _foo:1, bar:*_ also matches _foo:1,bar:zed-aaa_; _foo:1,bar:zed-bbb_; _foo:1,bar:zed-ccc_
-   * _foo:1, bar:*-aaa_ matches only _foo:1,bar:zed-aaa_
+   * <code>foo:1</code> matches <code>foo:1,bar:zed-aaa</code>; <code>foo:1,bar:zed-bbb</code>; <code>foo:1,bar:zed-ccc</code>
+   * <code>foo:1, bar:*</code> also matches <code>foo:1,bar:zed-aaa</code>; <code>foo:1,bar:zed-bbb</code>; <code>foo:1,bar:zed-ccc</code>
+   * <code>foo:1, bar:*-aaa</code> matches only <code>foo:1,bar:zed-aaa</code>
 
 Let's extend the color service example. You'll have three separate
 services, all running in separate processes. They will listen on ports
@@ -571,7 +569,7 @@ blue. Let's also run a client to connect to them.
 
 Let's make it interesting. The client will <code>listen</code> so that it can
 handle incoming actions, and pass them on to the appropriate server by
-using a _pin_. The client will also define a new action that can
+using a <code>pin</code>. The client will also define a new action that can
 aggregate color lookups.
 
 ```js
@@ -609,9 +607,9 @@ seneca()
 ```
 
 This code calls the <code>client</code> method three times. Each time,
-it specifies an action pattern _pin_, and a destination port. And
+it specifies an action pattern <code>pin</code>, and a destination port. And
 action submitted to this Seneca instance via the <code>act</code>
-method will be matched against these _pin_ patterns. If there is a
+method will be matched against these <code>pin</code> patterns. If there is a
 match, they will not be processed locally. Instead they will be sent
 out over the network to the micro-service that deals with them.
 
@@ -672,10 +670,10 @@ terminator).
 For other transports, please see the documentation for the underlying
 protocol. In general the transport plugins, such as
 _seneca-redis-transport_ will handle this for you so that you only
-have to think in terms of JavaScript objects
+have to think in terms of JavaScript objects.
 
 The JSON object is a wrapper for the message data. The wrapper contains
-some tracking fields to make debugging easier, these are:
+some tracking fields to make debugging easier. These are:
 
    * _id_:     action identifier (appears in Seneca logs after IN/OUT)
    * _kind_:   'act' for inbound actions, 'res' for outbound responses
