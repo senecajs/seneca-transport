@@ -492,15 +492,15 @@ property names and values that must match. Unlike ordinary action
 patterns, where the values are fixed, with a `pin`, you can use globs
 to match more than one value. For example, let's say you have the patterns:
 
-   * _foo:1,bar:zed-aaa_
-   * _foo:1,bar:zed-bbb_
-   * _foo:1,bar:zed-ccc_
+   * <code>foo:1,bar:zed-aaa</code>
+   * <code>foo:1,bar:zed-bbb</code>
+   * <code>foo:1,bar:zed-ccc</code>
 
 Then you can use these `pins` to pick out the patterns you want:
 
-   * <code>foo:1</code> matches <code>foo:1,bar:zed-aaa</code>; <code>foo:1,bar:zed-bbb</code>; <code>foo:1,bar:zed-ccc</code>
-   * <code>foo:1, bar:*</code> also matches <code>foo:1,bar:zed-aaa</code>; <code>foo:1,bar:zed-bbb</code>; <code>foo:1,bar:zed-ccc</code>
-   * <code>foo:1, bar:*-aaa</code> matches only <code>foo:1,bar:zed-aaa</code>
+   * The pin <code>foo:1</code> matches the patterns <code>foo:1,bar:zed-aaa</code> and <code>foo:1,bar:zed-bbb</code> and <code>foo:1,bar:zed-ccc</code>
+   * The pin <code>foo:1, bar:*</code> also matches the patterns <code>foo:1,bar:zed-aaa</code> and <code>foo:1,bar:zed-bbb</code> and <code>foo:1,bar:zed-ccc</code>
+   * The pin <code>foo:1, bar:*-aaa</code> matches only the pattern <code>foo:1,bar:zed-aaa</code>
 
 Let's extend the color service example. You'll have three separate
 services, all running in separate processes. They will listen on ports
