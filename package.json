@@ -44,10 +44,13 @@
     "eslint-config-seneca": "3.x.x",
     "eslint-plugin-hapi": "4.x.x",
     "eslint-plugin-standard": "2.x.x",
-    "lab": "10.9.x",
+    "lab": "11.0.x",
     "pre-commit": "1.1.x",
     "seneca": "plugin",
     "seneca-entity": "1.2.x",
     "seneca-transport-test": "0.2.0"
-  }
+  },
+  "pre-commit": [
+    "test"
+  ]
 }
