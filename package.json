@@ -20,13 +20,32 @@
     "test-report": "lab -v -L -P test -t 81 -m 5000 -r html > test/report.html; open test/report.html",
     "bench": "node bench",
     "coveralls": "lab -s -P test -r lcov | coveralls",
-    "annotate": "docco transport.js -o doc; open doc/transport.html"
+    "annotate": "docco transport.js -o docs/annotated; open docs/annotated/transport.html"
   },
+  "contributors": [
+    "Richard Rodger (https://github.com/rjrodger)",
+    "Wyatt Preul (https://github.com/geek)",
+    "Dean McDonnell (https://github.com/mcdonnelldean)",
+    "Mihai Dima (https://github.com/mihaidma)",
+    "David Gonzalez (https://github.com/dgonzalez)",
+    "Glen Keane (https://github.com/thekemkid)",
+    "Marco Piraccini (https://github.com/marcopiraccini)",
+    "Shane Lacey (https://github.com/shanel262)",
+    "Cristian Kiss (https://github.com/ckiss)",
+    "jaamison (https://github.com/jaamison)",
+    "peterli888 (https://github.com/peterli888)",
+    "Emer Rutherford (https://github.com/eeswr)",
+    "Greg Kubisa (https://github.com/gkubisa)",
+    "Geoffrey Clements (https://github.com/baldmountain)",
+    "Rumkin (https://github.com/rumkin)",
+    "Boris Jonica (https://github.com/bjonica)",
+    "Damien Simonin Feugas (https://github.com/feugy)"
+  ],
   "dependencies": {
     "eraro": "0.4.1",
     "gex": "0.2.2",
     "jsonic": "0.2.2",
-    "lodash": "4.14.2",
+    "lodash": "4.15.0",
     "lru-cache": "4.0.1",
     "ndjson": "1.4.3",
     "nid": "0.3.2",
@@ -50,6 +69,13 @@
     "seneca-entity": "1.2.x",
     "seneca-transport-test": "0.2.0"
   },
+  "files": [
+    "transport.js",
+    "README.md",
+    "LICENSE.txt",
+    "bench.js",
+    "lib"
+  ],
   "pre-commit": [
     "test"
   ]
