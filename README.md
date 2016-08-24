@@ -16,7 +16,7 @@ to wire up your micro-services so that they can talk to each other.
 
 seneca-transport's source can be read in an annotated fashion by:
 - running `npm run annotate`
-- viewing [./doc/transport.html](./doc/transport.html) locally
+- viewing ./docs/annotated/transport.html locally
 
 If you're using this module, and need help, you can:
 

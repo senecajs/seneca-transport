@@ -2,5 +2,5 @@
 *.log
 test/report.html
 
-doc
+docs/annotated
 node_modules
