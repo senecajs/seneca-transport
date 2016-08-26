@@ -20,6 +20,7 @@
     "test-report": "lab -v -L -P test -t 81 -m 5000 -r html > test/report.html; open test/report.html",
     "bench": "node bench",
     "coveralls": "lab -s -P test -r lcov | coveralls",
+    "coverage": "lab -v -P test -L -t 81 -r html > docs/coverage.html",
     "annotate": "docco transport.js -o docs/annotated; open docs/annotated/transport.html"
   },
   "contributors": [
@@ -72,7 +73,7 @@
   "files": [
     "transport.js",
     "README.md",
-    "LICENSE.txt",
+    "LICENSE",
     "bench.js",
     "lib"
   ],
