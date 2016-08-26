@@ -20,6 +20,7 @@
     "test-report": "lab -v -L -P test -t 81 -m 5000 -r html > test/report.html; open test/report.html",
     "bench": "node bench",
     "coveralls": "lab -s -P test -r lcov | coveralls",
+    "coverage": "lab -v -P test -L -t 80 -r html > docs/coverage.html",
     "annotate": "docco transport.js -o doc; open doc/transport.html"
   },
   "dependencies": {
