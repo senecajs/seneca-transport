@@ -26,7 +26,7 @@
     "eraro": "0.4.1",
     "gex": "0.2.2",
     "jsonic": "0.2.2",
-    "lodash": "4.14.2",
+    "lodash": "4.15.0",
     "lru-cache": "4.0.1",
     "ndjson": "1.4.3",
     "nid": "0.3.2",
@@ -47,7 +47,7 @@
     "lab": "11.0.x",
     "pre-commit": "1.1.x",
     "seneca": "plugin",
-    "seneca-entity": "1.2.x",
+    "seneca-entity": "1.3.x",
     "seneca-transport-test": "0.2.0"
   },
   "pre-commit": [
