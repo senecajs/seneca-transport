@@ -4,6 +4,7 @@ language: node_js
 env:
   - SENECA_VER=@1.x.x
   - SENECA_VER=@2.x.x
+  - SENECA_VER=@3.x.x
 
 node_js:
   - '6'
