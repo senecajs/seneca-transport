@@ -119,7 +119,7 @@ process. They won't interfere with each other, but they will share
 external options from configuration files or the command line.
 
 If you run the full script (full source is in
-[readme-color.js](https://github.com/senecajs/seneca-transport/blob/master/test/readme-color.js)),
+[readme-color.js](https://github.com/senecajs/seneca-transport/blob/master/test/stubs/readme-color.js)),
 you'll see the standard Seneca startup log messages, but you won't see
 anything that tells you what the _color_ plugin is doing since this
 code doesn't bother printing the result of the action. Let's use a
@@ -373,7 +373,7 @@ seneca()
 ```
 
 The full source code is in the
-[readme-color-tcp.js](https://github.com/senecajs/seneca-transport/blob/master/test/readme-color-tcp.js)
+[readme-color-tcp.js](https://github.com/senecajs/seneca-transport/blob/master/test/stubs/readme-color-tcp.js)
 file. When you run this script it would be great to verify that the
 right transport channels are being created. You'd like to see the
 configuration, and any connections that occur. By default, this
@@ -506,7 +506,7 @@ Let's extend the color service example. You'll have three separate
 services, all running in separate processes. They will listen on ports
 8081, 8082, and 8083 respectively. You'll use command line arguments
 for settings. Here's the service code (see
-[readme-many-colors-server.js](https://github.com/senecajs/seneca-transport/blob/master/test/readme-many-colors-server.js)):
+[readme-many-colors-server.js](https://github.com/senecajs/seneca-transport/blob/master/test/stubs/readme-many-colors-server.js)):
 
 ```js
 var color  = process.argv[2]
@@ -647,7 +647,7 @@ _list:colors_. This lets you call multiple color actions and return
 one result. This is a common micro-service pattern.
 
 The script
-[readme-many-colors.sh](https://github.com/senecajs/seneca-transport/blob/master/test/readme-many-colors.sh)
+[readme-many-colors.sh](https://github.com/senecajs/seneca-transport/blob/master/test/stubs/readme-many-colors.sh)
 wraps all this up into one place for you so that it is easy to run.
 
 Seneca does not require you to use message transports. You can run
