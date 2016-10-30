@@ -91,4 +91,36 @@ describe('Transporting Entities', function () {
           })
       })
   })
+
+  it('supports client that are not using entity (#135)', function (done) {
+    var server = CreateInstance()
+
+    if (server.version >= '2.0.0') {
+      server.use(Entity)
+    }
+
+    server.ready(function () {
+      server.add({cmd: 'test'}, function (args, cb) {
+        let entity = this.make$('test').data$(args.entity)
+        entity.save$(function (err, entitySaveResponse) {
+          if (err) return cb(err)
+          cb(null, entitySaveResponse)
+        })
+      })
+      .add({role: 'entity', cmd: 'save'}, function (args, cb) {
+        cb(null, { entity: args.ent, tx: args.tx$ })
+      })
+      .listen({ type: 'tcp', port: 20105 })
+
+      var client = CreateInstance()
+      client.client({ type: 'tcp', port: 20105 })
+      client.ready(function () {
+        this.act({cmd: 'test', entity: { name: 'bar' }}, function (err, res) {
+          Assert(!err)
+          Assert(res.entity.name === 'bar')
+          done()
+        })
+      })
+    })
+  })
 })
