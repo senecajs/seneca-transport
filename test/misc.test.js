@@ -348,4 +348,58 @@ describe('Miscellaneous', function () {
         }
       })
   })
+
+  it('listen-tcp-pin (#97)', function (fin) {
+    CreateInstance()
+      .add('foo:1', function (args, done) {
+        done(null, {FOO: 1})
+      })
+      .add('bar:1', function (args, done) {
+        done(null, {BAR: 1})
+      })
+      .listen({type: 'tcp', port: '9999', pin: 'foo:*'})
+
+      .ready(function () {
+        var siClient = CreateInstance()
+          .client({type: 'tcp', port: '9999'})
+
+        siClient.act('foo:1', function (err, out) {
+          Assert.equal(err, null)
+          Assert.equal(1, out.FOO)
+
+          siClient.act('bar:1', function (err, out) {
+            Assert.equal(err.code, 'not_pinned')
+            if (err) return fin()
+            fin(new Error('Not pinned service called'))
+          })
+        })
+      })
+  })
+  it('listen-http-pin (#97)', function (fin) {
+    CreateInstance()
+      .add('foo:1', function (args, done) {
+        done(null, {FOO: 1})
+      })
+      .add('bar:1', function (args, done) {
+        done(null, {BAR: 1})
+      })
+      .listen({type: 'http', port: '9998', pin: 'foo:*'})
+
+      .ready(function () {
+        var siClient = CreateInstance()
+          .client({type: 'http', port: '9998'})
+
+        siClient.act('foo:1', function (err, out) {
+          Assert.equal(err, null)
+          Assert.equal(1, out.FOO)
+
+          siClient.act('bar:1', function (err, out) {
+            Assert.equal(err.statusCode, 404)
+            Assert.equal(err.code, 'not_pinned')
+            if (err) return fin()
+            fin(new Error('Not pinned service called'))
+          })
+        })
+      })
+  })
 })
