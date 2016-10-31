@@ -68,7 +68,6 @@ describe('Specific http', function () {
       })
   })
 
-
   it('http-query', function (fin) {
     CreateInstance({errhandler: fin})
       .add('a:1', function (args, done) {
@@ -192,6 +191,106 @@ describe('Specific http', function () {
         done()
       })
     })
+  })
+
+  it('apply inward/outward listen options on HTTP remote act call', function (fin) {
+    CreateInstance()
+      .add('foo:1', function (args, done) {
+        done(null, { BAR: args.bar })
+      })
+      .listen({type: 'http', port: '18997',
+        inward: (context, data) => {
+          data.msg.bar += 1
+          data.msg.inward = 'INPUT UPGRADED'
+        },
+        outward: (context, data) => {
+          data.res.BAR += 10
+          data.res.inward = data.msg.inward
+          data.res.outward = 'OUTPUT UPGRADED'
+        }
+      })
+      .ready(function () {
+        var siClient = CreateInstance()
+          .client({type: 'http', port: '18997'})
+
+        siClient.act('foo:1,bar:2', function (err, out) {
+          if (err) return fin(err)
+          Assert.equal(out.BAR, 13)
+          Assert.equal(out.inward, 'INPUT UPGRADED')
+          Assert.equal(out.outward, 'OUTPUT UPGRADED')
+          fin()
+        })
+      })
+  })
+
+  it('reject HTTP remote act call in inward listen option', function (fin) {
+    CreateInstance()
+      .add('foo:1', function (args, done) {
+        done(null, { BAR: args.bar })
+      })
+      .listen({type: 'http', port: '18996',
+        inward: (context, data) => {
+          var e = new Error('HTTP inward rejected!')
+          e.error_code = 'inward_rejected'
+          throw e
+        }
+      })
+      .ready(function () {
+        var siClient = CreateInstance()
+          .client({type: 'http', port: '18996'})
+
+        siClient.act('foo:1,bar:2', function (err, out) {
+          Assert.equal(err.error_code, 'inward_rejected')
+          if (err) return fin()
+          fin(new Error('Inward does not reject remote call'))
+        })
+      })
+  })
+
+  it('reject HTTP remote act call in outward listen option', function (fin) {
+    CreateInstance()
+      .add('foo:1', function (args, done) {
+        done(null, { BAR: args.bar })
+      })
+      .listen({type: 'http', port: '18995',
+        outward: (context, data) => {
+          var e = new Error('HTTP outward rejected!')
+          e.error_code = 'outward_rejected'
+          throw e
+        }
+      })
+      .ready(function () {
+        var siClient = CreateInstance()
+          .client({type: 'http', port: '18995'})
+
+        siClient.act('foo:1,bar:2', function (err, out) {
+          Assert.equal(err.error_code, 'outward_rejected')
+          if (err) return fin()
+          fin(new Error('Outward does not reject remote call'))
+        })
+      })
+  })
+
+  it('catch HTTP remote act call error in outward listen option', function (fin) {
+    CreateInstance()
+      .add('foo:1', function (args, done) {
+        done(new Error('Catchable failure'), {BAR: args.bar})
+      })
+      .listen({type: 'http', port: '18994',
+        outward: (context, data) => {
+          delete data.err
+        }
+      })
+      .ready(function () {
+        var siClient = CreateInstance()
+          .client({type: 'http', port: '18994'})
+
+        siClient.act('foo:1,bar:2', function (err, out) {
+          if (err) return fin(err)
+          Assert.equal(out.BAR, 2)
+          fin()
+        })
+      })
   })
 })
 

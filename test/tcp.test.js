@@ -65,7 +65,6 @@ describe('Specific tcp', function () {
 
     var settings = {tcp: {port: 0, host: 'localhost'}}
 
-
     var transportUtil = new TransportUtil({
       callmap: {},
       seneca: seneca,
@@ -214,6 +213,106 @@ describe('Specific tcp', function () {
       }
 
       setTimeout(finish, 2000)
+    })
+
+    it('apply inward/outward listen options on TCP remote act call', function (fin) {
+      CreateInstance()
+        .add('foo:1', function (args, done) {
+          done(null, { BAR: args.bar })
+        })
+        .listen({type: 'tcp', port: '19997',
+          inward: (context, data) => {
+            data.msg.bar += 1
+            data.msg.inward = 'INPUT UPGRADED'
+          },
+          outward: (context, data) => {
+            data.res.BAR += 10
+            data.res.inward = data.msg.inward
+            data.res.outward = 'OUTPUT UPGRADED'
+          }
+        })
+        .ready(function () {
+          var siClient = CreateInstance()
+            .client({type: 'tcp', port: '19997'})
+
+          siClient.act('foo:1,bar:2', function (err, out) {
+            if (err) return fin(err)
+            Assert.equal(out.BAR, 13)
+            Assert.equal(out.inward, 'INPUT UPGRADED')
+            Assert.equal(out.outward, 'OUTPUT UPGRADED')
+            fin()
+          })
+        })
+    })
+
+    it('reject TCP remote act call in inward listen option', function (fin) {
+      CreateInstance()
+        .add('foo:1', function (args, done) {
+          done(null, { BAR: args.bar })
+        })
+        .listen({type: 'tcp', port: '19996',
+          inward: (context, data) => {
+            var e = new Error('TCP inward rejected!')
+            e.error_code = 'inward_rejected'
+            throw e
+          }
+        })
+        .ready(function () {
+          var siClient = CreateInstance()
+            .client({type: 'tcp', port: '19996'})
+
+          siClient.act('foo:1,bar:2', function (err, out) {
+            Assert.equal(err.error_code, 'inward_rejected')
+            if (err) return fin()
+            fin(new Error('Inward does not reject remote call'))
+          })
+        })
+    })
+
+    it('reject TCP remote act call in outward listen option', function (fin) {
+      CreateInstance()
+        .add('foo:1', function (args, done) {
+          done(null, { BAR: args.bar })
+        })
+        .listen({type: 'tcp', port: '19995',
+          outward: (context, data) => {
+            var e = new Error('TCP outward rejected!')
+            e.error_code = 'outward_rejected'
+            throw e
+          }
+        })
+        .ready(function () {
+          var siClient = CreateInstance()
+            .client({type: 'tcp', port: '19995'})
+
+          siClient.act('foo:1,bar:2', function (err, out) {
+            Assert.equal(err.error_code, 'outward_rejected')
+            if (err) return fin()
+            fin(new Error('Outward does not reject remote call'))
+          })
+        })
+    })
+
+    it('catch TCP remote act call error in outward listen option', function (fin) {
+      CreateInstance()
+        .add('foo:1', function (args, done) {
+          done(new Error('Catchable failure'), {BAR: args.bar})
+        })
+        .listen({type: 'tcp', port: '19994',
+          outward: (context, data) => {
+            delete data.err
+          }
+        })
+        .ready(function () {
+          var siClient = CreateInstance()
+            .client({type: 'tcp', port: '19994'})
+
+          siClient.act('foo:1,bar:2', function (err, out) {
+            if (err) return fin(err)
+            Assert.equal(out.BAR, 2)
+            fin()
+          })
+        })
     })
   })
 })

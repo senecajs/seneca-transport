@@ -44,7 +44,6 @@ describe('Miscellaneous', function () {
         counters.own++
       }
 
-
       var a = CreateInstance({
         log: {map: [
           {level: 'debug', regex: /\{a:1\}/, handler: log_a},
@@ -65,7 +64,6 @@ describe('Miscellaneous', function () {
             .add('b:1', counter_b)
             .listen({type: type, port: 40406})
             .client({type: type, port: 40405})
-
 
       a.ready(function () {
         b.ready(function () {
@@ -192,7 +190,6 @@ describe('Miscellaneous', function () {
             .add('c:1', counter_c)
             .listen({type: type, port: 40407})
             .client({type: type, port: 40405})
-
 
       a.ready(function () {
         b.ready(function () {
@@ -375,6 +372,7 @@ describe('Miscellaneous', function () {
         })
       })
   })
+
   it('listen-http-pin (#97)', function (fin) {
     CreateInstance()
       .add('foo:1', function (args, done) {
