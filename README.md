@@ -54,7 +54,7 @@ fact, all it can handle is the color red!
 You define the action pattern _color:red_, which always returns the
 result <code>{hex:'#FF0000'}</code>. You're also using the name of the
 function _color_  to define the name of the plugin (see [How to write a
-Seneca plugin](http://senecajs.org/tutorials/how-to-write-a-plugin.html)).
+Seneca plugin](http://senecajs.org/docs/tutorials/how-to-write-a-plugin.html)).
 
 ```js
 function color() {
@@ -168,7 +168,7 @@ The next two fields indicate the plugin name and tag, in this case <code>color
 -</code>. The plugin is only known on the server side, so the client
 just indicates a blank entry with <code>-</code>. For more details on
 plugin names and tags, see [How to write a Seneca
-plugin](http://senecajs.org/tutorials/how-to-write-a-plugin.html).
+plugin](http://senecajs.org/docs/tutorials/how-to-write-a-plugin.html).
 
 The next field (also known as the _case_) is either <code>IN</code> or
 <code>OUT</code>, and indicates the direction of the message. If you
@@ -808,7 +808,7 @@ subject to high load and many error conditions.
 The transport plugin family uses an extension to the normal Seneca
 options facility. As well as supporting the standard method for
 defining options (see [How to Write a
-Plugin](http://senecajs.org/tutorials/how-to-write-a-plugin.html#wp-options)), you can
+Plugin](http://senecajs.org/docs/tutorials/how-to-write-a-plugin.html#wp-options)), you can
 also supply options via arguments to the <code>client</code> or
 <code>listen</code> methods, and via the type name of the transport
 under the top-level _transport_ property.
