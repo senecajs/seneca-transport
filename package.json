@@ -40,7 +40,8 @@
     "Geoffrey Clements (https://github.com/baldmountain)",
     "Rumkin (https://github.com/rumkin)",
     "Boris Jonica (https://github.com/bjonica)",
-    "Damien Simonin Feugas (https://github.com/feugy)"
+    "Damien Simonin Feugas (https://github.com/feugy)",
+    "Tyler Waters (https://github.com/tswaters)"
   ],
   "dependencies": {
     "eraro": "0.4.1",
@@ -68,7 +69,8 @@
     "pre-commit": "1.1.x",
     "seneca": "plugin",
     "seneca-entity": "1.3.x",
-    "seneca-transport-test": "0.2.0"
+    "seneca-transport-test": "0.2.0",
+    "sinon": "^1.17.6"
   },
   "files": [
     "transport.js",
