@@ -268,11 +268,11 @@ describe('Miscellaneous', function () {
     CreateInstance()
       .use('./stubs/memtest-transport.js')
       .add('foo:1', function (args, done, meta) {
-        Assert.equal('aaa/AAA', meta.id)
+        Assert.equal('aaa/AAA', args.meta$ ? args.meta$.id : meta.id)
         done(null, {bar: 1})
       })
       .add('foo:2', function (args, done, meta) {
-        Assert.equal('bbb/BBB', meta.id)
+        Assert.equal('bbb/BBB', args.meta$ ? args.meta$.id : meta.id)
         done(null, {bar: 2})
       })
       .listen({type: 'memtest', pin: 'foo:*'})
