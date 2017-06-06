@@ -2,7 +2,6 @@ sudo: false,
 language: node_js
 
 env:
-  - SENECA_VER=seneca@1.x.x
   - SENECA_VER=seneca@2.x.x
   - SENECA_VER=seneca@3.x.x
   - SENECA_VER=seneca@plugin
@@ -10,9 +9,7 @@ env:
 
 node_js:
   - '8'
-  - '7'
   - '6'
-  - '5'
   - '4'
 
 before_script:
