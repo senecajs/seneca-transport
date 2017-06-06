@@ -3,6 +3,9 @@
 var Assert = require('assert')
 var Code = require('code')
 var Lab = require('lab')
+var Sinon = require('sinon')
+var PassThrough = require('stream').PassThrough
+var NodeHttp = require('http')
 var Http = require('../lib/http')
 var TransportUtil = require('../lib/transport-utils')
 var Wreck = require('wreck')
@@ -14,6 +17,49 @@ var lab = exports.lab = Lab.script()
 var describe = lab.describe
 var it = lab.it
 var expect = Code.expect
+var beforeEach = lab.beforeEach
+var afterEach = lab.afterEach
+
+describe('http errors', function () {
+  let request = null
+
+  beforeEach(function (done) {
+    request = Sinon.stub(NodeHttp, 'request')
+    done()
+  })
+
+  afterEach(function (done) {
+    request.restore()
+    done()
+  })
+
+  it('doesn\'t hang the process', function (fin) {
+    // wreck is expecting a http.ClientRequest, but we are stubbing request
+    // to return a PassThrough, for a simple stream that can emit an error.
+    // wreck does however call abort which is not on Passthrough;
+    // so we need to set up a dummy function so nothing blows up.
+    var req = new PassThrough()
+    req.abort = () => {}
+    request.returns(req)
+
+    CreateInstance()
+      .add('a:1', function (args, done) {
+        done(null, this.util.clean(args))
+      })
+      .listen(30304)
+
+    CreateInstance()
+      .client(30304)
+      .act('a:1', function (err, out) {
+        Assert.equal(err.orig.output.payload.message, 'aw snap')
+        fin()
+      })
+    // need to wait until after wreck sets up request before emitting
+    // otherwise domain catches the emitted error and the tests blow up
+    // 200ms should be plenty of time for this.
+    setTimeout(() => req.emit('error', new Error('aw snap')), 200)
+  })
+})
 
 describe('Specific http', function () {
   it('web-basic', function (done) {
