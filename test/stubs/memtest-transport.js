@@ -81,8 +81,8 @@ module.exports = function (options) {
         return done()
       })
 
-      send_done(null, function (args, done) {
-        var outmsg = tu.prepare_request(seneca, args, done)
+      send_done(null, function (args, done, meta) {
+        var outmsg = tu.prepare_request(seneca, args, done, meta)
 
         queuemap[dest][topic + '_act'].push(outmsg)
       })

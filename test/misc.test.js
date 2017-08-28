@@ -267,12 +267,12 @@ describe('Miscellaneous', function () {
   it('testmem-topic-star', function (fin) {
     CreateInstance()
       .use('./stubs/memtest-transport.js')
-      .add('foo:1', function (args, done) {
-        Assert.equal('aaa/AAA', args.meta$.id)
+      .add('foo:1', function (args, done, meta) {
+        Assert.equal('aaa/AAA', args.meta$ ? args.meta$.id : meta.id)
         done(null, {bar: 1})
       })
-      .add('foo:2', function (args, done) {
-        Assert.equal('bbb/BBB', args.meta$.id)
+      .add('foo:2', function (args, done, meta) {
+        Assert.equal('bbb/BBB', args.meta$ ? args.meta$.id : meta.id)
         done(null, {bar: 2})
       })
       .listen({type: 'memtest', pin: 'foo:*'})
