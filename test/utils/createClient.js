@@ -3,7 +3,7 @@
 var Assert = require('assert')
 var CreateInstance = require('./createInstance')
 
-function createClient (type, port, done, tag) {
+function createClient (type, port, done) {
   CreateInstance()
     .client({type: type, port: port})
     .ready(function () {

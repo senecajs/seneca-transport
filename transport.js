@@ -48,7 +48,7 @@ var internals = {
   plugin: 'transport'
 }
 
-module.exports = function transport (options) {
+module.exports = function transport(options) {
   var seneca = this
 
   var settings = seneca.util.deepextend(internals.defaults, options)
@@ -59,23 +59,50 @@ module.exports = function transport (options) {
     options: settings
   })
 
-  seneca.add({ role: internals.plugin, cmd: 'inflight' }, internals.inflight(callmap))
+  seneca.add(
+    { role: internals.plugin, cmd: 'inflight' },
+    internals.inflight(callmap)
+  )
   seneca.add({ role: internals.plugin, cmd: 'listen' }, internals.listen)
   seneca.add({ role: internals.plugin, cmd: 'client' }, internals.client)
 
-  seneca.add({ role: internals.plugin, hook: 'listen', type: 'tcp' }, Tcp.listen(settings, transportUtil))
-  seneca.add({ role: internals.plugin, hook: 'client', type: 'tcp' }, Tcp.client(settings, transportUtil))
+  seneca.add(
+    { role: internals.plugin, hook: 'listen', type: 'tcp' },
+    Tcp.listen(settings, transportUtil)
+  )
+  seneca.add(
+    { role: internals.plugin, hook: 'client', type: 'tcp' },
+    Tcp.client(settings, transportUtil)
+  )
 
-  seneca.add({ role: internals.plugin, hook: 'listen', type: 'web' }, Http.listen(settings, transportUtil))
-  seneca.add({ role: internals.plugin, hook: 'client', type: 'web' }, Http.client(settings, transportUtil))
+  seneca.add(
+    { role: internals.plugin, hook: 'listen', type: 'web' },
+    Http.listen(settings, transportUtil)
+  )
+  seneca.add(
+    { role: internals.plugin, hook: 'client', type: 'web' },
+    Http.client(settings, transportUtil)
+  )
 
   // Aliases.
-  seneca.add({ role: internals.plugin, hook: 'listen', type: 'http' }, Http.listen(settings, transportUtil))
-  seneca.add({ role: internals.plugin, hook: 'client', type: 'http' }, Http.client(settings, transportUtil))
+  seneca.add(
+    { role: internals.plugin, hook: 'listen', type: 'http' },
+    Http.listen(settings, transportUtil)
+  )
+  seneca.add(
+    { role: internals.plugin, hook: 'client', type: 'http' },
+    Http.client(settings, transportUtil)
+  )
 
   // Legacy API.
-  seneca.add({ role: internals.plugin, hook: 'listen', type: 'direct' }, Http.listen(settings, transportUtil))
-  seneca.add({ role: internals.plugin, hook: 'client', type: 'direct' }, Http.client(settings, transportUtil))
+  seneca.add(
+    { role: internals.plugin, hook: 'listen', type: 'direct' },
+    Http.listen(settings, transportUtil)
+  )
+  seneca.add(
+    { role: internals.plugin, hook: 'client', type: 'direct' },
+    Http.client(settings, transportUtil)
+  )
 
   return {
     name: internals.plugin,
@@ -84,13 +111,13 @@ module.exports = function transport (options) {
   }
 }
 
-module.exports.preload = function () {
+module.exports.preload = function() {
   var seneca = this
 
   var meta = {
     name: internals.plugin,
     exportmap: {
-      utils: function () {
+      utils: function() {
         var transportUtil = seneca.export(internals.plugin).utils
         if (transportUtil !== meta.exportmap.utils) {
           transportUtil.apply(this, arguments)
@@ -102,20 +129,23 @@ module.exports.preload = function () {
   return meta
 }
 
-internals.inflight = function (callmap) {
-  return function (args, callback) {
+internals.inflight = function(callmap) {
+  return function(args, callback) {
     var inflight = {}
-    callmap.forEach(function (val, key) {
+    callmap.forEach(function(val, key) {
       inflight[key] = val
     })
     callback(null, inflight)
   }
 }
 
-internals.listen = function (args, callback) {
+internals.listen = function(args, callback) {
   var seneca = this
 
-  var config = _.extend({}, args.config, { role: internals.plugin, hook: 'listen' })
+  var config = _.extend({}, args.config, {
+    role: internals.plugin,
+    hook: 'listen'
+  })
   var listen_args = seneca.util.clean(_.omit(config, 'cmd'))
   var legacyError = internals.legacyError(seneca, listen_args.type)
   if (legacyError) {
@@ -124,10 +154,13 @@ internals.listen = function (args, callback) {
   seneca.act(listen_args, callback)
 }
 
-internals.client = function (args, callback) {
+internals.client = function(args, callback) {
   var seneca = this
 
-  var config = _.extend({}, args.config, { role: internals.plugin, hook: 'client' })
+  var config = _.extend({}, args.config, {
+    role: internals.plugin,
+    hook: 'client'
+  })
   var client_args = seneca.util.clean(_.omit(config, 'cmd'))
   var legacyError = internals.legacyError(seneca, client_args.type)
   if (legacyError) {
@@ -136,7 +169,7 @@ internals.client = function (args, callback) {
   seneca.act(client_args, callback)
 }
 
-internals.legacyError = function (seneca, type) {
+internals.legacyError = function(seneca, type) {
   if (type === 'pubsub') {
     return seneca.fail('plugin-needed', { name: 'seneca-redis-transport' })
   }
