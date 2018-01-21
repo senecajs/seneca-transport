@@ -80,8 +80,5 @@
     "LICENSE",
     "bench.js",
     "lib"
-  ],
-  "pre-commit": [
-    "test"
   ]
 }
