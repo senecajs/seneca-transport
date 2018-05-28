@@ -1,6 +1,6 @@
 {
   "name": "seneca-transport",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Seneca transport",
   "main": "transport.js",
   "license": "MIT",
@@ -60,8 +60,8 @@
     "code": "4",
     "coveralls": "3",
     "lab": "14",
-    "seneca": "plugin",
-    "seneca-entity": "2",
+    "seneca": "github:senecajs/seneca",
+    "seneca-entity": "github:senecajs/seneca-entity",
     "seneca-transport-test": "0",
     "sinon": "5"
   },
