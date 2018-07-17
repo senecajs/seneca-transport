@@ -16,7 +16,7 @@
     "plugin"
   ],
   "scripts": {
-    "test": "lab -v -P test -t 70 -I URL,URLSearchParams",
+    "test": "lab -v -P test -t 70 -I URL,URLSearchParams,BigUint64Array,BigInt64Array,BigInt",
     "coveralls": "lab -s -P test -r lcov -I URL,URLSearchParams | coveralls",
     "coverage": "lab -v -P test -t 70 -r html -I URL,URLSearchParams > coverage.html",
     "prettier": "prettier --write --no-semi --single-quote *.js lib/*.js test/*.js"
