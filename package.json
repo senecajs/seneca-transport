@@ -1,6 +1,6 @@
 {
   "name": "seneca-transport",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Seneca transport",
   "main": "transport.js",
   "license": "MIT",
