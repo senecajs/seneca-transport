@@ -54,7 +54,7 @@ fact, all it can handle is the color red!
 You define the action pattern _color:red_, which always returns the
 result <code>{hex:'#FF0000'}</code>. You're also using the name of the
 function _color_  to define the name of the plugin (see [How to write a
-Seneca plugin](http://senecajs.org/tutorials/how-to-write-a-plugin.html)).
+Seneca plugin](http://senecajs.org/docs/tutorials/how-to-write-a-plugin.html)).
 
 ```js
 function color() {
