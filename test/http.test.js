@@ -128,15 +128,12 @@ describe('Specific http', function () {
             json: true
           },
           function (err, res, body) {
-            if (err) {
-              return fin(err)
-            }
-            Assert.equal(res.statusCode, 404)
+            Assert.equal(err.output.statusCode, 404)
             fin()
           })
       })
   })
-
+  
   it('http-query', function (fin) {
     CreateInstance({errhandler: fin})
       .add('a:1', function (args, done) {

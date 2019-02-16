@@ -11,6 +11,7 @@ var describe = lab.describe
 var it = lab.it
 
 describe('Miscellaneous', function () {
+
   // NOTE: SENECA_LOG=all will break this test as it counts log entries
   it.skip('own-message', function (fin) {
     // a -> b -> a
