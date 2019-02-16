@@ -114,6 +114,28 @@ describe('Specific http', function () {
       })
   })
 
+  it('not-found', function (fin) {
+    CreateInstance()
+      .add('c:1', function (args, cb) {
+        cb(null, {s: '1-' + args.d})
+      })
+      .listen({type: 'web', port: 20207})
+      .ready(function () {
+        Wreck.post(
+          'http://localhost:20207/act-foo',
+          {
+            payload: JSON.stringify({ c: 1, d: 'A' }),
+            json: true
+          },
+          function (err, res, body) {
+            if (err) {
+              return fin(err)
+            }
+            Assert.equal(res.statusCode, 404)
+            fin()
+          })
+      })
+  })
 
   it('http-query', function (fin) {
     CreateInstance({errhandler: fin})
