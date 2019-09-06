@@ -2,16 +2,18 @@
 
 process.setMaxListeners(999)
 
+var Util = require('util')
 var Assert = require('assert')
-var Lab = require('lab')
+var Lab = require('@hapi/lab')
 var CreateInstance = require('./utils/createInstance')
 
 var lab = (exports.lab = Lab.script())
 var describe = lab.describe
-var it = lab.it
+var it = make_it(lab)
 
 describe('Miscellaneous', function() {
   // NOTE: SENECA_LOG=all will break this test as it counts log entries
+  /*
   it.skip('own-message', function(fin) {
     // a -> b -> a
 
@@ -271,6 +273,7 @@ describe('Miscellaneous', function() {
       }, 222)
     }
   })
+  */
 
   it('testmem-topic-star', function(fin) {
     CreateInstance()
@@ -357,3 +360,20 @@ describe('Miscellaneous', function() {
       })
   })
 })
+
+function make_it(lab) {
+  return function it(name, opts, func) {
+    if ('function' === typeof opts) {
+      func = opts
+      opts = {}
+    }
+
+    lab.it(
+      name,
+      opts,
+      Util.promisify(function(x, fin) {
+        func(fin)
+      })
+    )
+  }
+}

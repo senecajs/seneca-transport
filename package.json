@@ -1,6 +1,6 @@
 {
   "name": "seneca-transport",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Seneca transport",
   "main": "transport.js",
   "license": "MIT",
@@ -16,7 +16,7 @@
     "plugin"
   ],
   "scripts": {
-    "test": "lab -v -P test -t 70 -I URL,URLSearchParams,BigUint64Array,BigInt64Array,BigInt,SharedArrayBuffer,Atomics",
+    "test": "lab -v -P test -t 70",
     "coveralls": "lab -s -P test -r lcov -I URL,URLSearchParams | coveralls",
     "coverage": "lab -v -P test -t 70 -r html -I URL,URLSearchParams > coverage.html",
     "prettier": "prettier --write --no-semi --single-quote *.js lib/*.js test/*.js",
@@ -45,35 +45,35 @@
     "Tyler Waters (https://github.com/tswaters)"
   ],
   "dependencies": {
+    "@hapi/wreck": "^15.0.2",
     "eraro": "^1.1.0",
     "gex": "^0.3.0",
     "jsonic": "^0.3.1",
-    "lodash": "^4.17.11",
-    "lru-cache": "^4.1.5",
+    "lodash": "^4.17.15",
+    "lru-cache": "^5.1.1",
     "ndjson": "^1.5.0",
     "nid": "^0.3.2",
     "patrun": "^1.0.0",
-    "qs": "^6.5.2",
-    "reconnect-core": "^1.3.0",
-    "wreck": "^12.5.1"
+    "qs": "^6.8.0",
+    "reconnect-core": "^1.3.0"
   },
   "devDependencies": {
-    "async": "^2.6.2",
+    "@hapi/code": "^6.0.0",
+    "@hapi/joi": "^15.1.1",
+    "@hapi/lab": "^20.2.2",
+    "async": "^3.1.0",
     "bench": "^0.3.6",
-    "code": "^4.1.0",
-    "coveralls": "^3.0.2",
-    "lab": "^14.3.4",
-    "prettier": "^1.16.4",
-    "seneca": "senecajs/seneca",
-    "seneca-entity": "^2.3.0",
-    "seneca-transport-test": "^0.3.0",
-    "sinon": "^5.1.1"
+    "coveralls": "^3.0.6",
+    "prettier": "^1.18.2",
+    "seneca": "plugin",
+    "seneca-entity": "^4.1.0",
+    "seneca-transport-test": "^1.0.0",
+    "sinon": "^7.4.2"
   },
   "files": [
     "transport.js",
     "README.md",
     "LICENSE",
-    "bench.js",
     "lib"
   ]
 }

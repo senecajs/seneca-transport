@@ -1,13 +1,14 @@
 'use strict'
 
+var Util = require('util')
 var Assert = require('assert')
-var Lab = require('lab')
+var Lab = require('@hapi/lab')
 var Entity = require('seneca-entity')
 var CreateInstance = require('./utils/createInstance')
 
 var lab = (exports.lab = Lab.script())
 var describe = lab.describe
-var it = lab.it
+var it = make_it(lab)
 
 describe('Transporting Entities', function() {
   it('uses correct tx$ properties on entity actions for "transported" entities', function(done) {
@@ -99,3 +100,20 @@ describe('Transporting Entities', function() {
       })
   })
 })
+
+function make_it(lab) {
+  return function it(name, opts, func) {
+    if ('function' === typeof opts) {
+      func = opts
+      opts = {}
+    }
+
+    lab.it(
+      name,
+      opts,
+      Util.promisify(function(x, fin) {
+        func(fin)
+      })
+    )
+  }
+}

@@ -1,6 +1,6 @@
 'use strict'
 
-var Lab = require('lab')
+var Lab = require('@hapi/lab')
 var Shared = require('seneca-transport-test')
 var CreateInstance = require('./utils/createInstance')
 

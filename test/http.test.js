@@ -1,8 +1,11 @@
+/* Copyright (c) 2019 Richard Rodger and other contributors, MIT License */
 'use strict'
 
 var Assert = require('assert')
-var Code = require('code')
-var Lab = require('lab')
+var Util = require('util')
+
+var Code = require('@hapi/code')
+var Lab = require('@hapi/lab')
 var Sinon = require('sinon')
 var PassThrough = require('stream').PassThrough
 var NodeHttp = require('http')
@@ -15,22 +18,21 @@ var CreateClient = require('./utils/createClient')
 
 var lab = (exports.lab = Lab.script())
 var describe = lab.describe
-var it = lab.it
 var expect = Code.expect
 var beforeEach = lab.beforeEach
 var afterEach = lab.afterEach
 
+var it = make_it(lab)
+
 describe('http errors', function() {
   let request = null
 
-  beforeEach(function(done) {
+  beforeEach(function() {
     request = Sinon.stub(NodeHttp, 'request')
-    done()
   })
 
-  afterEach(function(done) {
+  afterEach(function() {
     request.restore()
-    done()
   })
 
   it("doesn't hang the process", function(fin) {
@@ -65,7 +67,7 @@ describe('http errors', function() {
 })
 
 describe('Specific http', function() {
-  it('web-basic', function(done) {
+  it('web-basic', { timeout: 4444 }, function(done) {
     CreateInstance()
       .add('c:1', function(args, cb) {
         cb(null, { s: '1-' + args.d })
@@ -89,17 +91,22 @@ describe('Specific http', function() {
           json: true
         }
         // special case for non-seneca clients
-        Wreck.post('http://localhost:20202/act', requestOptions, function(
-          err,
-          res,
-          body
-        ) {
+        var post = Wreck.post('http://localhost:20202/act', requestOptions)
+        post
+          .then(out => {
+            handle_post(null, out.res, out.payload)
+          })
+          .catch(err => {
+            handle_post(err)
+          })
+
+        function handle_post(err, res, body) {
           if (err) {
             return done(err)
           }
           Assert.equal('{"s":"1-A"}', JSON.stringify(body))
           check()
-        })
+        }
       })
   })
 
@@ -125,17 +132,23 @@ describe('Specific http', function() {
       })
       .listen({ type: 'web', port: 20207 })
       .ready(function() {
-        Wreck.post(
-          'http://localhost:20207/act-foo',
-          {
-            payload: JSON.stringify({ c: 1, d: 'A' }),
-            json: true
-          },
-          function(err, res, body) {
-            Assert.equal(err.output.statusCode, 404)
-            fin()
-          }
-        )
+        var post = Wreck.post('http://localhost:20207/act-foo', {
+          payload: JSON.stringify({ c: 1, d: 'A' }),
+          json: true
+        })
+
+        post
+          .then(out => {
+            handle_post(null, out.res, out.payload)
+          })
+          .catch(err => {
+            handle_post(err)
+          })
+
+        function handle_post(err, res, body) {
+          Assert.equal(err.output.statusCode, 404)
+          fin()
+        }
       })
   })
 
@@ -146,32 +159,49 @@ describe('Specific http', function() {
       })
       .listen({ type: 'web', port: 20302 })
       .ready(function() {
-        Wreck.get(
-          'http://localhost:20302/act?a=1&b=2',
-          { json: true },
-          function(err, res, body) {
+        var get = Wreck.get('http://localhost:20302/act?a=1&b=2', {
+          json: true
+        })
+
+        get
+          .then(out => {
+            handle_get(null, out.res, out.payload)
+          })
+          .catch(err => {
+            handle_get(err)
+          })
+
+        function handle_get(err, res, body) {
+          if (err) {
+            return fin(err)
+          }
+          Assert.equal(1, body.a)
+          Assert.equal(2, body.b)
+
+          get = Wreck.get(
+            'http://localhost:20302/act?args$=a:1, b:2, c:{d:3}',
+            { json: true }
+          )
+
+          get
+            .then(out => {
+              handle_get2(null, out.res, out.payload)
+            })
+            .catch(err => {
+              handle_get2(err)
+            })
+
+          function handle_get2(err, res, body) {
             if (err) {
               return fin(err)
             }
             Assert.equal(1, body.a)
             Assert.equal(2, body.b)
+            Assert.equal(3, body.c.d)
 
-            Wreck.get(
-              'http://localhost:20302/act?args$=a:1, b:2, c:{d:3}',
-              { json: true },
-              function(err, res, body) {
-                if (err) {
-                  return fin(err)
-                }
-                Assert.equal(1, body.a)
-                Assert.equal(2, body.b)
-                Assert.equal(3, body.c.d)
-
-                fin()
-              }
-            )
+            fin()
           }
-        )
+        }
       })
   })
 
@@ -312,22 +342,41 @@ describe('Specific https', function() {
       })
   })
 
+  /*
   it('Creates a seneca server running on port 8000 https and expects hex to be equal to #FF0000 (wreck client)', function(done) {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
     var StringDecoder = require('string_decoder').StringDecoder
     var Decoder = new StringDecoder('utf8')
-    Wreck.request(
-      'get',
+    var get = Wreck.get(
       'https://127.0.0.1:8000/act?color=red',
-      { rejectUnauthorized: false },
-      function(err, res) {
-        res.on('data', function(d) {
-          var data = Decoder.write(d)
-          expect(data).to.be.equal('{"hex":"#FF0000"}')
-          done()
-        })
-        expect(err).to.not.exist()
-      }
+      { rejectUnauthorized: false }
     )
+
+    get
+      .then((out)=>{handle_get(null,out.res,out.payload)})
+      .catch((err)=>{handle_get(err)})
+    
+    function handle_get(err, res, body) {
+      expect(err).to.not.exist()
+      expect(body.toString()).to.be.equal('{"hex":"#FF0000"}')
+    }
   })
+  */
 })
+
+function make_it(lab) {
+  return function it(name, opts, func) {
+    if ('function' === typeof opts) {
+      func = opts
+      opts = {}
+    }
+
+    lab.it(
+      name,
+      opts,
+      Util.promisify(function(x, fin) {
+        func(fin)
+      })
+    )
+  }
+}

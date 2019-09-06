@@ -7,9 +7,10 @@ env:
   - SENECA_VER=senecajs/seneca
 
 node_js:
+  - '11'
   - '10'
   - '8'
-  - '6'
+
 
 install:
   - NODE_VERSION=$(node -v); if [ ${NODE_VERSION:1:2} -ge 10 ]; then npm i -g npm@6; npm ci; else npm install; fi

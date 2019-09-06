@@ -1,9 +1,10 @@
 'use strict'
 
+var Util = require('util')
 var Assert = require('assert')
 var Fs = require('fs')
-var Code = require('code')
-var Lab = require('lab')
+var Code = require('@hapi/code')
+var Lab = require('@hapi/lab')
 var Tcp = require('../lib/tcp')
 var TransportUtil = require('../lib/transport-utils')
 var ChildProcess = require('child_process')
@@ -14,7 +15,7 @@ var CreateClient = require('./utils/createClient')
 
 var lab = (exports.lab = Lab.script())
 var describe = lab.describe
-var it = lab.it
+var it = make_it(lab)
 var expect = Code.expect
 
 describe('Specific tcp', function() {
@@ -186,6 +187,7 @@ describe('Specific tcp', function() {
     })
   })
 
+  /*
   it.skip('handles reconnects', function(done) {
     var serverPath = Path.join(__dirname, 'reconnect', 'server.js')
     var clientPath = Path.join(__dirname, 'reconnect', 'client.js')
@@ -219,4 +221,22 @@ describe('Specific tcp', function() {
       setTimeout(finish, 2000)
     })
   })
+*/
 })
+
+function make_it(lab) {
+  return function it(name, opts, func) {
+    if ('function' === typeof opts) {
+      func = opts
+      opts = {}
+    }
+
+    lab.it(
+      name,
+      opts,
+      Util.promisify(function(x, fin) {
+        func(fin)
+      })
+    )
+  }
+}
