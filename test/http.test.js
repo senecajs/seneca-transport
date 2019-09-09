@@ -11,7 +11,7 @@ var PassThrough = require('stream').PassThrough
 var NodeHttp = require('http')
 var Http = require('../lib/http')
 var TransportUtil = require('../lib/transport-utils')
-var Wreck = require('wreck')
+var Wreck = require('@hapi/wreck')
 
 var CreateInstance = require('./utils/createInstance')
 var CreateClient = require('./utils/createClient')
