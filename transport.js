@@ -3,7 +3,7 @@
 'use strict'
 
 // Load modules
-var _ = require('lodash')
+//var _ = require('lodash')
 var LruCache = require('lru-cache')
 var Tcp = require('./lib/tcp')
 var TransportUtil = require('./lib/transport-utils.js')
@@ -142,11 +142,13 @@ internals.inflight = function(callmap) {
 internals.listen = function(args, callback) {
   var seneca = this
 
-  var config = _.extend({}, args.config, {
+  var config = Object.assign({}, args.config, {
     role: internals.plugin,
     hook: 'listen'
   })
-  var listen_args = seneca.util.clean(_.omit(config, 'cmd'))
+  //var listen_args = seneca.util.clean(_.omit(config, 'cmd'))
+  var listen_args = seneca.util.clean(config)
+  delete config.cmd
   var legacyError = internals.legacyError(seneca, listen_args.type)
   if (legacyError) {
     return callback(legacyError)
@@ -157,11 +159,13 @@ internals.listen = function(args, callback) {
 internals.client = function(args, callback) {
   var seneca = this
 
-  var config = _.extend({}, args.config, {
+  var config = Object.assign({}, args.config, {
     role: internals.plugin,
     hook: 'client'
   })
-  var client_args = seneca.util.clean(_.omit(config, 'cmd'))
+  //var client_args = seneca.util.clean(_.omit(config, 'cmd'))
+  var client_args = seneca.util.clean(config)
+  delete config.cmd
   var legacyError = internals.legacyError(seneca, client_args.type)
   if (legacyError) {
     return callback(legacyError)

@@ -2,7 +2,7 @@
 'use strict'
 
 
-var _ = require('lodash')
+//var _ = require('lodash')
 var Async = require('async')
 
 var queuemap = {}
@@ -31,7 +31,7 @@ module.exports = function (options) {
   function hook_listen_memtest (args, done) {
     var seneca = this
     var type = args.type
-    var listen_options = seneca.util.clean(_.extend({}, options[type], args))
+    var listen_options = seneca.util.clean(Object.assign({}, options[type], args))
 
     var dest = listen_options.dest || 'common'
     queuemap[dest] = queuemap[dest] || {}
@@ -66,7 +66,7 @@ module.exports = function (options) {
   function hook_client_memtest (args, clientdone) {
     var seneca = this
     var type = args.type
-    var client_options = seneca.util.clean(_.extend({}, options[type], args))
+    var client_options = seneca.util.clean(Object.assign({}, options[type], args))
 
     var dest = client_options.dest || 'common'
     queuemap[dest] = queuemap[dest] || {}
