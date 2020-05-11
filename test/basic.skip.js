@@ -12,23 +12,23 @@ var lab = (exports.lab = Lab.script())
 Shared.basictest({
   seneca: CreateInstance(),
   script: lab,
-  type: 'tcp'
+  type: 'tcp',
 })
 
 Shared.basicpintest({
   seneca: CreateInstance(),
   script: lab,
-  type: 'tcp'
+  type: 'tcp',
 })
 
 Shared.basictest({
   seneca: CreateInstance(),
   script: lab,
-  type: 'http'
+  type: 'http',
 })
 
 Shared.basicpintest({
   seneca: CreateInstance(),
   script: lab,
-  type: 'http'
+  type: 'http',
 })

@@ -11,7 +11,7 @@ var lab = (exports.lab = Lab.script())
 var describe = lab.describe
 var it = make_it(lab)
 
-describe('Miscellaneous', function() {
+describe('Miscellaneous', function () {
   // NOTE: SENECA_LOG=all will break this test as it counts log entries
   /*
   it.skip('own-message', function(fin) {
@@ -275,27 +275,27 @@ describe('Miscellaneous', function() {
   })
   */
 
-  it('testmem-topic-star', function(fin) {
+  it('testmem-topic-star', function (fin) {
     CreateInstance()
       .use('./stubs/memtest-transport.js')
-      .add('foo:1', function(args, done, meta) {
+      .add('foo:1', function (args, done, meta) {
         Assert.equal('aaa/AAA', args.meta$ ? args.meta$.id : meta.id)
         done(null, { bar: 1 })
       })
-      .add('foo:2', function(args, done, meta) {
+      .add('foo:2', function (args, done, meta) {
         Assert.equal('bbb/BBB', args.meta$ ? args.meta$.id : meta.id)
         done(null, { bar: 2 })
       })
       .listen({ type: 'memtest', pin: 'foo:*' })
-      .ready(function() {
+      .ready(function () {
         var siClient = CreateInstance()
           .use('./stubs/memtest-transport.js')
           .client({ type: 'memtest', pin: 'foo:*' })
 
-        siClient.act('foo:1,id$:aaa/AAA', function(err, out) {
+        siClient.act('foo:1,id$:aaa/AAA', function (err, out) {
           Assert.equal(err, null)
           Assert.equal(1, out.bar)
-          siClient.act('foo:2,id$:bbb/BBB', function(err, out) {
+          siClient.act('foo:2,id$:bbb/BBB', function (err, out) {
             Assert.equal(err, null)
             Assert.equal(2, out.bar)
 
@@ -305,19 +305,19 @@ describe('Miscellaneous', function() {
       })
   })
 
-  it('catchall-ordering', function(fin) {
+  it('catchall-ordering', function (fin) {
     CreateInstance()
       .use('./stubs/memtest-transport.js')
-      .add('foo:1', function(args, done) {
+      .add('foo:1', function (args, done) {
         done(null, { FOO: 1 })
       })
-      .add('bar:1', function(args, done) {
+      .add('bar:1', function (args, done) {
         done(null, { BAR: 1 })
       })
       .listen({ type: 'memtest', dest: 'D0', pin: 'foo:*' })
       .listen({ type: 'memtest', dest: 'D1' })
 
-      .ready(function() {
+      .ready(function () {
         do_catchall_first()
 
         function do_catchall_first() {
@@ -326,11 +326,11 @@ describe('Miscellaneous', function() {
             .client({ type: 'memtest', dest: 'D1' })
             .client({ type: 'memtest', dest: 'D0', pin: 'foo:*' })
 
-          siClient.act('foo:1', function(err, out) {
+          siClient.act('foo:1', function (err, out) {
             Assert.equal(err, null)
             Assert.equal(1, out.FOO)
 
-            siClient.act('bar:1', function(err, out) {
+            siClient.act('bar:1', function (err, out) {
               Assert.equal(err, null)
               Assert.equal(1, out.BAR)
 
@@ -345,11 +345,11 @@ describe('Miscellaneous', function() {
             .client({ type: 'memtest', dest: 'D0', pin: 'foo:*' })
             .client({ type: 'memtest', dest: 'D1' })
 
-          siClient.act('foo:1', function(err, out) {
+          siClient.act('foo:1', function (err, out) {
             Assert.equal(err, null)
             Assert.equal(1, out.FOO)
 
-            siClient.act('bar:1', function(err, out) {
+            siClient.act('bar:1', function (err, out) {
               Assert.equal(err, null)
               Assert.equal(1, out.BAR)
 
@@ -371,7 +371,7 @@ function make_it(lab) {
     lab.it(
       name,
       opts,
-      Util.promisify(function(x, fin) {
+      Util.promisify(function (x, fin) {
         func(fin)
       })
     )

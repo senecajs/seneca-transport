@@ -18,17 +18,17 @@ var describe = lab.describe
 var it = make_it(lab)
 var expect = Code.expect
 
-describe('Specific tcp', function() {
-  it('client and listen work as expected', function(fin) {
+describe('Specific tcp', function () {
+  it('client and listen work as expected', function (fin) {
     var instance = CreateInstance()
 
-    instance.add('c:1', function(args, done) {
+    instance.add('c:1', function (args, done) {
       done(null, { s: '1-' + args.d })
     })
 
     instance.listen({ type: 'tcp', port: 20102 })
 
-    instance.ready(function() {
+    instance.ready(function () {
       var seneca = this
       var count = 0
 
@@ -46,22 +46,22 @@ describe('Specific tcp', function() {
     })
   })
 
-  it('error-passing-tcp', function(fin) {
+  it('error-passing-tcp', function (fin) {
     CreateInstance()
-      .add('a:1', function(args, done) {
+      .add('a:1', function (args, done) {
         done(new Error('bad-wire'))
       })
       .listen({ type: 'tcp', port: 40404 })
 
     CreateInstance()
       .client({ type: 'tcp', port: 40404 })
-      .act('a:1', function(err, out) {
+      .act('a:1', function (err, out) {
         Assert.equal('seneca: Action a:1 failed: bad-wire.', err.message)
         fin()
       })
   })
 
-  it('can listen on ephemeral port', function(done) {
+  it('can listen on ephemeral port', function (done) {
     var seneca = CreateInstance()
 
     var settings = { tcp: { port: 0, host: 'localhost' } }
@@ -69,14 +69,14 @@ describe('Specific tcp', function() {
     var transportUtil = new TransportUtil({
       callmap: {},
       seneca: seneca,
-      options: settings
+      options: settings,
     })
 
     var tcp = Tcp.listen(settings, transportUtil)
 
     expect(typeof tcp).to.equal('function')
 
-    tcp.call(seneca, { type: 'tcp' }, function(err) {
+    tcp.call(seneca, { type: 'tcp' }, function (err) {
       expect(err).to.not.exist()
       done()
     })
@@ -85,7 +85,7 @@ describe('Specific tcp', function() {
   it(
     'can listen on unix path',
     { skip: /win/.test(process.platform) },
-    function(done) {
+    function (done) {
       var sock = '/tmp/seneca.sock'
 
       if (Fs.existsSync(sock)) {
@@ -98,20 +98,20 @@ describe('Specific tcp', function() {
       var transportUtil = new TransportUtil({
         callmap: {},
         seneca: seneca,
-        options: settings
+        options: settings,
       })
 
       var tcp = Tcp.listen(settings, transportUtil)
       expect(typeof tcp).to.equal('function')
 
-      tcp.call(seneca, { type: 'tcp' }, function(err) {
+      tcp.call(seneca, { type: 'tcp' }, function (err) {
         expect(err).to.not.exist()
         done()
       })
     }
   )
 
-  it('will retry listening a specified number of times', function(done) {
+  it('will retry listening a specified number of times', function (done) {
     var seneca1 = CreateInstance()
     var seneca2 = CreateInstance()
 
@@ -120,67 +120,67 @@ describe('Specific tcp', function() {
     var transportUtil1 = new TransportUtil({
       callmap: {},
       seneca: seneca1,
-      options: settings1
+      options: settings1,
     })
 
     var tcp1 = Tcp.listen(settings1, transportUtil1)
     expect(typeof tcp1).to.equal('function')
 
-    tcp1.call(seneca1, { type: 'tcp' }, function(err, address) {
+    tcp1.call(seneca1, { type: 'tcp' }, function (err, address) {
       expect(err).to.not.exist()
 
       var settings2 = {
         tcp: {
           port: address.port,
           max_listen_attempts: 10,
-          attempt_delay: 10
-        }
+          attempt_delay: 10,
+        },
       }
 
       var transportUtil2 = new TransportUtil({
         callmap: {},
         seneca: seneca2,
-        options: settings2
+        options: settings2,
       })
       var tcp2 = Tcp.listen(settings2, transportUtil2)
       expect(typeof tcp2).to.equal('function')
 
-      setTimeout(function() {
+      setTimeout(function () {
         seneca1.close()
       }, 20)
 
-      tcp2.call(seneca2, { type: 'tcp' }, function(err, address) {
+      tcp2.call(seneca2, { type: 'tcp' }, function (err, address) {
         expect(err).to.not.exist()
         done()
       })
     })
   })
 
-  it('defaults to 127.0.0.1 for connections', function(done) {
+  it('defaults to 127.0.0.1 for connections', function (done) {
     var seneca = CreateInstance()
 
     var settings = {
       tcp: {
-        port: 0
-      }
+        port: 0,
+      },
     }
 
     var transportUtil = new TransportUtil({
       callmap: {},
       seneca: seneca,
-      options: settings
+      options: settings,
     })
 
     var server = Tcp.listen(settings, transportUtil)
     expect(typeof server).to.equal('function')
 
-    server.call(seneca, { type: 'tcp' }, function(err, address) {
+    server.call(seneca, { type: 'tcp' }, function (err, address) {
       expect(err).to.not.exist()
       expect(address.type).to.equal('tcp')
       settings.tcp.port = address.port
       var client = Tcp.client(settings, transportUtil)
       expect(typeof client).to.equal('function')
-      client.call(seneca, { type: 'tcp' }, function(err) {
+      client.call(seneca, { type: 'tcp' }, function (err) {
         expect(err).to.not.exist()
         done()
       })
@@ -234,7 +234,7 @@ function make_it(lab) {
     lab.it(
       name,
       opts,
-      Util.promisify(function(x, fin) {
+      Util.promisify(function (x, fin) {
         func(fin)
       })
     )
