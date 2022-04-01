@@ -52,7 +52,7 @@ module.exports = function transport(options) {
   var seneca = this
 
   var settings = seneca.util.deepextend(internals.defaults, options)
-  var callmap = new LruCache({max:settings.callmax})
+  var callmap = new LruCache({ max: settings.callmax })
   var transportUtil = new TransportUtil({
     callmap: callmap,
     seneca: seneca,
