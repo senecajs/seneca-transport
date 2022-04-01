@@ -13,7 +13,7 @@ var Http = require('./lib/http')
 var internals = {
   defaults: {
     msgprefix: 'seneca_',
-    callmax: 111111,
+    callmax: 1111,
     msgidlen: 12,
     warn: {
       unknown_message_id: true,
