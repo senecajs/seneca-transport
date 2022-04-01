@@ -1,6 +1,6 @@
 {
   "name": "seneca-transport",
-  "version": "7.0.0",
+  "version": "7.0.1",
   "description": "Seneca transport",
   "main": "transport.js",
   "license": "MIT",
@@ -23,7 +23,7 @@
     "reset": "npm run clean && npm i && npm test",
     "clean": "rm -rf node_modules package-lock.json yarn.lock",
     "repo-tag": "REPO_VERSION=`node -e \"console.log(require('./package').version)\"` && echo TAG: v$REPO_VERSION && git commit -a -m v$REPO_VERSION && git push && git tag v$REPO_VERSION && git push --tags;",
-    "repo-publish": "npm run prettier && npm test && npm run repo-tag --registry http://registry.npmjs.org && npm publish --access public --registry http://registry.npmjs.org"
+    "repo-publish": "npm run prettier && npm test && npm run repo-tag --registry http://registry.npmjs.org && npm publish --access public --registry https://registry.npmjs.org"
   },
   "contributors": [
     "Richard Rodger (https://github.com/rjrodger)",
