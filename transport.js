@@ -1,183 +1,521 @@
-/* Copyright (c) 2013-2015 Richard Rodger & other contributors, MIT License */
-/* jshint node:true, asi:true, eqnull:true */
-'use strict'
+/* Copyright © 2015-2022 Richard Rodger and other contributors, MIT License. */
 
-// Load modules
-//var _ = require('lodash')
-var LruCache = require('lru-cache')
-var Tcp = require('./lib/tcp')
-var TransportUtil = require('./lib/transport-utils.js')
-var Http = require('./lib/http')
 
-// Declare internals
-var internals = {
-  defaults: {
-    msgprefix: 'seneca_',
-    callmax: 1111,
-    msgidlen: 12,
-    warn: {
-      unknown_message_id: true,
-      invalid_kind: true,
-      invalid_origin: true,
-      no_message_id: true,
-      message_loop: true,
-      own_message: true,
-    },
-    check: {
-      message_loop: true,
-      own_message: true,
-    },
-    web: {
-      type: 'web',
-      port: 10101,
-      host: '0.0.0.0',
-      path: '/act',
-      protocol: 'http',
-      timeout: 5555,
-      max_listen_attempts: 11,
-      attempt_delay: 222,
-      serverOptions: {},
-    },
-    tcp: {
-      type: 'tcp',
-      host: '0.0.0.0',
-      port: 10201,
-      timeout: 5555,
-    },
-  },
-  plugin: 'transport',
+const Util = require('util')
+const Http = require('http')
+const Https = require('https')
+const Url = require('url')
+
+const Wreck = require('@hapi/wreck')
+const Qs = require('qs')
+const Stringify = require('fast-safe-stringify')
+
+
+// THIS IS NOT A PLUGIN
+// DO NOT COPY TO CREATE TRANSPORT PLUGINS
+// USE THIS INSTEAD: [TODO github example]
+
+// TODO: handle lists properly, without losing meta data
+
+function transport(options) {
+  const seneca = this
+
+  seneca.add('role:transport,cmd:listen', action_listen)
+  seneca.add('role:transport,cmd:client', action_client)
+
+  seneca.add('role:transport,hook:listen,type:web', hook_listen_web)
+  seneca.add('role:transport,hook:client,type:web', hook_client_web)
+
+  const tu = {}
+
+  tu.stringifyJSON = stringifyJSON
+  tu.parseJSON = parseJSON
+
+  tu.externalize_msg = externalize_msg
+  tu.externalize_reply = externalize_reply
+  tu.internalize_msg = internalize_msg
+  tu.internalize_reply = internalize_reply
+  tu.close = closeTransport
+
+  tu.info = function() {
+    const pats = seneca.list()
+    const acts = { local: {}, remote: {} }
+    pats.forEach(function(pat) {
+      const def = seneca.find(pat, { exact: true })
+      if (def.client) {
+        acts.remote[def.pattern] = def.id
+      } else {
+        acts.local[def.pattern] = def.id
+      }
+    })
+    return acts
+  }
+
+  seneca.private$.exports['transport/utils'] = tu
 }
 
-module.exports = function transport(options) {
-  var seneca = this
+function externalize_msg(seneca, msg, meta) {
+  if (!msg) return
 
-  var settings = seneca.util.deepextend(internals.defaults, options)
-  var callmap = new LruCache({ max: settings.callmax })
-  var transportUtil = new TransportUtil({
-    callmap: callmap,
-    seneca: seneca,
-    options: settings,
-  })
+  if (msg instanceof Error) {
+    msg = copydata(msg)
+  }
 
-  seneca.add(
-    { role: internals.plugin, cmd: 'inflight' },
-    internals.inflight(callmap)
-  )
-  seneca.add({ role: internals.plugin, cmd: 'listen' }, internals.listen)
-  seneca.add({ role: internals.plugin, cmd: 'client' }, internals.client)
+  msg.meta$ = meta
 
-  seneca.add(
-    { role: internals.plugin, hook: 'listen', type: 'tcp' },
-    Tcp.listen(settings, transportUtil)
-  )
-  seneca.add(
-    { role: internals.plugin, hook: 'client', type: 'tcp' },
-    Tcp.client(settings, transportUtil)
-  )
+  return msg
+}
 
-  seneca.add(
-    { role: internals.plugin, hook: 'listen', type: 'web' },
-    Http.listen(settings, transportUtil)
-  )
-  seneca.add(
-    { role: internals.plugin, hook: 'client', type: 'web' },
-    Http.client(settings, transportUtil)
-  )
+// TODO: handle arrays gracefully - e.g {arr$:[]} as msg
+function externalize_reply(seneca, err, out, meta) {
+  let rep = err || out
 
-  // Aliases.
-  seneca.add(
-    { role: internals.plugin, hook: 'listen', type: 'http' },
-    Http.listen(settings, transportUtil)
-  )
-  seneca.add(
-    { role: internals.plugin, hook: 'client', type: 'http' },
-    Http.client(settings, transportUtil)
-  )
+  if (!rep) {
+    rep = {}
+    meta.empty = true
+  }
 
-  // Legacy API.
-  seneca.add(
-    { role: internals.plugin, hook: 'listen', type: 'direct' },
-    Http.listen(settings, transportUtil)
-  )
-  seneca.add(
-    { role: internals.plugin, hook: 'client', type: 'direct' },
-    Http.client(settings, transportUtil)
-  )
+  rep.meta$ = meta
+
+  if (Util.types.isNativeError(rep)) {
+    rep = copydata(rep)
+    rep.meta$.error = true
+  }
+
+  return rep
+}
+
+// TODO: allow list for inbound directives
+function internalize_msg(seneca, msg) {
+  if (!msg) return
+
+  msg = handle_entity(seneca, msg)
+
+  const meta = msg.meta$ || {}
+  delete msg.meta$
+
+  // You can't send fatal msgs
+  delete msg.fatal$
+
+  msg.id$ = meta.id
+  msg.sync$ = meta.sync
+  msg.custom$ = meta.custom
+  msg.explain$ = meta.explain
+
+  msg.parents$ = meta.parents || []
+  msg.parents$.unshift(make_trace_desc(meta))
+
+  msg.remote$ = true
+
+  return msg
+}
+
+function internalize_reply(seneca, data) {
+  let meta = {}
+  let err = null
+  let out = null
+
+  if (data) {
+    meta = data.meta$
+
+    if (meta) {
+      delete data.meta$
+
+      meta.remote = true
+
+      if (meta.error) {
+        err = new Error(data.message)
+        Object.assign(err, data)
+      } else if (!meta.empty) {
+        out = handle_entity(seneca, data)
+      }
+    }
+  }
 
   return {
-    name: internals.plugin,
-    exportmap: { utils: transportUtil },
-    options: settings,
+    err: err,
+    out: out,
+    meta: meta,
   }
 }
 
-module.exports.preload = function () {
-  var seneca = this
 
-  var meta = {
-    name: internals.plugin,
-    exportmap: {
-      utils: function () {
-        var transportUtil = seneca.export(internals.plugin).utils
-        if (transportUtil !== meta.exportmap.utils) {
-          transportUtil.apply(this, arguments)
-        }
-      },
-    },
-  }
-
-  return meta
+function stringifyJSON(obj) {
+  if (!obj) return
+  return Stringify(obj)
 }
 
-internals.inflight = function (callmap) {
-  return function (args, callback) {
-    var inflight = {}
-    callmap.forEach(function (val, key) {
-      inflight[key] = val
+function parseJSON(data) {
+  if (!data) return
+
+  const str = data.toString()
+
+  try {
+    return JSON.parse(str)
+  } catch (e) {
+    e.input = str
+    return e
+  }
+}
+
+function handle_entity(seneca, msg) {
+  if (seneca.make$) {
+    if (msg.entity$) {
+      msg = seneca.make$(msg)
+    }
+
+    Object.keys(msg).forEach(function(key) {
+      const value = msg[key]
+      if (value && 'object' === typeof value && value.entity$) {
+        msg[key] = seneca.make$(value)
+      }
     })
-    callback(null, inflight)
+  }
+
+  return msg
+}
+
+function register(config, reply) {
+  return function(err, out) {
+    this.private$.transport.register.push({
+      when: Date.now(),
+      config: config,
+      err: err,
+      res: out,
+    })
+
+    reply(err, out)
   }
 }
 
-internals.listen = function (args, callback) {
-  var seneca = this
+function closeTransport(seneca, closer) {
+  seneca.add('role:seneca,cmd:close', function(msg, reply) {
+    const seneca = this
 
-  var config = Object.assign({}, args.config, {
-    role: internals.plugin,
+    closer.call(seneca, function(err) {
+      if (err) {
+        seneca.log.error(err)
+      }
+
+      seneca.prior(msg, reply)
+    })
+  })
+}
+
+function action_listen(msg, reply) {
+  const seneca = this
+
+  const config = Object.assign({}, msg.config, {
+    role: 'transport',
     hook: 'listen',
   })
-  //var listen_args = seneca.util.clean(_.omit(config, 'cmd'))
-  var listen_args = seneca.util.clean(config)
+
   delete config.cmd
-  var legacyError = internals.legacyError(seneca, listen_args.type)
-  if (legacyError) {
-    return callback(legacyError)
-  }
-  seneca.act(listen_args, callback)
+
+  const listen_msg = seneca.util.clean(config)
+
+  seneca.act(listen_msg, register(listen_msg, reply))
 }
 
-internals.client = function (args, callback) {
-  var seneca = this
+function action_client(msg, reply) {
+  const seneca = this
 
-  var config = Object.assign({}, args.config, {
-    role: internals.plugin,
+  const config = Object.assign({}, msg.config, {
+    role: 'transport',
     hook: 'client',
   })
-  //var client_args = seneca.util.clean(_.omit(config, 'cmd'))
-  var client_args = seneca.util.clean(config)
+
   delete config.cmd
-  var legacyError = internals.legacyError(seneca, client_args.type)
-  if (legacyError) {
-    return callback(legacyError)
-  }
-  seneca.act(client_args, callback)
+
+  const client_msg = seneca.util.clean(config)
+
+  seneca.act(client_msg, register(client_msg, reply))
 }
 
-internals.legacyError = function (seneca, type) {
-  if (type === 'pubsub') {
-    return seneca.fail('plugin-needed', { name: 'seneca-redis-transport' })
+function hook_listen_web(msg, reply) {
+  const seneca = this.root.delegate()
+  const Jsonic = seneca.util.Jsonic
+
+  const transport_options = seneca.options().transport
+  const config = seneca.util.deep(msg)
+
+  config.port = null == config.port ? transport_options.port : config.port
+  config.modify_response = config.modify_response || web_modify_response
+
+  const server =
+    'https' === config.protocol
+      ? Https.createServer(config.custom || config.serverOptions)
+      : Http.createServer()
+
+  server.on('request', handle_request)
+
+  server.on('error', reply)
+
+  server.on('listening', function() {
+    config.port = server.address().port
+    reply(config)
+  })
+
+  const listener = listen()
+
+  closeTransport(seneca, function(reply) {
+    if (listener) {
+      listener.close()
+    }
+    reply()
+  })
+
+  function listen() {
+    const port = (config.port = seneca.util.resolve_option(config.port, config))
+    const host = (config.host = seneca.util.resolve_option(config.host, config))
+
+    seneca.log.debug(`transport web listen`, config)
+
+    return server.listen(port, host)
   }
-  if (type === 'queue') {
-    return seneca.fail('plugin-needed', { name: 'seneca-beanstalkd-transport' })
+
+  function handle_request(req, res) {
+    req.setEncoding('utf8')
+    req.query = Qs.parse(Url.parse(req.url).query)
+
+    const buf = []
+
+    req.on('data', function(chunk) {
+      buf.push(chunk)
+    })
+
+    req.on('end', function() {
+      let msg
+      const json = buf.join('')
+      const body = parseJSON(json)
+
+      if (Util.types.isNativeError(body)) {
+        msg = {
+          json: json,
+          role: 'seneca',
+          make: 'error',
+          code: 'parseJSON',
+          err: body,
+        }
+      } else {
+        msg = Object.assign(
+          body,
+          req.query && req.query.msg$ ? Jsonic(req.query.msg$) : {},
+          req.query || {}
+        )
+      }
+
+      // backwards compatibility with seneca-transport
+      let backwards_compat_origin
+      const backwards_compat_msgid = !msg.meta$ && req.headers['seneca-id']
+      if (backwards_compat_msgid) {
+        msg.meta$ = { id: req.headers['seneca-id'] }
+        backwards_compat_origin = req.headers['seneca-origin']
+      }
+
+      msg = internalize_msg(seneca, msg)
+
+      seneca.act(msg, function(err, out, meta) {
+        let spec = {
+          err: err,
+          out: out,
+          meta: meta,
+          config: config,
+        }
+
+        spec.headers = {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'private, max-age=0, no-cache, no-store',
+        }
+
+        spec.status = err ? 500 : 200
+
+        spec = config.modify_response(seneca, spec)
+
+        // backwards compatibility with seneca-transport
+        if (backwards_compat_msgid) {
+          spec.headers['seneca-id'] = backwards_compat_msgid
+          spec.headers['seneca-origin'] = backwards_compat_origin
+        }
+
+        res.writeHead(spec.status, spec.headers)
+        res.end(spec.body)
+      })
+    })
   }
 }
+
+function web_modify_response(seneca, spec) {
+  // JSON cannot handle arbitrary array properties
+  if (Array.isArray(spec.out)) {
+    spec.out = { array$: spec.out, meta$: spec.out.meta$ }
+  }
+
+  spec.body = stringifyJSON(
+    externalize_reply(seneca, spec.err, spec.out, spec.meta)
+  )
+  spec.headers['Content-Length'] = Buffer.byteLength(spec.body)
+
+  return spec
+}
+
+function makeWreck() {
+  return Wreck.defaults({
+    agents: {
+      http: new Http.Agent({ keepAlive: true, maxFreeSockets: Infinity }),
+      https: new Https.Agent({ keepAlive: true, maxFreeSockets: Infinity }),
+      httpsAllowUnauthorized: new Https.Agent({
+        keepAlive: true,
+        maxFreeSockets: Infinity,
+        rejectUnauthorized: false,
+      }),
+    },
+  })
+}
+
+function hook_client_web(msg, hook_reply) {
+  const seneca = this.root.delegate()
+  const transport_options = seneca.options().transport
+  const config = seneca.util.deep(msg)
+
+  config.port = null == config.port ? transport_options.port : config.port
+
+  config.modify_request = config.modify_request || web_modify_request
+    ; (config.port = seneca.util.resolve_option(config.port, config)),
+      (config.host = seneca.util.resolve_option(config.host, config))
+
+  config.wreck = seneca.util.resolve_option(config.wreck || makeWreck, config)
+
+  hook_reply({
+    config: config,
+    send: function(msg, reply, meta) {
+      const sending_instance = this
+
+      let spec = {
+        msg: msg,
+        meta: meta,
+        url:
+          config.protocol +
+          '://' +
+          config.host +
+          ':' +
+          config.port +
+          config.path,
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      }
+
+      spec = config.modify_request(seneca, spec)
+
+      const wreck_req = config.wreck.request(spec.method, spec.url, spec.wreck)
+      wreck_req
+        .then(function(res) {
+          const seneca_reply = function(res) {
+            // backwards compatibility with seneca-transport
+            if (!res.meta$) {
+              res.meta$ = {
+                id: meta.id,
+              }
+            }
+
+            seneca.reply(internalize_reply(sending_instance, res))
+          }
+
+          const wreck_read = Wreck.read(res, spec.wreck.read)
+          wreck_read
+            .then(function(body) {
+              let data = parseJSON(body)
+
+              // JSON cannot handle arbitrary array properties
+              if (Array.isArray(data.array$)) {
+                const array_data = data.array$
+                array_data.meta$ = data.meta$
+                data = array_data
+              }
+
+              seneca_reply(data)
+            })
+            .catch(seneca_reply)
+        })
+        .catch(function(err) {
+          return reply(err)
+        })
+    },
+  })
+}
+
+function web_modify_request(seneca, spec) {
+  spec.body = stringifyJSON(externalize_msg(seneca, spec.msg, spec.meta))
+  spec.headers['Content-Length'] = Buffer.byteLength(spec.body)
+
+  spec.wreck = {
+    json: false,
+    headers: spec.headers,
+    payload: spec.body,
+    read: {},
+  }
+
+  return spec
+}
+
+
+function make_trace_desc(meta) {
+  return [
+    meta.pattern,
+    meta.id,
+    meta.instance,
+    meta.tag,
+    meta.version,
+    meta.start,
+    meta.end,
+    meta.sync,
+    meta.action,
+  ]
+}
+
+function copydata(obj) {
+  var copy
+
+  // Handle the 3 simple types, and null or undefined
+  if (obj === null || typeof obj !== 'object') return obj
+
+  // Handle Error
+  if (Util.types.isNativeError(obj)) {
+    copy = {}
+    Object.getOwnPropertyNames(obj).forEach(function(key) {
+      copy[key] = obj[key]
+    })
+    return copy
+  }
+
+  // Handle Date
+  if (obj.constructor && 'Date' === obj.constructor.name) {
+    copy = new Date()
+    copy.setTime(obj.getTime())
+    return copy
+  }
+
+  // Handle Array
+  if (Array.isArray(obj)) {
+    copy = []
+    for (var i = 0, len = obj.length; i < len; ++i) {
+      copy[i] = copydata(obj[i])
+    }
+    return copy
+  }
+
+  copy = {}
+  for (var attr in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, attr)) {
+      copy[attr] = copydata(obj[attr])
+    }
+  }
+  return copy
+}
+
+
+
+module.exports = transport
