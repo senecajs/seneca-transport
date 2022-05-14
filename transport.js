@@ -3,7 +3,6 @@
 'use strict'
 
 // Load modules
-//var _ = require('lodash')
 var LruCache = require('lru-cache')
 var Tcp = require('./lib/tcp')
 var TransportUtil = require('./lib/transport-utils.js')
