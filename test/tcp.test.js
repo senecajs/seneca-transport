@@ -64,7 +64,7 @@ describe('Specific tcp', function () {
   it('can listen on ephemeral port', function (done) {
     var seneca = CreateInstance()
 
-    var settings = { tcp: { port: 0, host: 'localhost' } }
+    var settings = { tcp: { port: 0, host: '127.0.0.1' } }
 
     var transportUtil = new TransportUtil({
       callmap: {},

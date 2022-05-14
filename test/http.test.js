@@ -67,7 +67,7 @@ describe('http errors', function () {
 })
 
 describe('Specific http', function () {
-  it('web-basic', { timeout: 4444 }, function (done) {
+  it('web-basic', { timeout: 8888 }, function (done) {
     CreateInstance()
       .add('c:1', function (args, cb) {
         cb(null, { s: '1-' + args.d })
@@ -90,8 +90,9 @@ describe('Specific http', function () {
           payload: JSON.stringify({ c: 1, d: 'A' }),
           json: true,
         }
+
         // special case for non-seneca clients
-        var post = Wreck.post('http://localhost:20202/act', requestOptions)
+        var post = Wreck.post('http://127.0.0.1:20202/act', requestOptions)
         post
           .then((out) => {
             handle_post(null, out.res, out.payload)
@@ -101,6 +102,7 @@ describe('Specific http', function () {
           })
 
         function handle_post(err, res, body) {
+          // console.log(err, res, body)
           if (err) {
             return done(err)
           }
@@ -132,7 +134,7 @@ describe('Specific http', function () {
       })
       .listen({ type: 'web', port: 20207 })
       .ready(function () {
-        var post = Wreck.post('http://localhost:20207/act-foo', {
+        var post = Wreck.post('http://127.0.0.1:20207/act-foo', {
           payload: JSON.stringify({ c: 1, d: 'A' }),
           json: true,
         })
@@ -159,7 +161,7 @@ describe('Specific http', function () {
       })
       .listen({ type: 'web', port: 20302 })
       .ready(function () {
-        var get = Wreck.get('http://localhost:20302/act?a=1&b=2', {
+        var get = Wreck.get('http://127.0.0.1:20302/act?a=1&b=2', {
           json: true,
         })
 
@@ -179,7 +181,7 @@ describe('Specific http', function () {
           Assert.equal(2, body.b)
 
           get = Wreck.get(
-            'http://localhost:20302/act?args$=a:1, b:2, c:{d:3}',
+            'http://127.0.0.1:20302/act?args$=a:1, b:2, c:{d:3}',
             { json: true }
           )
 

@@ -1,6 +1,6 @@
 {
   "name": "seneca-transport",
-  "version": "7.1.0",
+  "version": "7.2.0",
   "description": "Seneca transport",
   "main": "transport.js",
   "license": "MIT",
@@ -16,9 +16,9 @@
     "plugin"
   ],
   "scripts": {
-    "test": "lab -v -P test -t 70",
+    "test": "lab -v -P test -t 70 -I AggregateError,atob,btoa,DOMException,AbortController,AbortSignal,EventTarget,Event,MessageChannel,MessagePort,MessageEvent,performance,structuredClone",
     "test-some": "lab -v -P test -g",
-    "coveralls": "lab -s -P test -r lcov > ./coverage/lcov.info",
+    "coveralls": "lab -s -P test -I AggregateError,atob,btoa,DOMException,AbortController,AbortSignal,EventTarget,Event,MessageChannel,MessagePort,MessageEvent,performance,structuredClone -r lcov > ./coverage/lcov.info",
     "coverage": "lab -v -P test -t 70 -r html -I URL,URLSearchParams > coverage.html",
     "prettier": "prettier --write --no-semi --single-quote *.js lib/*.js test/*.js",
     "reset": "npm run clean && npm i && npm test",
@@ -63,7 +63,7 @@
   "devDependencies": {
     "@hapi/code": "8",
     "@hapi/joi": "17",
-    "@hapi/lab": "24",
+    "@hapi/lab": "23",
     "async": "^3.2.3",
     "bench": "^0.3.6",
     "coveralls": "^3.1.1",
