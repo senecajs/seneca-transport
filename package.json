@@ -1,6 +1,6 @@
 {
   "name": "seneca-transport",
-  "version": "7.2.0",
+  "version": "8.0.0",
   "description": "Seneca transport",
   "main": "transport.js",
   "license": "MIT",
@@ -24,7 +24,7 @@
     "reset": "npm run clean && npm i && npm test",
     "clean": "rm -rf node_modules package-lock.json yarn.lock",
     "repo-tag": "REPO_VERSION=`node -e \"console.log(require('./package').version)\"` && echo TAG: v$REPO_VERSION && git commit -a -m v$REPO_VERSION && git push && git tag v$REPO_VERSION && git push --tags;",
-    "repo-publish": "npm run prettier && npm test && npm run repo-tag --registry http://registry.npmjs.org && npm publish --access public --registry https://registry.npmjs.org"
+    "repo-publish": "npm run prettier && npm test && npm run repo-tag --registry https://registry.npmjs.org && npm publish --access public --registry https://registry.npmjs.org"
   },
   "contributors": [
     "Richard Rodger (https://github.com/rjrodger)",
@@ -49,29 +49,25 @@
   "dependencies": {
     "@hapi/wreck": "^17.2.0",
     "eraro": "^2.1.0",
-    "gex": "^3.1.0",
-    "jsonic": "^1.0.1",
     "lodash.foreach": "^4.5.0",
     "lodash.omit": "^4.5.0",
-    "lru-cache": "^7.10.1",
+    "lru-cache": "^7.16.1",
     "ndjson": "^2.0.0",
-    "nid": "^2.0.0",
-    "patrun": "^7.1.0",
-    "qs": "^6.10.3",
+    "qs": "^6.11.0",
     "reconnect-core": "^1.3.0"
   },
   "devDependencies": {
     "@hapi/code": "8",
     "@hapi/joi": "17",
     "@hapi/lab": "23",
-    "async": "^3.2.3",
+    "async": "^3.2.4",
     "bench": "^0.3.6",
     "coveralls": "^3.1.1",
-    "prettier": "^2.6.2",
-    "seneca": "3.26",
-    "seneca-entity": "^16.4.0",
+    "prettier": "^2.8.4",
+    "seneca": "3.30",
+    "seneca-entity": "^19.0.0",
     "seneca-transport-test": "^1.0.0",
-    "sinon": "^14.0.0"
+    "sinon": "^15.0.1"
   },
   "files": [
     "transport.js",
