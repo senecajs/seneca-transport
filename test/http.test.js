@@ -55,7 +55,7 @@ describe('http errors', function () {
       .act('a:1', function (err, out) {
         Assert.equal(
           err.msg,
-          'seneca: Action  failed: Client request error: aw snap.'
+          'seneca: Action  failed: Client request error: aw snap.',
         )
         fin()
       })
@@ -182,7 +182,7 @@ describe('Specific http', function () {
 
           get = Wreck.get(
             'http://127.0.0.1:20302/act?args$=a:1, b:2, c:{d:3}',
-            { json: true }
+            { json: true },
           )
 
           get
@@ -216,7 +216,7 @@ describe('Specific http', function () {
       .ready(function () {
         CreateInstance(
           { errhandler: fin },
-          { web: { headers: { 'client-id': 'test-client' } } }
+          { web: { headers: { 'client-id': 'test-client' } } },
         )
           .client({ type: 'web', port: 20205 })
           .ready(function () {
@@ -376,7 +376,7 @@ function make_it(lab) {
       opts,
       Util.promisify(function (x, fin) {
         func(fin)
-      })
+      }),
     )
   }
 }

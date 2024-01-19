@@ -60,47 +60,47 @@ module.exports = function transport(options) {
 
   seneca.add(
     { role: internals.plugin, cmd: 'inflight' },
-    internals.inflight(callmap)
+    internals.inflight(callmap),
   )
   seneca.add({ role: internals.plugin, cmd: 'listen' }, internals.listen)
   seneca.add({ role: internals.plugin, cmd: 'client' }, internals.client)
 
   seneca.add(
     { role: internals.plugin, hook: 'listen', type: 'tcp' },
-    Tcp.listen(settings, transportUtil)
+    Tcp.listen(settings, transportUtil),
   )
   seneca.add(
     { role: internals.plugin, hook: 'client', type: 'tcp' },
-    Tcp.client(settings, transportUtil)
+    Tcp.client(settings, transportUtil),
   )
 
   seneca.add(
     { role: internals.plugin, hook: 'listen', type: 'web' },
-    Http.listen(settings, transportUtil)
+    Http.listen(settings, transportUtil),
   )
   seneca.add(
     { role: internals.plugin, hook: 'client', type: 'web' },
-    Http.client(settings, transportUtil)
+    Http.client(settings, transportUtil),
   )
 
   // Aliases.
   seneca.add(
     { role: internals.plugin, hook: 'listen', type: 'http' },
-    Http.listen(settings, transportUtil)
+    Http.listen(settings, transportUtil),
   )
   seneca.add(
     { role: internals.plugin, hook: 'client', type: 'http' },
-    Http.client(settings, transportUtil)
+    Http.client(settings, transportUtil),
   )
 
   // Legacy API.
   seneca.add(
     { role: internals.plugin, hook: 'listen', type: 'direct' },
-    Http.listen(settings, transportUtil)
+    Http.listen(settings, transportUtil),
   )
   seneca.add(
     { role: internals.plugin, hook: 'client', type: 'direct' },
-    Http.client(settings, transportUtil)
+    Http.client(settings, transportUtil),
   )
 
   return {

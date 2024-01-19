@@ -108,7 +108,7 @@ describe('Specific tcp', function () {
         expect(err).to.not.exist()
         done()
       })
-    }
+    },
   )
 
   it('will retry listening a specified number of times', function (done) {
@@ -236,7 +236,7 @@ function make_it(lab) {
       opts,
       Util.promisify(function (x, fin) {
         func(fin)
-      })
+      }),
     )
   }
 }

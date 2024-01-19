@@ -63,7 +63,7 @@ describe('Transporting Entities', function () {
             Assert(res.txBeforeEntityAction === res.txInsideEntityAction)
             Assert(res.txBeforeEntityAction === res.txAfterEntityAction)
             done()
-          }
+          },
         )
       })
     })
@@ -113,7 +113,7 @@ function make_it(lab) {
       opts,
       Util.promisify(function (x, fin) {
         func(fin)
-      })
+      }),
     )
   }
 }
