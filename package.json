@@ -1,6 +1,6 @@
 {
   "name": "seneca-transport",
-  "version": "8.1.0",
+  "version": "8.2.0",
   "description": "Seneca transport",
   "main": "transport.js",
   "license": "MIT",
@@ -65,10 +65,12 @@
     "bench": "^0.3.6",
     "coveralls": "^3.1.1",
     "prettier": "^3.2.4",
-    "seneca": "3.34",
-    "seneca-entity": "^25.1.1",
     "seneca-transport-test": "^1.0.0",
     "sinon": "^15.0.1"
+  },
+  "peerDependencies": {
+    "seneca": ">=3",
+    "seneca-entity": ">=25"
   },
   "files": [
     "transport.js",
