@@ -48,29 +48,29 @@
     "Tyler Waters (https://github.com/tswaters)"
   ],
   "dependencies": {
-    "@hapi/wreck": "^17.2.0",
+    "@hapi/wreck": "^18.1.0",
     "eraro": "^3.0.1",
     "lodash.foreach": "^4.5.0",
     "lodash.omit": "^4.5.0",
     "lru-cache": "8.x",
     "ndjson": "^2.0.0",
-    "qs": "^6.11.2",
+    "qs": "^6.13.0",
     "reconnect-core": "^1.3.0"
   },
   "devDependencies": {
-    "@hapi/code": "8",
+    "@hapi/code": "9",
     "@hapi/joi": "17",
-    "@hapi/lab": "23",
-    "async": "^3.2.5",
+    "@hapi/lab": "25",
+    "async": "^3.2.6",
     "bench": "^0.3.6",
     "coveralls": "^3.1.1",
-    "prettier": "^3.2.4",
+    "prettier": "^3.3.3",
     "seneca-transport-test": "^1.0.0",
-    "sinon": "^15.0.1"
+    "sinon": "^19.0.2"
   },
   "peerDependencies": {
     "seneca": ">=3",
-    "seneca-entity": ">=25"
+    "seneca-entity": ">=28"
   },
   "files": [
     "transport.js",
