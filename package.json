@@ -1,6 +1,6 @@
 {
   "name": "seneca-transport",
-  "version": "8.2.0",
+  "version": "8.3.0",
   "description": "Seneca transport",
   "main": "transport.js",
   "license": "MIT",
@@ -45,7 +45,8 @@
     "Rumkin (https://github.com/rumkin)",
     "Boris Jonica (https://github.com/bjonica)",
     "Damien Simonin Feugas (https://github.com/feugy)",
-    "Tyler Waters (https://github.com/tswaters)"
+    "Tyler Waters (https://github.com/tswaters)",
+    "Christian Gaggero (https://github.com/chirigg)"
   ],
   "dependencies": {
     "@hapi/wreck": "^18.1.0",
