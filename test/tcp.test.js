@@ -56,7 +56,9 @@ describe('Specific tcp', function () {
     CreateInstance()
       .client({ type: 'tcp', port: 40404 })
       .act('a:1', function (err, out) {
-        Assert.equal('seneca: Action a:1 failed: bad-wire.', err.message)
+        // Seneca 4 passes the remote error through unwrapped.
+        Assert.equal('bad-wire', err.message)
+        Assert(!out)
         fin()
       })
   })

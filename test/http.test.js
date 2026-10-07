@@ -53,10 +53,8 @@ describe('http errors', function () {
     CreateInstance()
       .client(30304)
       .act('a:1', function (err, out) {
-        Assert.equal(
-          err.msg,
-          'seneca: Action  failed: Client request error: aw snap.',
-        )
+        // Seneca 4 passes the transport error through unwrapped.
+        Assert.equal(err.message, 'Client request error: aw snap')
         fin()
       })
     // need to wait until after wreck sets up request before emitting
@@ -123,6 +121,10 @@ describe('Specific http', function () {
       .client(30303)
       .act('a:1', function (err, out) {
         Assert(!!err)
+        // The remote error message is carried over the wire.
+        Assert.equal(err.message, 'bad-wire')
+        Assert.equal(err.name, 'Error')
+        Assert(!out)
         fin()
       })
   })
