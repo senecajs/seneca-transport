@@ -1,0 +1,50 @@
+From c4cf6030b347b404d864407d54fc18e199ff4ee0 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 7 Oct 2026 20:58:23 +0000
+Subject: [PATCH] ci: run the build workflow on master and on Node.js 24 and 22
+
+The workflow triggered only on `main`, while the default branch is
+`master`, so it never ran. It now runs for pushes and pull requests on
+either branch, on Node.js 24 (the default target) and 22.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LaHppcejXbSsAH4BZXNsjV
+---
+ .github/workflows/build.yml | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
+index 0cacbf2..61ea391 100644
+--- a/.github/workflows/build.yml
++++ b/.github/workflows/build.yml
+@@ -2,19 +2,23 @@ name: build
+ 
+ on:
+   push:
+-    branches: [main]
++    branches: [master, main]
+   pull_request:
+-    branches: [main]
++    branches: [master, main]
+ 
+ jobs:
+   build:
+     runs-on: ubuntu-latest
++    strategy:
++      fail-fast: false
++      matrix:
++        node-version: [24.x, 22.x]
+     steps:
+       - uses: actions/checkout@v4
+-      - name: Use Node.js 24
++      - name: Use Node.js ${{ matrix.node-version }}
+         uses: actions/setup-node@v4
+         with:
+-          node-version: '24'
++          node-version: ${{ matrix.node-version }}
+       - run: npm install
+       - run: npm run build --if-present
+       - run: npm test
+-- 
+2.43.0
+
