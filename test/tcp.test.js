@@ -9,6 +9,8 @@ var Tcp = require('../lib/tcp')
 var TransportUtil = require('../lib/transport-utils')
 var ChildProcess = require('child_process')
 var Path = require('path')
+var Net = require('net')
+var Os = require('os')
 
 var CreateInstance = require('./utils/createInstance')
 var CreateClient = require('./utils/createClient')
@@ -109,6 +111,62 @@ describe('Specific tcp', function () {
       tcp.call(seneca, { type: 'tcp' }, function (err) {
         expect(err).to.not.exist()
         done()
+      })
+    },
+  )
+
+  it(
+    'listens on a shared transport.path as a unix socket',
+    { skip: /win/.test(process.platform) },
+    function (fin) {
+      var sock = Path.join(
+        Os.tmpdir(),
+        'seneca-shared-' + process.pid + '.sock',
+      )
+
+      if (Fs.existsSync(sock)) {
+        Fs.unlinkSync(sock)
+      }
+
+      // Core copies scalar transport options into every listen
+      // configuration, so a shared path reaches the tcp listener.
+      var seneca = CreateInstance({ transport: { path: sock } })
+      seneca.listen({ type: 'tcp' })
+
+      seneca.ready(function () {
+        var conn = Net.connect(sock, function () {
+          conn.end()
+          seneca.close(fin)
+        })
+        conn.on('error', fin)
+      })
+    },
+  )
+
+  it(
+    'listens on the tcp.path plugin option as a unix socket',
+    { skip: /win/.test(process.platform) },
+    function (fin) {
+      var sock = Path.join(
+        Os.tmpdir(),
+        'seneca-plugin-' + process.pid + '.sock',
+      )
+
+      if (Fs.existsSync(sock)) {
+        Fs.unlinkSync(sock)
+      }
+
+      // Seneca 4.0.0-rc core passes its HTTP default path /act over the
+      // plugin option; the plugin option still wins.
+      var seneca = CreateInstance({}, { tcp: { path: sock } })
+      seneca.listen({ type: 'tcp' })
+
+      seneca.ready(function () {
+        var conn = Net.connect(sock, function () {
+          conn.end()
+          seneca.close(fin)
+        })
+        conn.on('error', fin)
       })
     },
   )

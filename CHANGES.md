@@ -13,10 +13,17 @@
   `meta$` property, which could not be serialized. Remote errors now
   reach the client with their message, name, code and details over both
   HTTP and TCP, instead of a generic "Response Error: 500" (HTTP) or a
-  timeout (TCP). Non-2xx HTTP responses are read for their error body.
-* The TCP listener ignores a `path` equal to the shared `transport.path`
-  option (Seneca 4.0.0-rc core copied its HTTP path `/act` into TCP
-  configurations, which was then treated as a UNIX socket path).
+  timeout (TCP). A non-2xx HTTP response from a Seneca listener (marked
+  by the `seneca-kind: res` header) is read for its error body; any other
+  non-2xx response, such as one from a proxy, fails the call straight
+  away with the HTTP error.
+* The TCP listener ignores the path `/act` when the shared
+  `transport.path` option is also `/act`. Seneca 4.0.0-rc core sets that
+  HTTP default and copies it into every listen configuration, over the
+  plugin's `tcp.path` option, and the listener took it for a UNIX socket
+  path. The plugin's `tcp.path` is used instead, if set; any other path,
+  including a shared `transport.path` set by the application, is used as
+  given, as on Seneca 3.
 * Node.js 24 is the default target (Node.js 22 also tested); `engines.node`
   is `>=18`. Removed Travis CI configuration and the coveralls script.
 * Documentation reorganized following the Diátaxis structure (see `docs/`).

@@ -129,6 +129,30 @@ describe('Specific http', function () {
       })
   })
 
+  it('error-response-from-other-server', function (fin) {
+    // A proxy, or a server that is not a Seneca listener, answers with a
+    // non-2xx status and no seneca headers: the call fails straight away
+    // with the HTTP error instead of waiting for the action timeout.
+    var server = NodeHttp.createServer(function (req, res) {
+      req.resume()
+      res.writeHead(502, { 'Content-Type': 'text/html' })
+      res.end('<html><body>Bad Gateway</body></html>')
+    })
+
+    server.listen(0, '127.0.0.1', function () {
+      var client = CreateInstance().client({ port: server.address().port })
+
+      client.act('a:1', function (err, out) {
+        Assert(!!err)
+        Assert(!out)
+        Assert.match(err.message, /Response Error: 502 Bad Gateway/)
+        client.close(function () {
+          server.close(fin)
+        })
+      })
+    })
+  })
+
   it('not-found', function (fin) {
     CreateInstance()
       .add('c:1', function (args, cb) {
