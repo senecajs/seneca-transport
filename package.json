@@ -76,7 +76,8 @@
     "transport.js",
     "README.md",
     "LICENSE",
-    "lib"
+    "lib",
+    "docs"
   ],
   "engines": {
     "node": ">=18"
