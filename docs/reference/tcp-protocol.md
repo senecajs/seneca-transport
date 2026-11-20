@@ -33,7 +33,7 @@ matched to requests by `id`, not by order.
 
 ```json
 {"id":"request-1/transaction-1","kind":"res","origin":"raw-tcp-client",
- "accept":"8nm49wjj6rvv/1791442427939/10436/4.0.0-rc5/service","track":[],
+ "accept":"8nm49wjj6rvv/1791442427939/10436/4.0.0/service","track":[],
  "time":{"client_sent":1791442428074,"listen_recv":1791442428076,"listen_sent":1791442428077},
  "sync":true,"res":{"name":"blue","hex":"#0000FF"}}
 ```
@@ -68,49 +68,14 @@ the plugin's `tcp` options):
 | Key | Default | Meaning |
 | --- | ------- | ------- |
 | `port` | `10101`, from the core's shared `transport.port` (the plugin's own `tcp.port` default, 10201, never takes effect) | Port. `0` picks a free port. |
-| `host` | `0.0.0.0` (`127.0.0.1` on Seneca 4.0.0-rc5) | Address to bind. |
-| `path` | `tcp.path` plugin option, none by default | UNIX domain socket path. When set, the server listens on the socket file and ignores host and port; the file is removed when the server closes. A top level `transport.path` reaches this key too. When both this `path` and the shared `transport.path` are `/act` (the Seneca 4.0.0-rc5 default), the value is ignored in favour of `tcp.path`. See [The TCP `path`](options.md#the-tcp-path). |
+| `host` | `0.0.0.0` | Address to bind. |
+| `path` | `tcp.path` plugin option, none by default | UNIX domain socket path. When set, the server listens on the socket file and ignores host and port; the file is removed when the server closes. A top level `transport.path` reaches this key too. See [The TCP `path`](options.md#the-tcp-path). |
 | `max_listen_attempts`, `attempt_delay` | none | Retries after `EADDRINUSE`. Without them a bind failure is logged (`net-error`) and `listen` never completes; the process dies with `action_timeout` after the Seneca `timeout`. |
 | `timeout` | `5555` | Not used by the TCP transport. |
 
 The `listen` callback receives the merged options (the plugin's `tcp`
 options under the configuration) with the real `port`, undefined for a
-socket path. On Seneca 4.0.0-rc5, for `listen({ type: 'tcp', port:
-8271, pin: 'role:color,cmd:*' })` and for `listen({ type: 'tcp', path:
-'color.sock' })` (a path relative to the working directory):
-
-```js
-{
-  type: 'tcp',
-  port: 8271,
-  pin: 'role:color,cmd:*',
-  host: '127.0.0.1',
-  path: '/act',
-  protocol: 'http',
-  role: 'transport',
-  hook: 'listen',
-  'plugin$': { full: 'transport', name: 'transport', tag: '-' },
-  'tx$': 'ngc74xyp3vhp',
-  timeout: 5555
-}
-{
-  type: 'tcp',
-  path: 'color.sock',
-  port: undefined,
-  host: '127.0.0.1',
-  protocol: 'http',
-  role: 'transport',
-  hook: 'listen',
-  'plugin$': { full: 'transport', name: 'transport', tag: '-' },
-  'tx$': 'bxmfbczlovva',
-  timeout: 5555
-}
-```
-
-The first result shows the `/act` that the rc5 core puts into every
-configuration; the listener ignored it and bound port 8271. `host`,
-`path` and `protocol` come from the same core defaults and are not
-used otherwise by a TCP listener.
+socket path.
 
 Each connection gets its own parser and serializer; connection errors
 are logged (`pipe-error`). On close the server stops listening and every

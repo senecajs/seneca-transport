@@ -1,4 +1,4 @@
-/* A callback style client that runs on Seneca 3 and on Seneca 4.
+/* A callback style client.
    Run: node portable-client.js [web|tcp], with http-service.js or tcp-service.js running. */
 'use strict'
 
@@ -11,9 +11,6 @@ const port = 'tcp' === type ? 8271 : 8270
 const seneca = Seneca({
   tag: 'client',
   log: 'warn',
-  // Seneca 3 also loads the seneca-transport package it depends on;
-  // this option leaves only the plugin loaded below. Seneca 4 ignores it.
-  default_plugins: { transport: false },
 })
   .use(Transport)
   .client({ type, port, pin: 'role:color,cmd:*' })

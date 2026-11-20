@@ -12,17 +12,22 @@ errors. The patterns are added when the plugin is loaded
 | `role:transport,cmd:client` | `seneca.client()` | The client object. |
 | `role:transport,cmd:inflight` | you | Map of in-flight requests. |
 | `role:transport,hook:listen,type:web` | `cmd:listen` | Listen configuration with the real port. |
-| `role:transport,hook:listen,type:http` | `cmd:listen` | Alias of `web`. |
-| `role:transport,hook:listen,type:direct` | `cmd:listen` | Alias of `web`. |
+| `role:transport,hook:listen,type:http` | `cmd:listen` | Alias of `web`, kept for compatibility. |
+| `role:transport,hook:listen,type:direct` | `cmd:listen` | Alias of `web`, kept for compatibility. |
 | `role:transport,hook:listen,type:tcp` | `cmd:listen` | Listen options with the real port. |
 | `role:transport,hook:client,type:web` | `cmd:client` | Client object. |
-| `role:transport,hook:client,type:http` | `cmd:client` | Alias of `web`. |
-| `role:transport,hook:client,type:direct` | `cmd:client` | Alias of `web`. |
+| `role:transport,hook:client,type:http` | `cmd:client` | Alias of `web`, kept for compatibility. |
+| `role:transport,hook:client,type:direct` | `cmd:client` | Alias of `web`, kept for compatibility. |
 | `role:transport,hook:client,type:tcp` | `cmd:client` | Client object. |
 
-The plugin also adds a prior on the close action for every listener and
-client it creates: `sys:seneca,cmd:close` on Seneca 4,
-`role:seneca,cmd:close` on Seneca 3.
+Seneca 4 maps the types `http` and `direct` to `web`, with the
+deprecation warning `SENECA_DEP_TRANSPORT_TYPE`, before `cmd:listen` or
+`cmd:client` is sent, so the `http` and `direct` hooks are reached only
+when called directly.
+
+The plugin also adds a prior on the close action, `sys:seneca,cmd:close`
+on Seneca 4, for every listener and client it creates (see
+[Close hooks](#close-hooks)).
 
 ## `role:transport,cmd:listen`
 
@@ -105,7 +110,7 @@ filled from the plugin's `tcp` options.
 
 | Key | Used for |
 | --- | -------- |
-| `path` | A UNIX domain socket path (`server.listen(path)`); host and port are then ignored. When both this `path` and the core's shared `transport.path` are `/act` (the Seneca 4.0.0-rc5 default), the value is ignored and the plugin option `tcp.path` is used if set. See [The TCP `path`](options.md#the-tcp-path). |
+| `path` | A UNIX domain socket path (`server.listen(path)`); host and port are then ignored. See [The TCP `path`](options.md#the-tcp-path). |
 | `port`, `host` | `server.listen(port, host)` otherwise. |
 | `max_listen_attempts`, `attempt_delay` | Retries after `EADDRINUSE`; no retries by default. |
 

@@ -192,8 +192,8 @@ Converts `raw` into an entity when it has an `entity$` property, and
 converts first level property values marked `entity$`, using
 `seneca.make$`. Requires the entity plugin (`@seneca/entity` 29 or
 later on Seneca 4) to be loaded on the instance; without it, data with
-`entity$` makes the call fail with `seneca.make$ is not a function`. Returns `raw` unchanged when it
-is not an object.
+`entity$` makes the call fail with `seneca.make$ is not a function`.
+Returns `raw` unchanged when it is not an object.
 
 ### `stringifyJSON(seneca, note, obj)` and `parseJSON(seneca, note, str)`
 

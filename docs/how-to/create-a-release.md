@@ -3,6 +3,13 @@
 For maintainers. Releases are published from a maintainer's machine
 with the scripts in `package.json`.
 
+Version 9.0.0 is the first version published under the scoped name
+`@seneca/transport`. The first publish of a new scoped name is a manual
+bootstrap publish by a maintainer whose npm account uses two-factor
+authentication (`npm publish --access public`). After that, releases
+are planned to move to a GitHub Actions workflow with npm trusted
+publishing; this page will be updated when that workflow exists.
+
 1. Review GitHub issues and pull requests; merge what belongs in the
    release. Make sure the `build` workflow is green on `master`.
 2. Add an entry to `CHANGES.md`: `## X.Y.Z YYYY-MM-DD` followed by the
@@ -26,10 +33,12 @@ with the scripts in `package.json`.
 6. Notify core maintainers of the release via email.
 
 `npm publish` uses the `name` field of `package.json`, so releases from
-8.4.0 on are published as `@seneca/transport`; `--access public` is
+9.0.0 on are published as `@seneca/transport`; `--access public` is
 required because the name is scoped. Versions up to 8.3.0 were
-published as `seneca-transport`, which Seneca 3 still depends on. The
-published files are listed in the `files` field: `transport.js`,
-`lib/`, `docs/` (these pages and the example programs), `README.md`
-and `LICENSE`. Check the contents with `npm pack --dry-run` before
-publishing.
+published as `seneca-transport`. Version 8.4.0 was never published;
+its changes are part of 9.0.0. Never deprecate `seneca-transport`:
+`seneca@3.38.0` depends on it, and it remains the transport of Seneca 3
+applications. The published files are listed in the `files` field:
+`transport.js`, `lib/`, `docs/` (these pages and the example programs),
+`README.md` and `LICENSE`. Check the contents with
+`npm pack --dry-run` before publishing.

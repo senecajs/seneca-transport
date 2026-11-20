@@ -58,12 +58,12 @@ a transport that prints what it carries:
 
 ```json
 {"id":"0fci7uy42i6c/4sydzpirf78y","kind":"act",
- "origin":"7mn27t7l3bcs/1791442428498/10446/4.0.0-rc5/client",
- "track":["7mn27t7l3bcs/1791442428498/10446/4.0.0-rc5/client"],
+ "origin":"7mn27t7l3bcs/1791442428498/10446/4.0.0/client",
+ "track":["7mn27t7l3bcs/1791442428498/10446/4.0.0/client"],
  "time":{"client_sent":1791442428618},
  "act":{"role":"color","cmd":"hex","name":"red","custom$":{}},
  "sync":true,
- "msg$":{"vin":1,"sid":"7mn27t7l3bcs/1791442428498/10446/4.0.0-rc5/client","out":true,
+ "msg$":{"vin":1,"sid":"7mn27t7l3bcs/1791442428498/10446/4.0.0/client","out":true,
          "mid":"0fci7uy42i6c","cid":"4sydzpirf78y","snc":true,"pat":"cmd:*,role:color"}}
 ```
 
@@ -132,8 +132,7 @@ this.add('role:color,cmd:whoami', function (msg, reply) {
 
 Called locally this replies `{ origin: 'local' }`; called through a
 client, with the client's instance id, for example
-`{ origin: 'j9grm67r1bqt/1791444239520/28070/4.0.0-rc5/client' }`
-(the same on Seneca 3).
+`{ origin: 'j9grm67r1bqt/1791444239520/28070/4.0.0/client' }`.
 
 The listener's `pin` is not applied here: any pattern the listening
 instance knows can be invoked by anyone who can reach the port,
@@ -157,8 +156,9 @@ and the rest headers; over TCP the envelope is one line.
 Back on the client, `handle_response` checks that `kind` is `res`, that
 `id` is present and that `origin` is this instance (replies for someone
 else are dropped with an `invalid_origin` warning), rebuilds an `Error`
-when `error` is set, converts `entity$` objects back into entities when
-the entity plugin is loaded, finds the callback in the call map, removes
+when `error` is set, converts `entity$` objects back into entities with
+`seneca.make$` (provided by an entity plugin, `@seneca/entity` 29 or
+later on Seneca 4), finds the callback in the call map, removes
 the entry and calls the callback. The caller's `act` callback or `post`
 promise then completes as for a local action.
 
@@ -182,20 +182,20 @@ Both answer with an error envelope and log a warning (options
 when it starts):
 
 ```
-$ curl -s -X POST http://127.0.0.1:8280/act -H 'seneca-id: abc/def' -H 'seneca-origin: curl' -H 'seneca-track: ["9n3adn54mxnp/1791443865393/25365/4.0.0-rc5/protocol"]' -d '{"role":"color","cmd":"list"}'
+$ curl -s -X POST http://127.0.0.1:8280/act -H 'seneca-id: abc/def' -H 'seneca-origin: curl' -H 'seneca-track: ["9n3adn54mxnp/1791443865393/25365/4.0.0/protocol"]' -d '{"role":"color","cmd":"list"}'
 {"eraro":true,"orig":null,"code":"message_loop","seneca":true,"package":"seneca","msg":"seneca: Inbound message rejected as looping back to this server.","details":{},"callpoint":"at internals.Utils.handle_request (/home/user/seneca-transport/lib/transport-utils.js:260:56)"}
 ```
 
 The `track` is meant to grow by one instance per hop: `prepare_request`
 copies the `track` of an inbound message (`msg.transport$.track`) and
-appends the sending instance. In version 8.4 that copy is made with
+appends the sending instance. That copy is made with
 `seneca.util.deep`, which turns an array into a plain object, so an
 instance that relays an inbound message object through one of its own
 clients fails with the error `track.push is not a function`, delivered
-to the original caller. This happens on Seneca 3 and 4 alike. In
-practice this means that a loop through this plugin's own clients
-(a to b to a) is stopped by that error rather than by `message_loop`,
-and that multi-hop relaying of the same message object does not work.
+to the original caller. In practice this means that a loop through
+this plugin's own clients (a to b to a) is stopped by that error rather
+than by `message_loop`, and that multi-hop relaying of the same message
+object does not work.
 An instance that forwards work must send a new message without the
 inbound `$` properties, which starts a new `track`:
 
@@ -225,8 +225,8 @@ as the `curl` example shows.
 ## 7. Closing
 
 Each listener and each client registers a close hook with
-`transportUtil.close`. On Seneca 4 the hook is a prior on
-`sys:seneca,cmd:close`; on Seneca 3 on `role:seneca,cmd:close`. When the
+`transportUtil.close`. The hook is a prior on `sys:seneca,cmd:close`,
+the close action of Seneca 4. When the
 instance closes, HTTP servers stop listening, TCP servers stop
 listening and destroy their connections, and TCP clients disconnect.
 A process that closed all its instances exits by itself.

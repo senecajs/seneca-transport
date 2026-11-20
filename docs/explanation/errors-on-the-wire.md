@@ -10,11 +10,12 @@ it drops, and why.
 are not enumerable, so `JSON.stringify(new Error('x'))` is `{}`. On
 Seneca 4 an error replied by an action also carries `meta$`, the full
 meta data of the failed action, which is large and may contain
-references that cannot be serialized at all. Before version 8.4 this
-made error replies fail to stringify: HTTP clients saw a generic
-`Response Error: 500 Internal Server Error` and TCP clients timed out.
+references that cannot be serialized at all. `seneca-transport` 8.3.0
+and earlier try to serialize it, so on Seneca 4 their error replies
+fail to stringify: HTTP clients see a generic
+`Response Error: 500 Internal Server Error` and TCP clients time out.
 
-Version 8.4 flattens the error into a plain object before it is sent:
+Version 9.0 flattens the error into a plain object before it is sent:
 
 1. every own enumerable property except `meta$` (typically `code`,
    `details`, `statusCode`, and for errors made by `seneca.error` or
@@ -63,14 +64,15 @@ are non-Seneca HTTP clients.
 On Seneca 4 the rebuilt error is passed to the caller unwrapped:
 `err.message` is the remote message, `err.code` the remote code. The
 Seneca wrapper (`act_execute`, "Action ... failed") is only visible to
-the error handler as `err.meta$.err`. On Seneca 3 an error that is not
-a Seneca error (no `eraro` property) is wrapped: `err.message` becomes
-`seneca: Action <pattern> failed: <message>.`, `err.code` is
-`act_execute` and the remote message is in `err.details.message`;
-errors created with `seneca.error` or `seneca.fail` keep their code and
-message on both versions. See
+the error handler as `err.meta$.err`. Errors created with
+`seneca.error` or `seneca.fail` keep their code and message. See
 [Pass errors between services](../how-to/pass-errors-between-services.md)
 for the output of a real run.
+
+Seneca 3, which uses `seneca-transport` 8.3.0, is different: its core
+wraps an error that is not a Seneca error (no `eraro` property) in an
+`act_execute` error whose message starts with
+`seneca: Action <pattern> failed:`.
 
 Errors the transport itself produces follow the same path: a listener
 rejecting an envelope (`message_loop`, `invalid_json`, ...) answers with

@@ -10,9 +10,10 @@ each configuration value comes from.
 | `web` | You want HTTP or HTTPS: one POST per message, works through proxies and load balancers, can be called with `curl` or any HTTP client, easy to inspect. The default. |
 | `tcp` | You want one persistent connection per client with automatic reconnect and less overhead per message, and all callers are Seneca instances (or speak the ndjson envelope). |
 
-`http` and `direct` are aliases of `web`; they use the `web` options.
-The types `pubsub` and `queue` belong to other plugins and fail with
-`plugin-needed`.
+Write `type: 'web'` for HTTP. `http` and `direct` are deprecated names
+of `web`: Seneca 4 maps them to `web` and prints the deprecation
+warning `SENECA_DEP_TRANSPORT_TYPE`. The types `pubsub` and `queue`
+belong to other plugins and fail with `plugin-needed`.
 
 ## 2. Configure the service and the client
 
@@ -69,7 +70,7 @@ Seneca({
 
 Precedence, highest first: the call's own configuration, the core's top
 level `transport` values, the core section `transport.<type>`, the
-plugin option, the plugin default. Three consequences:
+plugin option, the plugin default. Two consequences:
 
 * The core always supplies `transport.port` (10101), so the port comes
   from the call or from the top level `transport.port` only; `web.port`
@@ -77,9 +78,6 @@ plugin option, the plugin default. Three consequences:
 * A top level `transport.path` reaches TCP listeners too, which then
   listen on a UNIX domain socket of that name. Keep HTTP paths per call
   or in a `web` section.
-* On Seneca 4.0.0-rc5 the core also supplies `host`, `path` and
-  `protocol` at the top level, so `web` and `tcp` sections cannot change
-  them there; give them per call.
 
 [precedence.js](../examples/precedence.js) shows the order with real
 listeners; see
@@ -97,17 +95,7 @@ seneca.listen({ type: 'web', port: () => Number(process.env.PORT) || 8270 })
 
 The `tcp` type does not resolve functions.
 
-## 5. Mind the Seneca 4.0.0-rc5 defaults
-
-On the Seneca 4 prerelease the core's shared block contains
-`host: '127.0.0.1'`, `path: '/act'` and `protocol: 'http'`, so a
-listener without an explicit `host` binds `127.0.0.1` (not `0.0.0.0` as
-on Seneca 3 and 4.0.0), and the plugin's `web.host`, `web.path` and
-`web.protocol` options are overridden. Set these per call when the
-service must run on 4.0.0-rc5. See
-[Seneca 3 versus 4](../explanation/seneca-3-versus-4.md).
-
-## 6. Check the result
+## 5. Check the result
 
 The `listen` callback receives the configuration the hook was given,
 with `port` (and for `web`, `host`) set to what was bound:
@@ -119,8 +107,8 @@ seneca.listen({ type: 'web', port: 0 }, function (err, out) {
 ```
 
 Values the hook filled in from the plugin's defaults are not all
-reported: a `web` listener on Seneca 3 or 4.0.0 reports `path:
-undefined` and still serves `/act`.
+reported: a `web` listener reports `path: undefined` and still serves
+`/act`.
 
-`seneca.list('role:transport')` lists the hook patterns available, which
-tells you whether the plugin is loaded.
+`seneca.list('role:transport,hook:listen')` lists the listen hooks
+available, which tells you whether the plugin is loaded.

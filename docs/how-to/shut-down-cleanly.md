@@ -64,11 +64,11 @@ Seneca({ close_delay: 5000 })
 
 ## 4. Seneca 3 and 4
 
-The plugin registers its hooks on `sys:seneca,cmd:close` on Seneca 4
-and on `role:seneca,cmd:close` on Seneca 3, chosen from `seneca.version`,
-so `close()` releases the sockets on both. This matters on Seneca
-4.0.0-rc5, which never calls hooks on the Seneca 3 pattern (version 8.3
-of this plugin left listeners open there).
+The plugin registers its hooks on `sys:seneca,cmd:close`, the close
+action of Seneca 4, chosen from `seneca.version`. `seneca-transport`
+8.3.0 registered them on `role:seneca,cmd:close`, the Seneca 3 pattern,
+which Seneca 4.0.0 still calls but with the deprecation warning
+`SENECA_DEP_LEGACY_CLOSE_HOOK`.
 
 ## 5. Remote close
 

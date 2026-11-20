@@ -69,9 +69,7 @@ color service listening on https://127.0.0.1:8273/act
 ```
 
 `serverOptions` can also be set once for all listeners as the plugin
-option `web.serverOptions`. Give `protocol: 'https'` in the `listen`
-call itself: on Seneca 4.0.0-rc5 the core supplies `protocol: 'http'`
-to every configuration, which overrides a `web.protocol` plugin option.
+option `web.serverOptions`.
 
 ## 3. The client
 

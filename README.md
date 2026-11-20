@@ -13,9 +13,9 @@ The standard network transport for [Seneca](https://github.com/senecajs/seneca)
 microservices. It provides the `web` (HTTP and HTTPS) and `tcp`
 transport types behind `seneca.listen()` and `seneca.client()`, so that
 actions defined in one process can be called from another without
-changing the code that sends the messages. Version 8.4 runs on Seneca 3
-and on Seneca 4 (tested with 4.0.0-rc5 and the unreleased 4.0.0), with
-Node.js 22 and 24.
+changing the code that sends the messages. Version 9 runs on Seneca 4
+and Node.js 24 or later. Seneca 3 applications keep using
+`seneca-transport` 8.3.0, which Seneca 3 loads by itself.
 
 Full documentation: [docs/](docs/README.md) (tutorial, how-to guides,
 reference and explanation).
@@ -23,13 +23,18 @@ reference and explanation).
 ## Install
 
 ```sh
-npm install seneca @seneca/transport
+npm install seneca@^4 @seneca/transport@^9
 ```
 
-Versions up to 8.3.0 were published as `seneca-transport`; from 8.4.0
-the package is `@seneca/transport`, which is not on npm yet. Until it
-is, `npm install seneca-transport` installs 8.3.0, which does not have
-the Seneca 4 fixes listed in the [change log](CHANGES.md).
+Write `seneca@^4`: until Seneca 4.0.0 is the npm `latest` release, a
+bare `seneca` installs Seneca 3.38.0. The plugin's peer dependency is
+`seneca` `^4.0.0`; `@seneca/entity` `^29.0.0` is an optional peer
+dependency, needed only to rebuild entities sent between services.
+
+Version 9.0.0 is the first version published as `@seneca/transport`.
+Versions up to 8.3.0 were published as `seneca-transport`. Version
+8.4.0 was never published; its changes are part of 9.0.0 (see the
+[change log](CHANGES.md)).
 
 Seneca 4 does not include a network transport. Load the plugin in every
 process that calls `listen` or `client`:
@@ -37,12 +42,13 @@ process that calls `listen` or `client`:
 ```js
 const Seneca = require('seneca')
 const seneca = Seneca().use('@seneca/transport')
+// or: Seneca().use(require('@seneca/transport'))
 ```
 
-Seneca 3 depends on `seneca-transport` 8.3.0 and loads it by itself. To
-use this version there, pass `default_plugins: { transport: false }` and
-load `@seneca/transport` as above; see
-[Run on Seneca 3 and Seneca 4](docs/how-to/run-on-seneca-3-and-4.md).
+Version 9 does not run on Seneca 3. Seneca 3 (3.38.0) depends on
+`seneca-transport` 8.3.0 and loads it by itself, so Seneca 3
+applications need nothing from this package; see
+[Choose the transport package for Seneca 3 or Seneca 4](docs/how-to/run-on-seneca-3-and-4.md).
 
 ## Quick Example
 
@@ -104,18 +110,18 @@ $ curl -s -X POST http://127.0.0.1:8270/act -H 'Content-Type: application/json' 
 | Example | Shows |
 | ------- | ----- |
 | [Getting started](docs/tutorials/getting-started.md) | A service and a client as separate processes, over HTTP and then over TCP. |
-| [Choose and configure a transport type](docs/how-to/choose-and-configure-a-transport-type.md) | `web`, `http`, `direct` and `tcp`; where configuration values come from. |
+| [Choose and configure a transport type](docs/how-to/choose-and-configure-a-transport-type.md) | `web` and `tcp` (and the deprecated `http` and `direct`); where configuration values come from. |
 | [Use HTTPS](docs/how-to/use-https.md) | A self-signed certificate, `protocol: 'https'`, `serverOptions`, trusting the certificate on the client. |
 | [Call a listener without Seneca](docs/how-to/call-a-listener-without-seneca.md) | `curl`, query parameters, a raw TCP client. |
 | [Pass errors between services](docs/how-to/pass-errors-between-services.md) | What an error looks like after the hop: message, code, details, status. |
 | [Tune timeouts, retries and message checks](docs/how-to/tune-timeouts-retries-and-message-checks.md) | The three timeouts, listen retries, `callmax`, loop checks. |
-| [Run on Seneca 3 and Seneca 4](docs/how-to/run-on-seneca-3-and-4.md) | A callback style client that runs unchanged on both. |
+| [Choose the transport package for Seneca 3 or Seneca 4](docs/how-to/run-on-seneca-3-and-4.md) | `seneca-transport` 8.3.0 on Seneca 3, `@seneca/transport` 9 on Seneca 4, and how to tell which is loaded. |
 | [Write a transport plugin](docs/how-to/write-a-transport-plugin.md) | An in-memory transport built on the `transport/utils` export. |
 
-The programs are in [docs/examples](docs/examples/); each was run
-against the Seneca 4 prerelease and its output is in the documentation.
-Inside this repository they load the plugin by relative path; in your
-own code write `require('@seneca/transport')` or
+The programs are in [docs/examples](docs/examples/); their output is
+quoted in the documentation (instance ids, ports and times differ from
+run to run). Inside this repository they load the plugin by relative
+path; in your own code write `require('@seneca/transport')` or
 `seneca.use('@seneca/transport')`.
 
 ## Motivation
@@ -141,9 +147,9 @@ Configuration keys for `listen` and `client` (see [Options](docs/reference/optio
 
 | Key | Default | Meaning |
 | --- | ------- | ------- |
-| `type` | `web` | `web` (aliases `http`, `direct`) or `tcp`. |
+| `type` | `web` | `web` or `tcp`. `http` and `direct` are deprecated names of `web`. |
 | `port` | `10101` | Port to listen on or connect to. The default comes from Seneca's shared `transport.port` option, for both types. |
-| `host` | `0.0.0.0` | Address to bind, or host to connect to (`0.0.0.0` connects to `127.0.0.1`). Seneca 4.0.0-rc5 supplies `127.0.0.1`. |
+| `host` | `0.0.0.0` | Address to bind, or host to connect to (`0.0.0.0` connects to `127.0.0.1`). |
 | `path` | `/act` | HTTP path. For a `tcp` listener, a UNIX domain socket path to listen on instead of a port. |
 | `protocol` | `http` | `http` or `https` (web only). |
 | `pin`, `pins` | none | Patterns the client sends to the remote side. |
@@ -179,18 +185,17 @@ new features please get in touch.
 
 ### Running tests
 
-The tests use [@hapi/lab](https://github.com/hapijs/lab) and run on
-Node.js 24 (default) and 22:
+The tests use [@hapi/lab](https://github.com/hapijs/lab) and need
+Node.js 24 or later:
 
 ```sh
 npm install
 npm test
 ```
 
-The `seneca` development dependency is the Seneca 4 prerelease
-(`^4.0.0-rc5`), and the tests assert Seneca 4 behaviour (for example
-unwrapped remote errors). To run them against another Seneca 4 build,
-install it without saving, run the tests, and restore:
+The tests assert Seneca 4 behaviour (for example unwrapped remote
+errors). To run them against another Seneca 4 build, install it
+without saving, run the tests, and restore:
 
 ```sh
 npm install --no-save seneca@<version or tarball>
@@ -213,24 +218,24 @@ Maintainers: see [Create a release](docs/how-to/create-a-release.md).
 This plugin dates from 2013 and was the transport bundled with Seneca up
 to and including Seneca 3, which loads it automatically (`legacy.transport`).
 Seneca 4 removed network transports from the core, so the plugin is now
-loaded explicitly. Version 8.4 adds Seneca 4 support; the
+loaded explicitly. Version 9.0 supports Seneca 4 only; the
 [change log](CHANGES.md) lists what changed and
 [Seneca 3 versus 4](docs/explanation/seneca-3-versus-4.md) explains the
 differences.
 
-Versions up to 8.3.0 were published as `seneca-transport`; from 8.4.0
-the package is `@seneca/transport`, which is not on npm yet.
+Versions up to 8.3.0 were published as `seneca-transport`, which
+Seneca 3 still depends on; that package is not deprecated. Version
+9.0.0 is the first version published as `@seneca/transport`.
 
-| Seneca | Node.js 22 | Node.js 24 |
-| ------ | ---------- | ---------- |
-| 3.38 | supported | supported |
-| 4.0.0-rc5 | supported | supported |
-| 4.0.0 (unreleased) | supported | supported |
+| Seneca | Node.js | Transport package |
+| ------ | ------- | ----------------- |
+| 4.0.0 and later 4.x | 24 or later | `@seneca/transport` 9 (supported) |
+| 3.x (3.38.0) | as required by Seneca 3 | `seneca-transport` 8.3.0, loaded by Seneca 3 itself |
+| 4.0.0-rc prereleases | | not supported by 9.x |
 
-Verified for 8.4: the test suite on Seneca 4.0.0-rc5 (Node.js 22 and
-24) and 4.0.0; every program in [docs/examples](docs/examples/) on
-4.0.0-rc5 (Node.js 22 and 24) and 4.0.0 (Node.js 24); the callback
-style ones (the services and `portable-client.js`) also on 3.38.
+Verified for 9.0.0: the test suite was run against the Seneca 4.0.0
+release candidate code (not a published version) on Node.js 26, on
+Linux.
 
 Other transports are separate plugins, for example
 [seneca-redis-transport](https://github.com/senecajs/seneca-redis-transport),

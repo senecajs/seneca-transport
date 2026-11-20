@@ -11,7 +11,7 @@ listening on port 8280:
 
 ```
 $ node protocol-service.js
-protocol service listening on port 8280 as 9n3adn54mxnp/1791443865393/25365/4.0.0-rc5/protocol
+protocol service listening on port 8280 as 9n3adn54mxnp/1791443865393/25365/4.0.0/protocol
 ```
 
 ## Request
@@ -25,8 +25,8 @@ path `/act`) with these headers, captured by a plain Node.js server:
 | `Content-Type` | `application/json` |
 | `seneca-id` | The message id, `mi/tx`, for example `om2iglkqlspi/g0q99tv319u6`. |
 | `seneca-kind` | `req` |
-| `seneca-origin` | The sending instance id, for example `9mnxhxjc1t43/1791407450634/26401/4.0.0-rc5/client`. |
-| `seneca-track` | The `track` array as JSON, for example `["9mnxhxjc1t43/1791407450634/26401/4.0.0-rc5/client"]`. |
+| `seneca-origin` | The sending instance id, for example `9mnxhxjc1t43/1791407450634/26401/4.0.0/client`. |
+| `seneca-track` | The `track` array as JSON, for example `["9mnxhxjc1t43/1791407450634/26401/4.0.0/client"]`. |
 | `seneca-time-client-sent` | Timestamp in milliseconds. |
 | `Content-Length`, `Host`, `Connection: close` | Added by the HTTP library. Each request uses its own connection. |
 
@@ -74,7 +74,7 @@ Content-Length: 32
 seneca-id: abc/def
 seneca-kind: res
 seneca-origin: curl
-seneca-accept: 9n3adn54mxnp/1791443865393/25365/4.0.0-rc5/protocol
+seneca-accept: 9n3adn54mxnp/1791443865393/25365/4.0.0/protocol
 seneca-track:
 seneca-time-client-sent: 0
 seneca-time-listen-recv: 0
@@ -97,7 +97,7 @@ Content-Length: 30
 seneca-id: ddhwuq3txp2r
 seneca-kind: res
 seneca-origin: curl/8.5.0
-seneca-accept: 9n3adn54mxnp/1791443865393/25365/4.0.0-rc5/protocol
+seneca-accept: 9n3adn54mxnp/1791443865393/25365/4.0.0/protocol
 seneca-track:
 seneca-time-client-sent: 0
 seneca-time-listen-recv: 0
@@ -119,7 +119,7 @@ Keep-Alive: timeout=5
 | `seneca-origin` | The request's origin, or `UNKNOWN`. |
 | `seneca-accept` | The listening instance id. |
 | `seneca-track` | The request's `track` joined with commas (not JSON); empty when the track is empty. |
-| `seneca-time-client-sent`, `seneca-time-listen-recv`, `seneca-time-listen-sent` | Always `0` in version 8.4. |
+| `seneca-time-client-sent`, `seneca-time-listen-recv`, `seneca-time-listen-sent` | Always `0` in version 9.0. |
 
 The body is the result as JSON; `null` when the action replied with
 nothing.
@@ -152,7 +152,7 @@ HTTP/1.1 404 Not Found
 $ curl -s -i -X POST http://127.0.0.1:8280/act -d '{not json'
 HTTP/1.1 500 Internal Server Error
 ...
-seneca-id: 9n3adn54mxnp/1791443865393/25365/4.0.0-rc5/protocol
+seneca-id: 9n3adn54mxnp/1791443865393/25365/4.0.0/protocol
 seneca-kind: res
 seneca-origin: UNKNOWN
 ...
@@ -233,8 +233,8 @@ Three timeouts apply to a remote call; see
   `{ "code": "ETIMEDOUT" }`. The timer is cleared when the request's
   `close` event fires or data arrives on the socket, and on Node.js 16
   and later `close` fires as soon as the request body has been read,
-  before the action runs. Do not rely on this timeout. On Node.js 24,
-  with the default 5555 ms:
+  before the action runs. Do not rely on this timeout. With the default
+  5555 ms:
 
   ```
   $ time curl -s -i -X POST http://127.0.0.1:8280/act -d '{"role":"color","cmd":"slow","ms":7000}'
@@ -281,7 +281,7 @@ restricts paths and bodies.
 
 * Node.js 24 prints a `DEP0169` deprecation warning about `url.parse()`
   the first time a listener handles a request. It is harmless.
-* This plugin (versions 8.x) and Seneca 3's own `web` transport (used
-  when `legacy.transport` is false) both post to `/act`, but the Seneca
-  3 core format puts the meta data in a `meta$` body property; the two
-  formats are not interchangeable.
+* This plugin (and `seneca-transport` 8.x before it) and Seneca 3's
+  own `web` transport (used when `legacy.transport` is false) both post
+  to `/act`, but the Seneca 3 core format puts the meta data in a
+  `meta$` body property; the two formats are not interchangeable.
