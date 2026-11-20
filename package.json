@@ -1,6 +1,6 @@
 {
   "name": "@seneca/transport",
-  "version": "8.4.0",
+  "version": "9.0.0",
   "description": "Seneca transport",
   "main": "transport.js",
   "license": "MIT",
@@ -59,27 +59,34 @@
   },
   "devDependencies": {
     "@hapi/code": "9",
-    "@hapi/joi": "17",
     "@hapi/lab": "25",
+    "@seneca/entity": "^29.0.0",
     "async": "^3.2.6",
-    "bench": "^0.3.6",
     "prettier": "^3.3.3",
-    "seneca": "^4.0.0-rc5",
-    "seneca-transport-test": "^1.0.0",
+    "seneca": "^4.0.0",
     "sinon": "^19.0.2"
   },
   "peerDependencies": {
-    "seneca": ">=3 || >=4.0.0-rc5",
-    "seneca-entity": ">=28"
+    "seneca": "^4.0.0",
+    "@seneca/entity": "^29.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@seneca/entity": {
+      "optional": true
+    }
   },
   "files": [
     "transport.js",
     "README.md",
+    "CHANGES.md",
     "LICENSE",
     "lib",
     "docs"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

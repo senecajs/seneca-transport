@@ -11,9 +11,11 @@ const tu = seneca.export('transport/utils')
 The export is registered under the plugin's export key `utils`
 (`exportmap: { utils }`). During the plugin's preload a placeholder
 function is registered under the same key; once the plugin's definition
-has run, the key holds the utilities object. On Seneca 4 the core has
-its own `transport/utils` object (`externalize_msg`, `internalize_reply`
-and so on); loading this plugin replaces it.
+has run, the key holds the utilities object. Seneca 4 core has its own
+`transport/utils` object, which transport plugins written for Seneca 4
+use. Loading this plugin replaces it, but the helpers of the core object
+are kept: see [Seneca 4 core helpers](#seneca-4-core-helpers). Capture
+the export when your plugin is defined, after this plugin is loaded.
 
 The object is an instance of the class in `lib/transport-utils.js`,
 created as `new TransportUtil({ callmap, seneca, options })` where
@@ -44,7 +46,11 @@ receives `{ input: data, error }` (an eraro error object; no `id`).
 
 `seneca` should be a delegate of the listening instance
 (`this.root.delegate()` in the hook), because the transaction id is set
-on its `fixedargs`.
+on its fixed message properties, `seneca.fixedmsg`. Seneca 4.0.0 renamed
+`fixedargs` to `fixedmsg` and keeps `fixedargs` as a deprecated alias
+that warns once (`SENECA_DEP_FIXEDARGS`), so the plugin reads
+`seneca.fixedmsg ?? seneca.fixedargs` and never touches the alias when
+`fixedmsg` exists.
 
 ### `requestAct(seneca, input, output, respond)`
 
@@ -78,8 +84,8 @@ only. Also available as a static function on the module.
 ### `listen_topics(seneca, args, listen_options, [do_topic])`
 
 Resolves the pins of configuration `args` (`pin` or `pins`) with
-`resolve_pins`, finds the local patterns matching them
-(`seneca.findpins`) and returns one topic name per pattern:
+`resolve_pins`, finds the local patterns matching each pin
+(`seneca.list(pin)`) and returns one topic name per pattern:
 `msgprefix` followed by the pattern's `key=value,` pairs in key order
 with non-word characters replaced by `_`, for example
 `seneca_cmd_hex_role_color_`. Without pins the single topic is
@@ -103,9 +109,9 @@ cached per topic (`make_resolvesend`); without pins a single `send` for
 receives `{ id, send, toString }`.
 
 The legacy three argument form `make_client(make_send, client_options,
-done)` uses the plugin's own instance. `client_options.id` must be set
-(the core's `client()` always sets it); without it the pinned client
-fails with `ReferenceError: self is not defined`.
+done)` uses the plugin's own instance. When `client_options.id` is not
+set (the core's `client()` always sets it), the client gets a generated
+id.
 
 ### `prepare_request(seneca, msg, done, meta)`
 
@@ -184,9 +190,9 @@ to release sockets when the instance closes.
 
 Converts `raw` into an entity when it has an `entity$` property, and
 converts first level property values marked `entity$`, using
-`seneca.make$`. Requires the entity plugin (seneca-entity) to be loaded
-on the instance; without it, data with `entity$` makes the call fail
-with `seneca.make$ is not a function`. Returns `raw` unchanged when it
+`seneca.make$`. Requires the entity plugin (`@seneca/entity` 29 or
+later on Seneca 4) to be loaded on the instance; without it, data with
+`entity$` makes the call fail with `seneca.make$ is not a function`. Returns `raw` unchanged when it
 is not an object.
 
 ### `stringifyJSON(seneca, note, obj)` and `parseJSON(seneca, note, str)`
@@ -195,6 +201,19 @@ is not an object.
 `json-parse`, with `note`) instead of throwing. `parseJSON` returns the
 error object (with `input` set to the string) on failure; both return
 `undefined` for empty input.
+
+Called with a single argument, `stringifyJSON(obj)` and
+`parseJSON(data)`, they behave as the Seneca 4 core helpers of the same
+name, which they call.
+
+### `adopt_core_utils(core)`
+
+Called by the plugin when it is defined, with the `transport/utils`
+export that was registered before its own (on Seneca 4, the core
+object). Copies every function of `core` that this object does not
+define, and keeps `core` for the single argument forms of
+`stringifyJSON` and `parseJSON`. Does nothing when `core` is not an
+object.
 
 ### `resolveDynamicValue(value, options)`
 
@@ -205,3 +224,23 @@ for `port`, `host` and `path` of the `web` transport.
 
 The eraro error factory with the plugin's message templates (see
 [Errors](errors.md)).
+
+## Seneca 4 core helpers
+
+On Seneca 4 the exported object also carries the helpers of the core
+`transport/utils` object, so that transports written against the core
+export (for example the MQTT, SNS, SQS and local queue transports) keep
+working when this plugin is loaded:
+
+* `externalize_msg(seneca, msg, meta)` and
+  `internalize_msg(seneca, msg)`: a message and its meta data, to and
+  from the wire form with `meta$`.
+* `externalize_reply(seneca, err, out, meta)` and
+  `internalize_reply(seneca, data)`: a reply or an error, to and from the
+  wire form; `internalize_reply` returns `{ err, out, meta }`.
+* `info()`: the local and remote action patterns of the instance.
+
+These are the core functions themselves; see the Seneca 4 transport
+reference for their details. `close`, `stringifyJSON` and `parseJSON`
+are this plugin's own; `close` registers on `sys:seneca,cmd:close` on
+Seneca 4, as the core helper does.

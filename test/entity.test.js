@@ -3,7 +3,7 @@
 var Util = require('util')
 var Assert = require('assert')
 var Lab = require('@hapi/lab')
-var Entity = require('seneca-entity')
+var Entity = require('@seneca/entity')
 var CreateInstance = require('./utils/createInstance')
 
 var lab = (exports.lab = Lab.script())

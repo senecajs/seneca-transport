@@ -80,9 +80,9 @@ describe('Specific http', function () {
           }
         }
 
-        CreateClient('http', 20202, check)
-        CreateClient('http', 20202, check)
-        CreateClient('http', 20202, check)
+        CreateClient('web', 20202, check)
+        CreateClient('web', 20202, check)
+        CreateClient('web', 20202, check)
 
         var requestOptions = {
           payload: JSON.stringify({ c: 1, d: 'A' }),
@@ -353,7 +353,7 @@ describe('Specific https', function () {
       .ready(function () {
         CreateInstance()
           .client({
-            type: 'http',
+            type: 'web',
             port: 8000,
             host: '127.0.0.1',
             protocol: 'https',

@@ -5,8 +5,10 @@ var hexval = process.argv[3]
 var port = process.argv[4]
 
 var Seneca = require('seneca')
+var Transport = require('../../transport.js')
 
 Seneca()
+  .use(Transport)
 
   .add('color:' + color, function (args, done) {
     done(null, {hex: '#' + hexval})

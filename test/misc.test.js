@@ -21,7 +21,7 @@ describe('Miscellaneous', function () {
       if (err) {
         return fin(err)
       }
-      do_type('http', fin)
+      do_type('web', fin)
     })
 
     function do_type(type, fin) {
@@ -131,7 +131,7 @@ describe('Miscellaneous', function () {
       if (err) {
         return fin(err)
       }
-      do_type('http', fin)
+      do_type('web', fin)
     })
 
     function do_type(type, fin) {

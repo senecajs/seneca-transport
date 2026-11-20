@@ -12,7 +12,7 @@ module.exports = function (options) {
   var seneca = this
   var so = seneca.options()
 
-  options = seneca.util.deepextend(
+  options = seneca.util.deep(
     {
       memtest: {
         timeout: so.timeout ? so.timeout - 555 : 22222
