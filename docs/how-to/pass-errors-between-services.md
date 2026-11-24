@@ -114,15 +114,15 @@ failures look similar: `Client request error: connect ECONNREFUSED
 reference, for example), only `message`, `name` and `code` are sent and
 `details` is `undefined` on the client.
 
-## 6. Seneca 3 callers
+## 6. Callers on Seneca 3
 
-On Seneca 3, errors that are not Seneca errors arrive wrapped:
-`err.message` is `seneca: Action <pattern> failed: a plain error.`,
-`err.code` is `act_execute` and the remote message is in
-`err.details.message`. Errors made with `seneca.error` or `seneca.fail`
-keep their own code and message on both versions. Code that must run
-on both can use `err.code` for Seneca errors and
-`(err.details && err.details.message) || err.message` for the text.
+This page describes callers on Seneca 4 with `@seneca/transport` 9.
+A Seneca 3 application calls through the `seneca-transport` 8.3.0
+package that Seneca 3 loads, and the Seneca 3 core wraps errors that
+are not Seneca errors: `err.code` is `act_execute` and `err.message`
+starts with `seneca: Action <pattern> failed:`. Error handling code
+shared between the two must allow for both shapes. See
+[Choose the transport package for Seneca 3 or Seneca 4](run-on-seneca-3-and-4.md).
 
 ## 7. Prefer results for expected failures
 

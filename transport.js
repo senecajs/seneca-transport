@@ -50,13 +50,17 @@ var internals = {
 module.exports = function transport(options) {
   var seneca = this
 
-  var settings = seneca.util.deepextend(internals.defaults, options)
+  var settings = seneca.util.deep(internals.defaults, options)
   var callmap = new LruCache({ max: settings.callmax })
   var transportUtil = new TransportUtil({
     callmap: callmap,
     seneca: seneca,
     options: settings,
   })
+
+  // The export of this plugin replaces the core transport/utils export,
+  // so keep the core helpers that other transports use.
+  transportUtil.adopt_core_utils(internals.priorUtils.get(seneca.root))
 
   seneca.add(
     { role: internals.plugin, cmd: 'inflight' },
@@ -110,8 +114,14 @@ module.exports = function transport(options) {
   }
 }
 
+// The transport/utils export registered before this plugin's own (on
+// Seneca 4, the core helpers), captured in preload, per root instance.
+internals.priorUtils = new WeakMap()
+
 module.exports.preload = function () {
   var seneca = this
+
+  internals.priorUtils.set(seneca.root, seneca.export('transport/utils'))
 
   var meta = {
     name: internals.plugin,

@@ -13,15 +13,18 @@ covers them.
 ## 1. Install
 
 ```sh
-npm install seneca @seneca/transport
+npm install seneca@^4 @seneca/transport@^9
 ```
 
-Version 8.4.0 is the first one published as `@seneca/transport`; see
-[Install](../../README.md#install) for the state of the npm package.
+Version 9.0.0 is the first version published as `@seneca/transport`;
+see [Install](../../README.md#install). Write `seneca@^4`: until Seneca
+4.0.0 is the npm `latest` release, a bare `seneca` installs Seneca 3.
+Both need Node.js 24 or later.
 
 Seneca 4 does not contain network code; `listen` and `client` need a
-transport plugin. (Seneca 3 loads its own copy of the plugin; see
-[Run on Seneca 3 and Seneca 4](../how-to/run-on-seneca-3-and-4.md).)
+transport plugin. (Seneca 3 applications use the `seneca-transport`
+package that Seneca 3 loads by itself; see
+[Choose the transport package for Seneca 3 or Seneca 4](../how-to/run-on-seneca-3-and-4.md).)
 
 The example files in this repository load the plugin with
 `require('../..')` because they live inside it. In your own project
@@ -155,7 +158,7 @@ Start the service in one terminal:
 
 ```
 $ node http-service.js
-color service listening on port 8270 as us1i90uwlny0/1791442553218/11713/4.0.0-rc5/color
+color service listening on port 8270 as us1i90uwlny0/1791442553218/11713/4.0.0/color
 ```
 
 The client, `http-client.js`, in a second terminal:
@@ -229,7 +232,7 @@ const seneca = Seneca({ tag: 'client', log: 'warn' })
 
 ```
 $ node tcp-service.js
-color service listening on tcp port 8271 as 5j2vgvjqddl4/1791442554105/11737/4.0.0-rc5/color
+color service listening on tcp port 8271 as 5j2vgvjqddl4/1791442554105/11737/4.0.0/color
 ```
 
 ```

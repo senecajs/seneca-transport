@@ -16,25 +16,25 @@ and the [Message transport protocol](https://github.com/senecajs/seneca/blob/mas
 | -------- | -------------- |
 | [Getting started](tutorials/getting-started.md) | A service and a client in one process, then as two processes over HTTP, then over TCP. |
 
-The programs are in [examples](examples/). Each was run against Seneca
-4.0.0-rc5 on Node.js 24 and 22 and against 4.0.0; the outputs quoted
-are from 4.0.0-rc5 on Node.js 24. Inside the repository they load the
-plugin with `require('../..')`; in your own code write
+The programs are in [examples](examples/). The outputs quoted come
+from runs of these programs; instance ids, ports and times differ from
+run to run. Inside the repository they load the plugin with
+`require('../..')`; in your own code write
 `require('@seneca/transport')`.
 
 ## How-to guides
 
 | Guide | Covers |
 | ----- | ------ |
-| [Choose and configure a transport type](how-to/choose-and-configure-a-transport-type.md) | `web` versus `tcp`, the `http` and `direct` aliases, plugin options, core `transport` options, precedence, function values. |
+| [Choose and configure a transport type](how-to/choose-and-configure-a-transport-type.md) | `web` versus `tcp`, the deprecated `http` and `direct` names, plugin options, core `transport` options, precedence, function values. |
 | [Listen on a specific host, port and path](how-to/listen-on-a-host-port-and-path.md) | Interfaces, fixed and free ports, HTTP paths, UNIX domain sockets. |
 | [Use HTTPS](how-to/use-https.md) | A self-signed certificate, `protocol: 'https'`, `serverOptions`, trusting the certificate on the client and in curl. |
 | [Call a listener from curl or another non-Seneca client](how-to/call-a-listener-without-seneca.md) | JSON bodies, query parameters, error bodies, answering Seneca clients from your own server, a raw TCP client. |
-| [Pass errors between services](how-to/pass-errors-between-services.md) | What arrives on the client: message, code, details, status; Seneca 3 callers; results instead of errors. |
+| [Pass errors between services](how-to/pass-errors-between-services.md) | What arrives on the client: message, code, details, status; callers on Seneca 3; results instead of errors. |
 | [Tune timeouts, retries and message checks](how-to/tune-timeouts-retries-and-message-checks.md) | The three timeouts, `EADDRINUSE` retries, `callmax`, `check` and `warn`, fire and forget. |
 | [Shut down cleanly](how-to/shut-down-cleanly.md) | `close`, signals, released ports, remote close. |
-| [Run on Seneca 3 and Seneca 4](how-to/run-on-seneca-3-and-4.md) | Loading the plugin once, a callback style client that runs on both, error shapes, hosts. |
-| [Migrate from Seneca 3](how-to/migrate-from-seneca-3.md) | The package rename, removed options, the 8.4 fixes, error handling, HTTP paths in the shared options. |
+| [Choose the transport package for Seneca 3 or Seneca 4](how-to/run-on-seneca-3-and-4.md) | `seneca-transport` 8.3.0 for Seneca 3, `@seneca/transport` 9 for Seneca 4, telling which one is loaded, not loading both, `type: 'web'`. |
+| [Migrate from Seneca 3](how-to/migrate-from-seneca-3.md) | The package rename, removed options, what 9.0 fixes over 8.3.0, error handling, `type: 'web'`, HTTP paths in the shared options, entities. |
 | [Write a transport plugin](how-to/write-a-transport-plugin.md) | An in-memory transport built on the `transport/utils` export. |
 | [Create a release](how-to/create-a-release.md) | For maintainers: publishing with the `repo-publish` scripts. |
 
@@ -55,7 +55,7 @@ plugin with `require('../..')`; in your own code write
 | ----------- | ----- |
 | [How a message travels](explanation/message-lifecycle.md) | The envelope, the call map and message ids, the checks, loop detection and its limits, closing, what is not recorded. |
 | [Errors on the wire](explanation/errors-on-the-wire.md) | Why errors are flattened, what survives, HTTP status mapping, the `statusCode` quirk. |
-| [Seneca 3 versus 4](explanation/seneca-3-versus-4.md) | Loading and the package name, type aliases, the shared `transport` options, precedence and the `path` quirk, close hooks, errors, promises. |
+| [Seneca 3 versus 4](explanation/seneca-3-versus-4.md) | Loading and the package names, type aliases, the shared `transport` options and precedence, close hooks, errors, promises, Node.js, the 4.0.0 prereleases. |
 
 ## Feature index
 
@@ -77,14 +77,14 @@ protocol header of the plugin, with the page that documents it.
 | `tcp.type`, `tcp.host`, `tcp.port`, `tcp.timeout` | plugin options | [Options](reference/options.md#tcp), [TCP protocol](reference/tcp-protocol.md#listener) |
 | `tcp.path` | plugin option (no default) | [Options](reference/options.md#the-tcp-path), [Listen on a specific host, port and path](how-to/listen-on-a-host-port-and-path.md#4-unix-domain-socket-tcp-only) |
 | `tcp.max_listen_attempts`, `tcp.attempt_delay` | plugin options (no default) | [Options](reference/options.md#tcp), [Tune timeouts, retries and message checks](how-to/tune-timeouts-retries-and-message-checks.md) |
-| `type` (`web`, `http`, `direct`, `tcp`; `pubsub` and `queue` rejected) | configuration key | [Options](reference/options.md#configuration-keys-of-listen-and-client), [Choose and configure a transport type](how-to/choose-and-configure-a-transport-type.md) |
+| `type` (`web`, `tcp`; `http` and `direct` deprecated; `pubsub` and `queue` rejected) | configuration key | [Options](reference/options.md#configuration-keys-of-listen-and-client), [Choose and configure a transport type](how-to/choose-and-configure-a-transport-type.md) |
 | `port`, `host`, `path`, `protocol` | configuration keys | [Options](reference/options.md#configuration-keys-of-listen-and-client), [Listen on a specific host, port and path](how-to/listen-on-a-host-port-and-path.md) |
 | `pin`, `pins` | configuration keys | [Options](reference/options.md#configuration-keys-of-listen-and-client), [HTTP protocol](reference/http-protocol.md#security) |
 | `timeout` (client configuration) | configuration key | [Options](reference/options.md#configuration-keys-of-listen-and-client), [HTTP protocol](reference/http-protocol.md#timeouts) |
 | `serverOptions`, `max_listen_attempts`, `attempt_delay` | configuration keys | [Options](reference/options.md#configuration-keys-of-listen-and-client) |
 | `id`, `override`, `makehandle` | configuration keys (core) | [Options](reference/options.md#configuration-keys-of-listen-and-client) |
 | Shared `transport` options of Seneca core (`port`, `host`, `path`, `protocol`, `transport.web`, `transport.tcp`) and their precedence | core options | [Options](reference/options.md#how-a-configuration-is-resolved), [Seneca 3 versus 4](explanation/seneca-3-versus-4.md#the-shared-transport-options) |
-| `default_plugins: { transport: false }` (Seneca 3: skip the bundled `seneca-transport`) | core option | [Run on Seneca 3 and Seneca 4](how-to/run-on-seneca-3-and-4.md#1-load-the-plugin-explicitly-and-only-once), [Seneca 3 versus 4](explanation/seneca-3-versus-4.md#who-loads-the-plugin-and-under-which-name) |
+| `default_plugins: { transport: false }` (Seneca 3 only: skip the bundled `seneca-transport`; Seneca 4 ignores it) | core option | [Choose the transport package for Seneca 3 or Seneca 4](how-to/run-on-seneca-3-and-4.md#5-check-which-one-is-loaded), [Seneca 3 versus 4](explanation/seneca-3-versus-4.md#who-loads-the-plugin-and-under-which-name) |
 | `sync$`, `local$`, `custom$`, `transport$`, `id$` | message directives | [Options](reference/options.md#message-directives-read-by-the-plugin), [How a message travels](explanation/message-lifecycle.md) |
 | `role:transport,cmd:listen` | action | [Messages](reference/messages.md#roletransportcmdlisten) |
 | `role:transport,cmd:client` | action | [Messages](reference/messages.md#roletransportcmdclient) |
@@ -109,7 +109,7 @@ protocol header of the plugin, with the page that documents it.
 | Request and response envelopes (`id`, `kind`, `origin`, `track`, `time`, `act`, `sync`, `msg$`, `accept`, `res`, `error`, `input`) | TCP frames | [TCP protocol](reference/tcp-protocol.md#frames), [How a message travels](explanation/message-lifecycle.md#2-the-envelope) |
 | Reconnect, UNIX domain sockets | TCP behaviour | [TCP protocol](reference/tcp-protocol.md), [Listen on a specific host, port and path](how-to/listen-on-a-host-port-and-path.md) |
 | HTTPS (`protocol: 'https'`, `NODE_EXTRA_CA_CERTS`) | HTTP behaviour | [Use HTTPS](how-to/use-https.md), [HTTP protocol](reference/http-protocol.md#https) |
-| Entities (`entity$`) | data conversion | [Utilities](reference/utils.md#shared-helpers) |
+| Entities (`entity$`; `@seneca/entity` 29 or later on Seneca 4) | data conversion | [Utilities](reference/utils.md#shared-helpers), [Migrate from Seneca 3](how-to/migrate-from-seneca-3.md#7-load-senecaentity-if-messages-carry-entities) |
 
 ## Other documents
 

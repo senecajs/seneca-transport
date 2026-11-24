@@ -126,8 +126,8 @@ The example prints what passes through:
 $ node memory-transport.js
 listening on topics [ 'seneca_cmd_hex_role_color_' ]
 client sends topic seneca_cmd_hex_role_color_ for pin {"role":"color","cmd":"*"}
-listener received {"id":"0fci7uy42i6c/4sydzpirf78y","kind":"act","origin":"7mn27t7l3bcs/1791442428498/10446/4.0.0-rc5/client","track":["7mn27t7l3bcs/1791442428498/10446/4.0.0-rc5/client"],"time":{"client_sent":1791442428618},"act":{"role":"color","cmd":"hex","name":"red","custom$":{}},"sync":true,"msg$":{"vin":1,"sid":"7mn27t7l3bcs/1791442428498/10446/4.0.0-rc5/client","out":true,"mid":"0fci7uy42i6c","cid":"4sydzpirf78y","snc":true,"pat":"cmd:*,role:color"}}
-listener replies {"id":"0fci7uy42i6c/4sydzpirf78y","kind":"res","origin":"7mn27t7l3bcs/1791442428498/10446/4.0.0-rc5/client","accept":"nk28nhl8gqyq/1791442428358/10446/4.0.0-rc5/service","track":["7mn27t7l3bcs/1791442428498/10446/4.0.0-rc5/client"],"time":{"client_sent":1791442428618,"listen_recv":1791442428619,"listen_sent":1791442428619},"sync":true,"res":{"name":"red","hex":"#FF0000"}}
+listener received {"id":"0fci7uy42i6c/4sydzpirf78y","kind":"act","origin":"7mn27t7l3bcs/1791442428498/10446/4.0.0/client","track":["7mn27t7l3bcs/1791442428498/10446/4.0.0/client"],"time":{"client_sent":1791442428618},"act":{"role":"color","cmd":"hex","name":"red","custom$":{}},"sync":true,"msg$":{"vin":1,"sid":"7mn27t7l3bcs/1791442428498/10446/4.0.0/client","out":true,"mid":"0fci7uy42i6c","cid":"4sydzpirf78y","snc":true,"pat":"cmd:*,role:color"}}
+listener replies {"id":"0fci7uy42i6c/4sydzpirf78y","kind":"res","origin":"7mn27t7l3bcs/1791442428498/10446/4.0.0/client","accept":"nk28nhl8gqyq/1791442428358/10446/4.0.0/service","track":["7mn27t7l3bcs/1791442428498/10446/4.0.0/client"],"time":{"client_sent":1791442428618,"listen_recv":1791442428619,"listen_sent":1791442428619},"sync":true,"res":{"name":"red","hex":"#FF0000"}}
 result { name: 'red', hex: '#FF0000' }
 memory client closed
 memory listener closed
@@ -135,8 +135,10 @@ memory listener closed
 
 Add the actions before `listen()`: `listen_topics` only finds patterns
 that already exist. The plugin must be loaded on both sides, and this
-plugin (`@seneca/transport`) must be loaded before yours so that the
-export exists.
+plugin (`@seneca/transport`) must be loaded before yours: without it,
+`seneca.export('transport/utils')` is Seneca 4's own helper set, which
+has no `listen_topics`, `handle_request`, `make_client`,
+`prepare_request` or `handle_response`.
 
 ## 4. Things to get right
 

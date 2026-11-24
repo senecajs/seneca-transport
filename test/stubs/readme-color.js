@@ -8,12 +8,15 @@ function color () {
 
 
 var Seneca = require('seneca')
+var Transport = require('../../transport.js')
 
 Seneca()
+  .use(Transport)
   .use(color)
   .listen()
 
 Seneca()
+  .use(Transport)
   .client()
   .act('color:red')
 

@@ -5,8 +5,7 @@ Two kinds of settings control the plugin: *plugin options*, given to
 `options.plugin.transport`, and the *configuration* of each `listen` and
 `client` call. This page lists both, with every default, and explains
 how they are combined. Values are read from `transport.js`, `lib/http.js`
-and `lib/tcp.js`; the precedence rules were verified on Seneca 3.38,
-4.0.0-rc5 and 4.0.0.
+and `lib/tcp.js`.
 
 ## Plugin options
 
@@ -16,7 +15,7 @@ and `lib/tcp.js`; the precedence rules were verified on Seneca 3.38,
 | ------ | ------- | ------ |
 | `msgprefix` | `'seneca_'` | Prefix of the topic names derived from pins by the `transport/utils` helpers (`seneca_any`, `seneca_cmd_hex_role_color_`). Topics are used by transports built on the helpers, such as message queues; the `web` and `tcp` transports ignore them. |
 | `callmax` | `1111` | Maximum number of in-flight requests per instance (the size of the call map, an LRU cache). When exceeded, the oldest waiting request is forgotten: its reply is dropped with an `unknown_message_id` warning and the caller gets an `action_timeout`. |
-| `msgidlen` | `12` | Accepted for compatibility; not read by version 8.4 (message identifiers come from Seneca). |
+| `msgidlen` | `12` | Accepted for compatibility; not read by version 9.0 (message identifiers come from Seneca). |
 
 ### `warn`
 
@@ -44,18 +43,18 @@ for what these checks can and cannot catch.
 
 ### `web`
 
-Defaults for the `web` type and its aliases `http` and `direct`. A key
-takes effect only when neither the call's configuration nor the core's
-`transport` options supply it (see
+Defaults for the `web` type and its deprecated aliases `http` and
+`direct`. A key takes effect only when neither the call's configuration
+nor the core's `transport` options supply it (see
 [How a configuration is resolved](#how-a-configuration-is-resolved)).
 
 | Option | Default | Effect |
 | ------ | ------- | ------ |
 | `web.type` | `'web'` | Type name. |
 | `web.port` | `10101` | Never takes effect: the core always supplies `transport.port` (default 10101). Set the port per call or with `Seneca({ transport: { port } })`. |
-| `web.host` | `'0.0.0.0'` | Address to bind (listen) or connect to (client). A client never connects to `0.0.0.0`; it uses `127.0.0.1` instead. Overridden on Seneca 4.0.0-rc5, whose core supplies `transport.host: '127.0.0.1'`. |
-| `web.path` | `'/act'` | URL path. The listener answers 404 to any other path; the client posts to it. Overridden on Seneca 4.0.0-rc5, whose core supplies `transport.path: '/act'`. |
-| `web.protocol` | `'http'` | `http` or `https`. Overridden on Seneca 4.0.0-rc5 (`transport.protocol: 'http'`), so give `protocol: 'https'` per call. |
+| `web.host` | `'0.0.0.0'` | Address to bind (listen) or connect to (client). A client never connects to `0.0.0.0`; it uses `127.0.0.1` instead. |
+| `web.path` | `'/act'` | URL path. The listener answers 404 to any other path; the client posts to it. |
+| `web.protocol` | `'http'` | `http` or `https`. |
 | `web.timeout` | `5555` | Milliseconds. Client: the HTTP request timeout (`Client request timeout` error). Listener: the response timeout timer, which on Node.js 16 and later is cleared when the request body has been read and so does not fire; see [HTTP protocol](http-protocol.md#timeouts). |
 | `web.max_listen_attempts` | `11` | Listener: how many times to retry `listen` after `EADDRINUSE` before failing. |
 | `web.attempt_delay` | `222` | Listener: the retry delay is 100 ms plus a random part of up to this many milliseconds. |
@@ -67,9 +66,9 @@ takes effect only when neither the call's configuration nor the core's
 | Option | Default | Effect |
 | ------ | ------- | ------ |
 | `tcp.type` | `'tcp'` | Type name. |
-| `tcp.host` | `'0.0.0.0'` | Address to bind or connect to (a client uses `127.0.0.1` for `0.0.0.0`). Overridden on Seneca 4.0.0-rc5, as `web.host`. |
+| `tcp.host` | `'0.0.0.0'` | Address to bind or connect to (a client uses `127.0.0.1` for `0.0.0.0`). |
 | `tcp.port` | `10201` | Never takes effect: the core always supplies `transport.port` (default 10101), so `listen({ type: 'tcp' })` without a port listens on 10101. |
-| `tcp.path` | none | Listener: a UNIX domain socket path. When set, TCP listeners whose configuration has no path of its own bind this socket instead of a port. On Seneca 4.0.0-rc5 it also replaces the `/act` the core puts into every configuration. |
+| `tcp.path` | none | Listener: a UNIX domain socket path. When set, TCP listeners whose configuration has no path of its own bind this socket instead of a port. |
 | `tcp.timeout` | `5555` | Accepted; not read by the TCP transport. The Seneca `timeout` option bounds TCP calls. |
 | `tcp.max_listen_attempts` | none | No default: a TCP listener does not retry after `EADDRINUSE` unless this is set. |
 | `tcp.attempt_delay` | none | Retry delay, as for `web.attempt_delay`. Set it together with `tcp.max_listen_attempts`. |
@@ -82,7 +81,7 @@ plugin:
 
 | Key | Applies to | Meaning |
 | --- | ---------- | ------- |
-| `type` | both | `web`, `http`, `direct` (all HTTP) or `tcp`. Default `web`. The types `pubsub` and `queue` fail with `plugin-needed`. |
+| `type` | both | `web` (HTTP) or `tcp`. Default `web`. `http` and `direct` are deprecated names of `web`: Seneca 4 maps them to `web` and prints the deprecation warning `SENECA_DEP_TRANSPORT_TYPE`. The types `pubsub` and `queue` fail with `plugin-needed`. |
 | `port` | both | Port. `0` makes a listener pick a free port; the `listen` callback result has the real `port`. For `web` the value may be a function `(config) => port`. |
 | `host` | both | Address. For `web` the value may be a function. |
 | `path` | both | `web`: URL path; may be a function. `tcp` listener: UNIX domain socket path, used instead of host and port (see the rules below). `tcp` client: not supported; the client always connects by host and port. |
@@ -106,21 +105,22 @@ configuration has a `path`:
 * A `path` given in the `listen` call is used as given.
 * A top level `Seneca({ transport: { path } })` is copied by the core
   into every `listen` configuration, so it also turns TCP listeners into
-  socket listeners (Seneca 3 and 4 alike). Set HTTP paths per call or in
-  a `web` section instead.
-* Seneca 4.0.0-rc5 sets `transport.path` to `/act` by default. When both
-  the configuration's `path` and `transport.path` are `/act`, the
-  listener ignores the value and uses `tcp.path` if set, otherwise
-  `host` and `port`. Seneca 4.0.0 no longer sets that default.
+  socket listeners. Set HTTP paths per call or in a `web` section
+  instead.
+* When both the configuration's `path` and `transport.path` are `/act`,
+  the listener ignores the value and uses `tcp.path` if set, otherwise
+  `host` and `port`; this workaround for the Seneca 4.0.0 prereleases,
+  which set that default, is kept for compatibility.
 * Otherwise the plugin option `tcp.path` applies, if set.
 
 ## How a configuration is resolved
 
 1. The core parses the arguments into a configuration object.
 2. Every scalar value of the core's `options.transport` fills a missing
-   key. By default this is `port: 10101`; on Seneca 4.0.0-rc5 also
-   `host: '127.0.0.1'`, `path: '/act'` and `protocol: 'http'`.
-3. `type` defaults to `web`.
+   key. By default this is `port: 10101`.
+3. `type` defaults to `web`. On Seneca 4 the types `http` and `direct`
+   become `web` here, with the deprecation warning
+   `SENECA_DEP_TRANSPORT_TYPE`.
 4. The core section `options.transport[type]` (for example
    `Seneca({ transport: { web: { timeout: 10000 } } })`) fills keys that
    are still missing.
@@ -133,11 +133,9 @@ So, from highest to lowest precedence: the call's configuration, the
 core's top level `transport` values, the core section
 `transport.<type>`, the plugin option, the plugin default. Because the
 core always supplies `transport.port`, a port can only be set per call
-or with the top level `transport.port`; on Seneca 4.0.0-rc5 the same
-holds for `host`, `path` and `protocol`.
+or with the top level `transport.port`.
 [precedence.js](../examples/precedence.js) starts TCP listeners
-configured in different places and prints what each one ends up with;
-the output is the same on Seneca 3.38, 4.0.0-rc5 and 4.0.0:
+configured in different places and prints what each one ends up with:
 
 ```
 $ node precedence.js

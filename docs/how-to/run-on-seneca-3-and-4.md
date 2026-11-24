@@ -1,129 +1,94 @@
-# Run on Seneca 3 and Seneca 4
+# Choose the transport package for Seneca 3 or Seneca 4
 
-Goal: write services and clients that work with both Seneca major
-versions, or know which difference you are hitting. Version 8.4 of the
-plugin supports both; the differences are explained in
-[Seneca 3 versus 4](../explanation/seneca-3-versus-4.md). The program
-on this page is [portable-client.js](../examples/portable-client.js).
+Goal: give each application the transport package that matches its
+Seneca major version, and check which one is loaded. The differences
+between the two cores are explained in
+[Seneca 3 versus 4](../explanation/seneca-3-versus-4.md).
 
-## 1. Load the plugin explicitly, and only once
+## 1. Match the package to the Seneca version
+
+| Application | Transport package | How it is loaded |
+| ----------- | ----------------- | ---------------- |
+| Seneca 3 (`seneca@3`, 3.38.0) | `seneca-transport` 8.3.0 | Seneca 3 depends on it and loads it by itself. |
+| Seneca 4 (`seneca@^4`) | `@seneca/transport` 9 | You load it with `seneca.use('@seneca/transport')`. |
+
+Version 9 declares the peer dependency `seneca` `^4.0.0` and nothing
+else, so it does not run on Seneca 3. That range does not admit the
+4.0.0-rc prereleases either. Version 8.3.0 is the last version
+published as `seneca-transport`; that package is not deprecated and
+stays the transport of Seneca 3. Version 8.4.0 was never published;
+its changes are part of 9.0.0.
+
+One code base cannot use version 9 on Seneca 3. Code that must run on
+both majors needs a separate set of dependencies for each. The
+`listen` and `client` calls and the callback API can be shared; only
+the Seneca 4 setup loads `@seneca/transport`.
+
+## 2. Seneca 3: keep the bundled package
+
+There is nothing to install. `seneca@3.38.0` brings `seneca-transport`
+8.3.0, and `listen` and `client` work without a `use`. If you list the
+package in your own `package.json`, pin it to the 8.3 line:
+
+```sh
+npm install seneca@3 seneca-transport@^8.3.0
+```
+
+Do not add `@seneca/transport` to a Seneca 3 application.
+
+## 3. Seneca 4: install and load `@seneca/transport`
+
+```sh
+npm install seneca@^4 @seneca/transport@^9
+```
+
+Write `seneca@^4`: until Seneca 4.0.0 is the npm `latest` release, a
+bare `seneca` installs 3.38.0. Seneca 4.0.0 and this plugin both need
+Node.js 24 or later.
+
+Seneca 4 has no transport of its own. Load the plugin in every process
+that calls `listen` or `client`:
 
 ```js
 const Seneca = require('seneca')
 
-const seneca = Seneca({
-  // Seneca 3 also loads the seneca-transport package it depends on;
-  // this option leaves only the plugin loaded below. Seneca 4 ignores it.
-  default_plugins: { transport: false },
-}).use('@seneca/transport')
+const seneca = Seneca().use('@seneca/transport')
+// or: Seneca().use(require('@seneca/transport'))
 ```
 
-Seneca 4 needs the `use`: it has no transport of its own. Seneca 3
-depends on the `seneca-transport` package (8.3.0, the last version
-published under that name) and loads it at startup unless
-`default_plugins.transport` is false. Without the option you get two
-copies of the plugin, both named `transport`: the one you load last
-provides the active hooks and the `transport/utils` export, and the
-bundled one stays behind as their prior. That works, but it is one copy
-too many.
+Without it, `listen` fails fatally (`transport_listen`: no action for
+`role:transport,hook:listen,type:web`). The steps for an existing
+application are in [Migrate from Seneca 3](migrate-from-seneca-3.md).
 
-Dependencies: `@seneca/transport@^8.4.0`, with `seneca` as a peer
-(`>=3 || >=4.0.0-rc5`).
+## 4. Do not install both into one Seneca 4 application
 
-## 2. Use the API both versions have
+Both packages register a plugin named `transport`. Loading both gives
+two plugins under one name: the one loaded last provides the active
+hooks and the `transport/utils` export. Seneca 4 does not load
+`seneca-transport` by itself, but a leftover dependency is easy to load
+by mistake, and version 8.3.0 cannot pass a remote error back on
+Seneca 4 (see [Errors on the wire](../explanation/errors-on-the-wire.md)).
+Remove `seneca-transport` from the dependencies of a Seneca 4
+application and load only `@seneca/transport`.
 
-Callbacks work everywhere: `add`, `act(msg, callback)`, `listen`,
-`client`, `ready(callback)`, `close(callback)`. The promise API (`post`,
-`message`, `await ready()`, `await close()`) is built into Seneca 4;
-on Seneca 3 load [seneca-promisify](https://github.com/senecajs/seneca-promisify)
-for it. A client in callback style, which closes its instance on every
-path:
+## 5. Check which one is loaded
 
-```js
-seneca.ready(function () {
-  seneca.act('role:color,cmd:hex,name:plum', function (err, out) {
-    if (err) return finish(err)
-    console.log('Seneca ' + seneca.version + ' over ' + type + ':', out)
+* `seneca.version` names the core: `3.38.0` or `4.0.0`, for example.
+  On Seneca 3 the transport is the bundled `seneca-transport`, unless
+  the application set `default_plugins: { transport: false }`.
+* `npm ls seneca-transport @seneca/transport` shows which of the two
+  packages are installed, in which version, and which package depends
+  on each. In a Seneca 4 application only `@seneca/transport@9` should
+  appear.
+* `seneca.list('role:transport,hook:listen')` lists the listen hooks.
+  It is empty on Seneca 4 when no transport plugin is loaded. Both
+  packages add the same patterns, so it does not tell them apart.
 
-    // An expected failure: the service replies with an unknown_color error.
-    seneca.act('role:color,cmd:hex,name:pink', function (err) {
-      console.log('expected error:', err && err.code, '|', err && err.message)
-      finish()
-    })
-  })
-})
+## 6. Name the transport type `web`
 
-// Close the instance on every path, so that the process exits.
-function finish(err) {
-  if (err) {
-    console.error('ERROR', err.message)
-    process.exitCode = 1
-  }
-  seneca.close()
-}
-```
-
-Run against the tutorial's services ([http-service.js](../examples/http-service.js),
-[tcp-service.js](../examples/tcp-service.js)), which also use only this
-API, with each Seneca version installed in turn:
-
-```
-$ node portable-client.js web
-Seneca 3.38.0 over web: { name: 'plum', hex: '#8E4585' }
-expected error: unknown_color | seneca: Unknown color: pink.
-$ node portable-client.js tcp
-Seneca 3.38.0 over tcp: { name: 'plum', hex: '#8E4585' }
-expected error: unknown_color | seneca: Unknown color: pink.
-
-$ node portable-client.js web
-Seneca 4.0.0-rc5 over web: { name: 'plum', hex: '#8E4585' }
-expected error: unknown_color | seneca: Unknown color: pink.
-
-$ node portable-client.js tcp
-Seneca 4.0.0 over tcp: { name: 'plum', hex: '#8E4585' }
-expected error: unknown_color | seneca: Unknown color: pink.
-```
-
-On Seneca 4.0.0-rc5, `await seneca.ready()` on an idle instance never
-resolves; use `seneca.ready(callback)` or
-`await new Promise((resolve) => seneca.ready(resolve))`.
-
-## 3. Expect different error shapes
-
-| | Seneca 3 | Seneca 4 |
-| --- | -------- | -------- |
-| Error made with `seneca.error`/`seneca.fail` | `err.code` and `err.message` as created | the same |
-| Plain `Error` from the remote action | `err.message` is `seneca: Action <pattern> failed: <message>.`, `err.code` is `act_execute`, `err.details.message` is the remote message | `err.message` is the remote message, `err.code` is undefined |
-| HTTP error from a proxy or a wrong path | `seneca: Action <pattern> failed: Response Error: 404 Not Found.` | `Response Error: 404 Not Found` |
-
-The service above replies with `this.error('unknown_color', ...)`, so
-the error looks the same on both. For plain errors, a portable way to
-get the remote text is:
-
-```js
-const text = (err.details && err.details.message) || err.message
-```
-
-## 4. Set the host on Seneca 4.0.0-rc5
-
-Listeners bind `0.0.0.0` by default on Seneca 3 and on 4.0.0, but
-`127.0.0.1` on 4.0.0-rc5 (that core copies its own defaults into every
-configuration). Pass `host` explicitly when it matters.
-
-## 5. Do not count on registrations
-
-`seneca.status().transport.register` and `seneca.ping().tr` are empty
-with this plugin on both versions.
-
-## 6. Verify both
-
-Install the other version without saving and run your own tests:
-
-```sh
-npm install --no-save seneca@3
-npm test
-npm install          # back to the version in package.json
-```
-
-For Seneca 4 use `seneca@^4.0.0-rc5` (or `seneca@4` once released).
-Both run on Node.js 22 and 24; Seneca 4 requires Node.js 22 or later.
+Write `type: 'web'` (or `tcp`) in `listen` and `client` calls. Seneca 3
+treated `http` and `direct` as names of `web`. Seneca 4.0.0 still
+accepts them, maps them to `web` and prints the deprecation warning
+`SENECA_DEP_TRANSPORT_TYPE`. This plugin also registers hooks for
+`http` and `direct`, but new code should not rely on these names. See
+[Choose and configure a transport type](choose-and-configure-a-transport-type.md).

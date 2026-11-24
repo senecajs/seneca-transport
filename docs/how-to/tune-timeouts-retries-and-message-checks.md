@@ -37,8 +37,8 @@ Seneca({ timeout: 10000 })
 
 The listener's `timeout` would answer `503 Response timeout`, but the
 timer is cleared when the request body has been read, which on Node.js
-16 and later happens before the action runs. Verified on Node.js 24: a
-7 second action was answered after 7 seconds with `200`. Bound slow
+16 and later happens before the action runs. A 7 second action, for
+example, is answered after 7 seconds with `200`. Bound slow
 actions on the service with the service's own Seneca `timeout` instead.
 
 TCP calls are bounded by the Seneca `timeout` only; `tcp.timeout` is

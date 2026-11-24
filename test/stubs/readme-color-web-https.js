@@ -28,7 +28,7 @@ Seneca()
     Seneca()
       .use('../transport')
       .client({
-        type: 'http',
+        type: 'web',
         port: 8000,
         host: '127.0.0.1',
         protocol: 'https'

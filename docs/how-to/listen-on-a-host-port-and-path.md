@@ -10,10 +10,8 @@ seneca.listen({ type: 'web', host: '0.0.0.0', port: 8270 })   // all interfaces
 seneca.listen({ type: 'web', host: '127.0.0.1', port: 8270 }) // loopback only
 ```
 
-The plugin default is `0.0.0.0`; on Seneca 4.0.0-rc5 the core supplies
-`127.0.0.1` instead (see [Seneca 3 versus 4](../explanation/seneca-3-versus-4.md)),
-so set `host` explicitly for a service that must accept remote
-connections. A client given `host: '0.0.0.0'` connects to `127.0.0.1`.
+The plugin default is `0.0.0.0`. A client given `host: '0.0.0.0'`
+connects to `127.0.0.1`.
 
 ## 2. Port
 
@@ -61,9 +59,7 @@ To set the path for every `web` call, use a `web` section (the core
 option `transport.web.path` or the plugin option `web.path`), not the
 top level `transport.path`: the core copies top level `transport` values
 into every configuration, TCP ones included, and a TCP listener reads a
-path as a socket file (next step). On Seneca 4.0.0-rc5 the `web`
-sections are overridden by the core's own `path: '/act'`, so give the
-path per call there.
+path as a socket file (next step).
 
 ## 4. UNIX domain socket (TCP only)
 
@@ -89,12 +85,9 @@ Where the path comes from matters:
 * A path in the `listen` configuration is used as given.
 * A top level `Seneca({ transport: { path } })` is copied by the core
   into every `listen` configuration, so it also turns TCP listeners into
-  socket listeners, on Seneca 3 and 4 alike.
-* Seneca 4.0.0-rc5 sets `transport.path` to `/act` by default and copies
-  it into every configuration. The plugin ignores that value (when both
-  the configuration's path and `transport.path` are `/act`) and uses its
-  `tcp.path` option instead, or the port when that is not set. Seneca
-  4.0.0 no longer sets the default.
+  socket listeners.
+* Otherwise the plugin option `tcp.path` applies, if set. The exact
+  rules are in [The TCP `path`](../reference/options.md#the-tcp-path).
 
 The plugin's TCP client connects by host and port only, so a socket
 listener is for clients you write yourself; see
@@ -104,7 +97,7 @@ listener is for clients you write yourself; see
 
 ```
 $ node http-service.js
-color service listening on port 8270 as kpr6g4la2i4f/1791443865384/25366/4.0.0-rc5/color
+color service listening on port 8270 as kpr6g4la2i4f/1791443865384/25366/4.0.0/color
 $ curl -s -X POST http://127.0.0.1:8270/act -d '{"role":"color","cmd":"list"}'
 {"names":["red","green","blue","plum"]}
 ```

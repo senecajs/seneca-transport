@@ -1,9 +1,11 @@
 'use strict'
 
 var Seneca = require('seneca')
+var Transport = require('../../transport.js')
 
 
 Seneca()
+  .use(Transport)
 
   // send matching actions out over the network
   .client({ port: 8081, pin: 'color:red' })

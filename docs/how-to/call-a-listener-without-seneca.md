@@ -130,7 +130,7 @@ $ node raw-tcp-client.js
   id: 'request-1/transaction-1',
   kind: 'res',
   origin: 'raw-tcp-client',
-  accept: '8nm49wjj6rvv/1791442427939/10436/4.0.0-rc5/service',
+  accept: '8nm49wjj6rvv/1791442427939/10436/4.0.0/service',
   track: [],
   time: {
     client_sent: 1791442428074,

@@ -1,6 +1,7 @@
 'use strict'
 
 require('seneca')()
+  .use(require('../../transport.js'))
 
   .add('foo:1,bar:A', function (args, done) {
     done(null, 'localA-' + args.bar)
